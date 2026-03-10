@@ -7,6 +7,7 @@ import java.sql.Date;
  * @author exorc
  */
 public class NguoiDung {
+
     private int nguoiDungID;
     private String cccd;
     private String ho;
@@ -15,20 +16,20 @@ public class NguoiDung {
     private String gioiTinh;
     private String email;
     private String soDienThoai;
-    private String tenDangNhap;
     private String matKhauHash;
-    private Integer vaiTroID;       // khóa ngoại - có thể null
-    private Integer toDanPhoID;     // khóa ngoại - có thể null
+    private Integer vaiTroID;
+    private Integer toDanPhoID;
     private boolean isActivated;
     private Date ngayTao;
+    private String tenVaiTro; // thêm mới - không có trong DB, lấy từ JOIN
 
     public NguoiDung() {
     }
 
-    public NguoiDung(int nguoiDungID, String cccd, String ho, String ten, Date ngaySinh, 
-                     String gioiTinh, String email, String soDienThoai, String tenDangNhap, 
-                     String matKhauHash, Integer vaiTroID, Integer toDanPhoID, 
-                     boolean isActivated, Date ngayTao) {
+    public NguoiDung(int nguoiDungID, String cccd, String ho, String ten, Date ngaySinh,
+            String gioiTinh, String email, String soDienThoai,
+            String matKhauHash, Integer vaiTroID, Integer toDanPhoID,
+            boolean isActivated, Date ngayTao) {
         this.nguoiDungID = nguoiDungID;
         this.cccd = cccd;
         this.ho = ho;
@@ -37,7 +38,6 @@ public class NguoiDung {
         this.gioiTinh = gioiTinh;
         this.email = email;
         this.soDienThoai = soDienThoai;
-        this.tenDangNhap = tenDangNhap;
         this.matKhauHash = matKhauHash;
         this.vaiTroID = vaiTroID;
         this.toDanPhoID = toDanPhoID;
@@ -45,66 +45,135 @@ public class NguoiDung {
         this.ngayTao = ngayTao;
     }
 
-    // Getter và Setter cho tất cả các trường
-    public int getNguoiDungID() { return nguoiDungID; }
-    public void setNguoiDungID(int nguoiDungID) { this.nguoiDungID = nguoiDungID; }
+    public int getNguoiDungID() {
+        return nguoiDungID;
+    }
 
-    public String getCccd() { return cccd; }
-    public void setCccd(String cccd) { this.cccd = cccd; }
+    public void setNguoiDungID(int nguoiDungID) {
+        this.nguoiDungID = nguoiDungID;
+    }
 
-    public String getHo() { return ho; }
-    public void setHo(String ho) { this.ho = ho; }
+    public String getCccd() {
+        return cccd;
+    }
 
-    public String getTen() { return ten; }
-    public void setTen(String ten) { this.ten = ten; }
+    public void setCccd(String cccd) {
+        this.cccd = cccd;
+    }
 
-    public Date getNgaySinh() { return ngaySinh; }
-    public void setNgaySinh(Date ngaySinh) { this.ngaySinh = ngaySinh; }
+    public String getHo() {
+        return ho;
+    }
 
-    public String getGioiTinh() { return gioiTinh; }
-    public void setGioiTinh(String gioiTinh) { this.gioiTinh = gioiTinh; }
+    public void setHo(String ho) {
+        this.ho = ho;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public String getTen() {
+        return ten;
+    }
 
-    public String getSoDienThoai() { return soDienThoai; }
-    public void setSoDienThoai(String soDienThoai) { this.soDienThoai = soDienThoai; }
+    public void setTen(String ten) {
+        this.ten = ten;
+    }
 
-    public String getTenDangNhap() { return tenDangNhap; }
-    public void setTenDangNhap(String tenDangNhap) { this.tenDangNhap = tenDangNhap; }
+    public Date getNgaySinh() {
+        return ngaySinh;
+    }
 
-    public String getMatKhauHash() { return matKhauHash; }
-    public void setMatKhauHash(String matKhauHash) { this.matKhauHash = matKhauHash; }
+    public void setNgaySinh(Date ngaySinh) {
+        this.ngaySinh = ngaySinh;
+    }
 
-    public Integer getVaiTroID() { return vaiTroID; }
-    public void setVaiTroID(Integer vaiTroID) { this.vaiTroID = vaiTroID; }
+    public String getGioiTinh() {
+        return gioiTinh;
+    }
 
-    public Integer getToDanPhoID() { return toDanPhoID; }
-    public void setToDanPhoID(Integer toDanPhoID) { this.toDanPhoID = toDanPhoID; }
+    public void setGioiTinh(String gioiTinh) {
+        this.gioiTinh = gioiTinh;
+    }
 
-    public boolean isIsActivated() { return isActivated; }
-    public void setIsActivated(boolean isActivated) { this.isActivated = isActivated; }
+    public String getEmail() {
+        return email;
+    }
 
-    public Date getNgayTao() { return ngayTao; }
-    public void setNgayTao(Date ngayTao) { this.ngayTao = ngayTao; }
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getSoDienThoai() {
+        return soDienThoai;
+    }
+
+    public void setSoDienThoai(String soDienThoai) {
+        this.soDienThoai = soDienThoai;
+    }
+
+    public String getMatKhauHash() {
+        return matKhauHash;
+    }
+
+    public void setMatKhauHash(String matKhauHash) {
+        this.matKhauHash = matKhauHash;
+    }
+
+    public Integer getVaiTroID() {
+        return vaiTroID;
+    }
+
+    public void setVaiTroID(Integer vaiTroID) {
+        this.vaiTroID = vaiTroID;
+    }
+
+    public Integer getToDanPhoID() {
+        return toDanPhoID;
+    }
+
+    public void setToDanPhoID(Integer toDanPhoID) {
+        this.toDanPhoID = toDanPhoID;
+    }
+
+    public boolean isIsActivated() {
+        return isActivated;
+    }
+
+    public void setIsActivated(boolean isActivated) {
+        this.isActivated = isActivated;
+    }
+
+    public Date getNgayTao() {
+        return ngayTao;
+    }
+
+    public void setNgayTao(Date ngayTao) {
+        this.ngayTao = ngayTao;
+    }
+
+    public String getTenVaiTro() {
+        return tenVaiTro;
+    }
+
+    public void setTenVaiTro(String tenVaiTro) {
+        this.tenVaiTro = tenVaiTro;
+    }
 
     @Override
     public String toString() {
-        return "NguoiDung{" +
-                "nguoiDungID=" + nguoiDungID +
-                ", cccd='" + cccd + '\'' +
-                ", ho='" + ho + '\'' +
-                ", ten='" + ten + '\'' +
-                ", ngaySinh=" + ngaySinh +
-                ", gioiTinh='" + gioiTinh + '\'' +
-                ", email='" + email + '\'' +
-                ", soDienThoai='" + soDienThoai + '\'' +
-                ", tenDangNhap='" + tenDangNhap + '\'' +
-                ", matKhauHash='" + matKhauHash + '\'' +
-                ", vaiTroID=" + vaiTroID +
-                ", toDanPhoID=" + toDanPhoID +
-                ", isActivated=" + isActivated +
-                ", ngayTao=" + ngayTao +
-                '}';
+        return "NguoiDung{"
+                + "nguoiDungID=" + nguoiDungID
+                + ", cccd='" + cccd + '\''
+                + ", ho='" + ho + '\''
+                + ", ten='" + ten + '\''
+                + ", ngaySinh=" + ngaySinh
+                + ", gioiTinh='" + gioiTinh + '\''
+                + ", email='" + email + '\''
+                + ", soDienThoai='" + soDienThoai + '\''
+                + ", matKhauHash='" + matKhauHash + '\''
+                + ", vaiTroID=" + vaiTroID
+                + ", toDanPhoID=" + toDanPhoID
+                + ", isActivated=" + isActivated
+                + ", ngayTao=" + ngayTao
+                + ", tenVaiTro='" + tenVaiTro + '\''
+                + '}';
     }
 }
