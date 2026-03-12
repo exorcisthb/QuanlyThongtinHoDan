@@ -2,33 +2,24 @@ package Model.Entity;
 
 import java.sql.Date;
 
-/**
- *
- * @author exorc
- */
 public class HoDan {
     private int hoDanID;
     private String maHoKhau;
     private String diaChi;
-    private Integer toDanPhoID;     // khóa ngoại
-    private Integer chuHoID;        // khóa ngoại đến NguoiDung
-    private Integer trangThaiID;    // khóa ngoại
+    private int toDanPhoID;
+    private Integer chuHoID;
+    private int trangThaiID;
     private Date ngayTao;
 
-    public HoDan() {
-    }
+    // Thêm từ JOIN
+    private String tenChuHo;      // ho + ten của chủ hộ
+    private String tenTrangThai;
+    private int soThanhVien;
+    private String tenDuong;      // tách từ diaChi
 
-    public HoDan(int hoDanID, String maHoKhau, String diaChi, Integer toDanPhoID, 
-                 Integer chuHoID, Integer trangThaiID, Date ngayTao) {
-        this.hoDanID = hoDanID;
-        this.maHoKhau = maHoKhau;
-        this.diaChi = diaChi;
-        this.toDanPhoID = toDanPhoID;
-        this.chuHoID = chuHoID;
-        this.trangThaiID = trangThaiID;
-        this.ngayTao = ngayTao;
-    }
+    public HoDan() {}
 
+    // ── Getters / Setters ──
     public int getHoDanID() { return hoDanID; }
     public void setHoDanID(int hoDanID) { this.hoDanID = hoDanID; }
 
@@ -38,28 +29,40 @@ public class HoDan {
     public String getDiaChi() { return diaChi; }
     public void setDiaChi(String diaChi) { this.diaChi = diaChi; }
 
-    public Integer getToDanPhoID() { return toDanPhoID; }
-    public void setToDanPhoID(Integer toDanPhoID) { this.toDanPhoID = toDanPhoID; }
+    public int getToDanPhoID() { return toDanPhoID; }
+    public void setToDanPhoID(int toDanPhoID) { this.toDanPhoID = toDanPhoID; }
 
     public Integer getChuHoID() { return chuHoID; }
     public void setChuHoID(Integer chuHoID) { this.chuHoID = chuHoID; }
 
-    public Integer getTrangThaiID() { return trangThaiID; }
-    public void setTrangThaiID(Integer trangThaiID) { this.trangThaiID = trangThaiID; }
+    public int getTrangThaiID() { return trangThaiID; }
+    public void setTrangThaiID(int trangThaiID) { this.trangThaiID = trangThaiID; }
 
     public Date getNgayTao() { return ngayTao; }
     public void setNgayTao(Date ngayTao) { this.ngayTao = ngayTao; }
 
-    @Override
-    public String toString() {
-        return "HoDan{" +
-                "hoDanID=" + hoDanID +
-                ", maHoKhau='" + maHoKhau + '\'' +
-                ", diaChi='" + diaChi + '\'' +
-                ", toDanPhoID=" + toDanPhoID +
-                ", chuHoID=" + chuHoID +
-                ", trangThaiID=" + trangThaiID +
-                ", ngayTao=" + ngayTao +
-                '}';
+    public String getTenChuHo() { return tenChuHo; }
+    public void setTenChuHo(String tenChuHo) { this.tenChuHo = tenChuHo; }
+
+    public String getTenTrangThai() { return tenTrangThai; }
+    public void setTenTrangThai(String tenTrangThai) { this.tenTrangThai = tenTrangThai; }
+
+    public int getSoThanhVien() { return soThanhVien; }
+    public void setSoThanhVien(int soThanhVien) { this.soThanhVien = soThanhVien; }
+
+    public String getTenDuong() { return tenDuong; }
+    public void setTenDuong(String tenDuong) { this.tenDuong = tenDuong; }
+
+    // Tách tên đường từ địa chỉ
+    // VD: "12 Hùng Vương, Phường X" → "Hùng Vương"
+    public String extractTenDuong() {
+        if (diaChi == null || diaChi.trim().isEmpty()) return "Không rõ";
+        String part = diaChi.split(",")[0].trim(); // "12 Hùng Vương"
+        // Bỏ số đầu
+        String[] tokens = part.split(" ", 2);
+        if (tokens.length == 2 && tokens[0].matches("\\d+")) {
+            return tokens[1].trim();
+        }
+        return part;
     }
 }

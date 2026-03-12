@@ -16,10 +16,23 @@ public class LoginServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Nếu đã đăng nhập rồi thì redirect về home
         HttpSession session = request.getSession(false);
         if (session != null && session.getAttribute("nguoiDung") != null) {
-            response.sendRedirect(request.getContextPath() + "/home");
+            NguoiDung nd = (NguoiDung) session.getAttribute("nguoiDung");
+            switch (nd.getTenVaiTro()) {
+                case "Admin":
+                    request.setAttribute("currentAdmin", nd);
+                    request.getRequestDispatcher("/Views/Admin/AdminDashboard.jsp")
+                            .forward(request, response);
+                    break;
+                case "ToTruong":
+                    response.sendRedirect(request.getContextPath() + "/totruong/dashboard");
+                    break;
+                default:
+                    request.getRequestDispatcher("/Views/Common/Login.jsp")
+                            .forward(request, response);
+                    break;
+            }
             return;
         }
         request.getRequestDispatcher("/Views/Common/Login.jsp").forward(request, response);
@@ -29,12 +42,12 @@ public class LoginServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String email    = request.getParameter("email");
-        String matKhau  = request.getParameter("matKhau");
+        String email = request.getParameter("email");
+        String matKhau = request.getParameter("matKhau");
 
         // Validate đầu vào
-        if (email == null || email.trim().isEmpty() ||
-            matKhau == null || matKhau.trim().isEmpty()) {
+        if (email == null || email.trim().isEmpty()
+                || matKhau == null || matKhau.trim().isEmpty()) {
             request.setAttribute("error", "Vui lòng nhập đầy đủ email và mật khẩu.");
             request.getRequestDispatcher("/Views/Common/Login.jsp").forward(request, response);
             return;
@@ -64,14 +77,15 @@ public class LoginServlet extends HttpServlet {
             // Redirect theo vai trò
             switch (nguoiDung.getTenVaiTro()) {
                 case "Admin":
-                    response.sendRedirect(request.getContextPath() + "/Views/Admin/AdminDashboard.jsp");
+                    request.setAttribute("currentAdmin", nguoiDung);
+                    request.getRequestDispatcher("/Views/Admin/AdminDashboard.jsp")
+                            .forward(request, response);
                     break;
-                case "Tổ trưởng":
-                case "Cán bộ tổ dân phố":
-                    response.sendRedirect(request.getContextPath() + "/todan/dashboard");
+                case "ToTruong":  // ✅ khớp với DB
+                    response.sendRedirect(request.getContextPath() + "/totruong/dashboard");
                     break;
                 default:
-                    response.sendRedirect(request.getContextPath() + "/home");
+                    response.sendRedirect(request.getContextPath() + "/login");
                     break;
             }
 
