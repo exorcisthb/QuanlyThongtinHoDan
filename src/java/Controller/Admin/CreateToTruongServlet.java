@@ -1,4 +1,4 @@
-package Controller.User;
+package Controller.Admin;
 
 import Model.Entity.NguoiDung;
 import Model.Service.NguoiDungService;

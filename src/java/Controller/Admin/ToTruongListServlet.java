@@ -1,4 +1,4 @@
-package Controller.User;
+package Controller.Admin;
 
 import Model.Entity.NguoiDung;
 import Model.Service.NguoiDungService;
@@ -28,16 +28,14 @@ public class ToTruongListServlet extends HttpServlet {
             return;
         }
 
-        String keyword    = request.getParameter("keyword");
-        // ✅ SỬA: đổi "filterTrangThai" → "trangThai", "filterToSo" → "toSo"
-        String trangThai  = request.getParameter("trangThai");
-        String toSo       = request.getParameter("toSo");
+        String keyword   = request.getParameter("keyword");
+        String trangThai = request.getParameter("trangThai");
+        String toSo      = request.getParameter("toSo");
 
         List<NguoiDung> danhSach = nguoiDungService.getDanhSachToTruong(keyword);
 
-        // Lọc trạng thái
         if (trangThai != null && !trangThai.isEmpty()) {
-            boolean activated = "active".equals(trangThai); // ✅ "active" / "locked"
+            boolean activated = "active".equals(trangThai);
             List<NguoiDung> temp = new java.util.ArrayList<>();
             for (NguoiDung u : danhSach) {
                 if (u.isIsActivated() == activated) temp.add(u);
@@ -45,7 +43,6 @@ public class ToTruongListServlet extends HttpServlet {
             danhSach = temp;
         }
 
-        // Lọc tổ số
         if (toSo != null && !toSo.trim().isEmpty()) {
             List<NguoiDung> temp = new java.util.ArrayList<>();
             for (NguoiDung u : danhSach) {
@@ -58,8 +55,8 @@ public class ToTruongListServlet extends HttpServlet {
 
         request.setAttribute("danhSachToTruong", danhSach);
         request.setAttribute("keyword",          keyword);
-        request.setAttribute("trangThai",        trangThai);  // ✅ SỬA
-        request.setAttribute("toSo",             toSo);       // ✅ SỬA
+        request.setAttribute("trangThai",        trangThai);
+        request.setAttribute("toSo",             toSo);
         request.setAttribute("showDanhSach",     true);
         request.setAttribute("currentAdmin",     nd);
 
@@ -82,12 +79,29 @@ public class ToTruongListServlet extends HttpServlet {
         String idStr  = request.getParameter("nguoiDungID");
 
         if ("toggleKhoa".equals(action) && idStr != null) {
-            int id      = Integer.parseInt(idStr);
-            boolean mo  = "true".equals(request.getParameter("activated"));
+            int id     = Integer.parseInt(idStr);
+            boolean mo = "true".equals(request.getParameter("activated"));
             nguoiDungService.toggleKhoaTaiKhoan(id, mo);
         }
 
-        // ✅ SỬA: đổi tên param cho khớp
+        // ✅ THÊM: xử lý đổi trạng thái nhân sự
+        if ("toggleTrangThai".equals(action) && idStr != null) {
+            try {
+                int id            = Integer.parseInt(idStr);
+                int trangThaiMoi  = Integer.parseInt(request.getParameter("trangThaiNhanSu"));
+                boolean ok = nguoiDungService.updateTrangThaiNhanSu(id, trangThaiMoi);
+                if (ok) {
+                    request.getSession().setAttribute("message",
+                        "Đã cập nhật trạng thái nhân sự thành công.");
+                } else {
+                    request.getSession().setAttribute("error",
+                        "Cập nhật trạng thái thất bại, vui lòng thử lại.");
+                }
+            } catch (NumberFormatException e) {
+                request.getSession().setAttribute("error", "Dữ liệu không hợp lệ.");
+            }
+        }
+
         String keyword   = request.getParameter("keyword");
         String trangThai = request.getParameter("trangThai");
         String toSo      = request.getParameter("toSo");
@@ -99,10 +113,10 @@ public class ToTruongListServlet extends HttpServlet {
             redirect.append("keyword=")
                     .append(java.net.URLEncoder.encode(keyword, "UTF-8")).append("&");
         if (trangThai != null && !trangThai.isEmpty())
-            redirect.append("trangThai=").append(trangThai).append("&");   // ✅ SỬA
+            redirect.append("trangThai=").append(trangThai).append("&");
         if (toSo != null && !toSo.isEmpty())
             redirect.append("toSo=")
-                    .append(java.net.URLEncoder.encode(toSo, "UTF-8")).append("&"); // ✅ SỬA
+                    .append(java.net.URLEncoder.encode(toSo, "UTF-8")).append("&");
 
         response.sendRedirect(redirect.toString().replaceAll("[&?]$", ""));
     }

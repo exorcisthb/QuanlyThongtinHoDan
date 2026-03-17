@@ -8,6 +8,8 @@ import java.sql.Date;
  */
 public class NguoiDung {
 
+    private String tenQuanHe;
+    private int tuoi;
     private int nguoiDungID;
     private String cccd;
     private String ho;
@@ -22,6 +24,9 @@ public class NguoiDung {
     private boolean isActivated;
     private Date ngayTao;
     private String tenVaiTro; // thêm mới - không có trong DB, lấy từ JOIN
+    private int trangThaiNhanSu = 1;
+    private String avatarPath;
+    private String tenTo; // tên tổ dân phố, lấy từ JOIN ToDanPho
 
     public NguoiDung() {
     }
@@ -157,6 +162,51 @@ public class NguoiDung {
         this.tenVaiTro = tenVaiTro;
     }
 
+    public int getTrangThaiNhanSu() {
+        return trangThaiNhanSu;
+    }
+
+    public void setTrangThaiNhanSu(int trangThaiNhanSu) {
+        this.trangThaiNhanSu = trangThaiNhanSu;
+    }
+
+// Dùng trong LoginServlet để check
+    public boolean isConHoatDong() {
+        return trangThaiNhanSu == 1;
+    }
+
+    public String getTenQuanHe() {
+        return tenQuanHe;
+    }
+
+    public void setTenQuanHe(String tenQuanHe) {
+        this.tenQuanHe = tenQuanHe;
+    }
+
+    public int getTuoi() {
+        return tuoi;
+    }
+
+    public void setTuoi(int tuoi) {
+        this.tuoi = tuoi;
+    }
+
+    public String getAvatarPath() {
+        return avatarPath;
+    }
+
+    public void setAvatarPath(String avatarPath) {
+        this.avatarPath = avatarPath;
+    }
+
+    public String getTenTo() {
+        return tenTo;
+    }
+
+    public void setTenTo(String tenTo) {
+        this.tenTo = tenTo;
+    }
+
     @Override
     public String toString() {
         return "NguoiDung{"
@@ -174,6 +224,20 @@ public class NguoiDung {
                 + ", isActivated=" + isActivated
                 + ", ngayTao=" + ngayTao
                 + ", tenVaiTro='" + tenVaiTro + '\''
+                + ", trangThaiNhanSu=" + trangThaiNhanSu
                 + '}';
+    }
+
+    public String getTenTrangThaiNhanSu() {
+        return switch (trangThaiNhanSu) {
+            case 1 ->
+                "Đang công tác";
+            case 2 ->
+                "Không còn tại vị";
+            case 3 ->
+                "Đã mất / Nghỉ hưu";
+            default ->
+                "Không xác định";
+        };
     }
 }

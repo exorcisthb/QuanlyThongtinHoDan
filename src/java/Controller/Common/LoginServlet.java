@@ -28,6 +28,12 @@ public class LoginServlet extends HttpServlet {
                 case "ToTruong":
                     response.sendRedirect(request.getContextPath() + "/totruong/dashboard");
                     break;
+                case "CanBoPhuong":
+                    response.sendRedirect(request.getContextPath() + "/canbophuong/dashboard");
+                    break;
+                case "HoDan":
+                    response.sendRedirect(request.getContextPath() + "/hodan/dashboard");
+                    break;
                 default:
                     request.getRequestDispatcher("/Views/Common/Login.jsp")
                             .forward(request, response);
@@ -45,7 +51,6 @@ public class LoginServlet extends HttpServlet {
         String email = request.getParameter("email");
         String matKhau = request.getParameter("matKhau");
 
-        // Validate đầu vào
         if (email == null || email.trim().isEmpty()
                 || matKhau == null || matKhau.trim().isEmpty()) {
             request.setAttribute("error", "Vui lòng nhập đầy đủ email và mật khẩu.");
@@ -63,26 +68,46 @@ public class LoginServlet extends HttpServlet {
                 return;
             }
 
-            if (!nguoiDung.isIsActivated()) {
-                request.setAttribute("error", "Tài khoản chưa được kích hoạt.");
+            // ✅ SỬA: kiểm tra trạng thái nhân sự TRƯỚC, message rõ lý do
+            if (!nguoiDung.isConHoatDong()) {
+                String lyDo = switch (nguoiDung.getTrangThaiNhanSu()) {
+                    case 2 ->
+                        "Tài khoản này không còn hoạt động. Vui lòng liên hệ quản trị viên.";
+                    case 3 ->
+                        "Tài khoản đã bị đóng vĩnh viễn. Vui lòng liên hệ quản trị viên.";
+                    default ->
+                        "Tài khoản không có quyền truy cập.";
+                };
+                request.setAttribute("error", lyDo);
                 request.getRequestDispatcher("/Views/Common/Login.jsp").forward(request, response);
                 return;
             }
 
-            // Lưu thông tin vào session
+            // ✅ SỬA: kiểm tra IsActivated (bị admin khóa thủ công), message rõ hơn
+            if (!nguoiDung.isIsActivated()) {
+                request.setAttribute("error", "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.");
+                request.getRequestDispatcher("/Views/Common/Login.jsp").forward(request, response);
+                return;
+            }
+
             HttpSession session = request.getSession();
             session.setAttribute("nguoiDung", nguoiDung);
-            session.setAttribute("vaiTro", nguoiDung.getTenVaiTro());
+            session.setAttribute("vaiTro", nguoiDung.getTenVaiTro()); // "ToTruong", "CanBoPhuong"...
 
-            // Redirect theo vai trò
             switch (nguoiDung.getTenVaiTro()) {
                 case "Admin":
                     request.setAttribute("currentAdmin", nguoiDung);
                     request.getRequestDispatcher("/Views/Admin/AdminDashboard.jsp")
                             .forward(request, response);
                     break;
-                case "ToTruong":  // ✅ khớp với DB
+                case "ToTruong":
                     response.sendRedirect(request.getContextPath() + "/totruong/dashboard");
+                    break;
+                case "CanBoPhuong":
+                    response.sendRedirect(request.getContextPath() + "/canbophuong/dashboard");
+                    break;
+                case "HoDan":
+                    response.sendRedirect(request.getContextPath() + "/hodan/dashboard");
                     break;
                 default:
                     response.sendRedirect(request.getContextPath() + "/login");

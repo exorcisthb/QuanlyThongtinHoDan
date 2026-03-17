@@ -1,4 +1,4 @@
-package Controller.User;
+package Controller.Common;
 import Model.Entity.NguoiDung;
 import Model.Service.NguoiDungService;
 import jakarta.servlet.ServletException;

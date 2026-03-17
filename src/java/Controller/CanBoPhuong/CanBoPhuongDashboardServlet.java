@@ -1,4 +1,4 @@
-package Controller.User;
+package Controller.CanBoPhuong;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -7,8 +7,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import Model.Entity.NguoiDung;
-@WebServlet("/totruong/dashboard")
-public class ToTruongDashboardServlet extends HttpServlet {
+@WebServlet("/canbophuong/dashboard")
+public class CanBoPhuongDashboardServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
@@ -19,7 +19,7 @@ public class ToTruongDashboardServlet extends HttpServlet {
         }
 
         NguoiDung user = (NguoiDung) session.getAttribute("nguoiDung");
-        if (!"ToTruong".equals(user.getTenVaiTro())) {
+        if (!"CanBoPhuong".equals(user.getTenVaiTro())) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
@@ -28,7 +28,7 @@ public class ToTruongDashboardServlet extends HttpServlet {
         request.setAttribute("currentUser", user);
         // Nếu cần tên tổ: query DB hoặc lưu vào session lúc login
 
-        request.getRequestDispatcher("/Views/ToTruong/ToTruongDashboard.jsp")
+        request.getRequestDispatcher("/Views/CanBoPhuong/CanBoPhuongDashBoard.jsp")
                .forward(request, response);
     }
 }

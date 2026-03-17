@@ -277,14 +277,28 @@
             }
 
             /* ── Password wrap ── */
-            .pw-wrap { position: relative; }
-            .pw-wrap input { padding-right: 44px; }
-            .pw-eye {
-                position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-                background: none; border: none; cursor: pointer;
-                color: #b0bac5; font-size: 16px; padding: 0; transition: color .15s;
+            .pw-wrap {
+                position: relative;
             }
-            .pw-eye:hover { color: var(--ink); }
+            .pw-wrap input {
+                padding-right: 44px;
+            }
+            .pw-eye {
+                position: absolute;
+                right: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: none;
+                border: none;
+                cursor: pointer;
+                color: #b0bac5;
+                font-size: 16px;
+                padding: 0;
+                transition: color .15s;
+            }
+            .pw-eye:hover {
+                color: var(--ink);
+            }
 
             .btn-submit {
                 width: 100%;
@@ -580,20 +594,43 @@
             }
 
             @keyframes fadeUp {
-                from { opacity: 0; transform: translateY(24px); }
-                to   { opacity: 1; transform: translateY(0); }
+                from {
+                    opacity: 0;
+                    transform: translateY(24px);
+                }
+                to   {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
             }
             @keyframes popIn {
-                from { transform: scale(.5); opacity: 0; }
-                to   { transform: scale(1);  opacity: 1; }
+                from {
+                    transform: scale(.5);
+                    opacity: 0;
+                }
+                to   {
+                    transform: scale(1);
+                    opacity: 1;
+                }
             }
 
             @media (max-width: 768px) {
-                .page-body { grid-template-columns: 1fr; }
-                .left-panel { display: none; }
-                .right-panel { padding: 40px 24px; }
-                .navbar { padding: 0 20px; }
-                .modal { padding: 32px 24px; margin: 16px; }
+                .page-body {
+                    grid-template-columns: 1fr;
+                }
+                .left-panel {
+                    display: none;
+                }
+                .right-panel {
+                    padding: 40px 24px;
+                }
+                .navbar {
+                    padding: 0 20px;
+                }
+                .modal {
+                    padding: 32px 24px;
+                    margin: 16px;
+                }
             }
         </style>
     </head>
@@ -670,8 +707,7 @@
                         </div>
                         <button type="submit" class="btn-submit">Đăng nhập</button>
 
-                        <a href="#" class="forgot-link" onclick="openForgot(event)"
-                           style="display:inline-block; margin-top:12px;">
+                        <a href="${pageContext.request.contextPath}/quen-mat-khau" class="forgot-link" style="display:inline-block; margin-top:12px;">
                             Quên mật khẩu?
                         </a>
                     </form>
@@ -702,7 +738,7 @@
                     <h3>Quên mật khẩu?</h3>
                     <p>Nhập địa chỉ email đã đăng ký. Chúng tôi sẽ gửi cho bạn đường dẫn để đặt lại mật khẩu.</p>
 
-                    <form action="${pageContext.request.contextPath}/forgot-password" method="post"
+                    <form action="${pageContext.request.contextPath}/quen-mat-khau" method="post"
                           onsubmit="handleForgotSubmit(event)">
                         <div class="form-group">
                             <label for="resetEmail">Địa chỉ email</label>
@@ -754,11 +790,13 @@
             }
 
             function closeForgotOutside(e) {
-                if (e.target === document.getElementById('forgotOverlay')) closeForgot();
+                if (e.target === document.getElementById('forgotOverlay'))
+                    closeForgot();
             }
 
             document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') closeForgot();
+                if (e.key === 'Escape')
+                    closeForgot();
             });
 
             function handleForgotSubmit(e) {
@@ -768,17 +806,17 @@
                  const btn   = document.getElementById('forgotSubmitBtn');
                  btn.textContent = 'Đang gửi...';
                  btn.disabled = true;
-                 fetch('${pageContext.request.contextPath}/forgot-password', {
-                     method: 'POST',
-                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                     body: 'resetEmail=' + encodeURIComponent(email)
+                 fetch('${pageContext.request.contextPath}/quen-mat-khau', {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                 body: 'resetEmail=' + encodeURIComponent(email)
                  }).then(() => {
-                     document.getElementById('forgotForm').style.display = 'none';
-                     document.getElementById('forgotDone').style.display  = 'block';
+                 document.getElementById('forgotForm').style.display = 'none';
+                 document.getElementById('forgotDone').style.display  = 'block';
                  }).catch(() => {
-                     btn.textContent = 'Gửi email đặt lại';
-                     btn.disabled = false;
-                     alert('Có lỗi xảy ra, vui lòng thử lại.');
+                 btn.textContent = 'Gửi email đặt lại';
+                 btn.disabled = false;
+                 alert('Có lỗi xảy ra, vui lòng thử lại.');
                  });
                  */
             }
