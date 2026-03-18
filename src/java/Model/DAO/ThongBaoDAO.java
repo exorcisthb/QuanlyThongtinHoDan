@@ -333,4 +333,80 @@ public class ThongBaoDAO {
             return false;
         }
     }
+
+    public boolean guiThongBaoCaNhan(String tieuDe, String noiDung,
+            int nguoiGuiID, int nguoiNhanID, Connection conn) throws Exception {
+        String sqlThongBao
+                = "INSERT INTO ThongBao (TieuDe, NoiDung, NguoiGuiID, ToDanPhoID) "
+                + "VALUES (?, ?, ?, NULL)";
+        String sqlNguoiNhan
+                = "INSERT INTO NguoiNhanThongBao (ThongBaoID, NguoiDungID) VALUES (?, ?)";
+
+        int thongBaoID;
+        try (PreparedStatement ps = conn.prepareStatement(sqlThongBao,
+                Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, tieuDe);
+            ps.setString(2, noiDung);
+            ps.setInt(3, nguoiGuiID);
+            ps.executeUpdate();
+            ResultSet keys = ps.getGeneratedKeys();
+            if (!keys.next()) {
+                return false;
+            }
+            thongBaoID = keys.getInt(1);
+        }
+        try (PreparedStatement ps = conn.prepareStatement(sqlNguoiNhan)) {
+            ps.setInt(1, thongBaoID);
+            ps.setInt(2, nguoiNhanID);
+            ps.executeUpdate();
+        }
+        return true;
+    }
+
+    public boolean guiThongBaoTheoVaiTro(String tieuDe, String noiDung,
+            int nguoiGuiID, String tenVaiTro, Connection conn) throws Exception {
+        String sqlThongBao
+                = "INSERT INTO ThongBao (TieuDe, NoiDung, NguoiGuiID, ToDanPhoID) "
+                + "VALUES (?, ?, ?, NULL)";
+        String sqlLayNguoiNhan
+                = "SELECT nd.NguoiDungID FROM NguoiDung nd "
+                + "JOIN VaiTro vt ON vt.VaiTroID = nd.VaiTroID "
+                + "WHERE vt.TenVaiTro = ? AND nd.IsActivated = 1 AND nd.TrangThaiNhanSu = 1";
+        String sqlNguoiNhan
+                = "INSERT INTO NguoiNhanThongBao (ThongBaoID, NguoiDungID) VALUES (?, ?)";
+
+        int thongBaoID;
+        try (PreparedStatement ps = conn.prepareStatement(sqlThongBao,
+                Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, tieuDe);
+            ps.setString(2, noiDung);
+            ps.setInt(3, nguoiGuiID);
+            ps.executeUpdate();
+            ResultSet keys = ps.getGeneratedKeys();
+            if (!keys.next()) {
+                return false;
+            }
+            thongBaoID = keys.getInt(1);
+        }
+        List<Integer> danhSach = new ArrayList<>();
+        try (PreparedStatement ps = conn.prepareStatement(sqlLayNguoiNhan)) {
+            ps.setString(1, tenVaiTro);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                danhSach.add(rs.getInt("NguoiDungID"));
+            }
+        }
+        if (danhSach.isEmpty()) {
+            return false;
+        }
+        try (PreparedStatement ps = conn.prepareStatement(sqlNguoiNhan)) {
+            for (int id : danhSach) {
+                ps.setInt(1, thongBaoID);
+                ps.setInt(2, id);
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        }
+        return true;
+    }
 }

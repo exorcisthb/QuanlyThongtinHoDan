@@ -347,4 +347,23 @@ public class NguoiDungDAO {
         }
         return false;
     }
+    // Thêm vào NguoiDungDAO
+
+    public NguoiDung layTheoID(int nguoiDungID) {
+        String sql = "SELECT nd.*, vt.TenVaiTro, tdp.TenTo "
+                + "FROM NguoiDung nd "
+                + "LEFT JOIN VaiTro vt ON nd.VaiTroID = vt.VaiTroID "
+                + "LEFT JOIN ToDanPho tdp ON nd.ToDanPhoID = tdp.ToDanPhoID "
+                + "WHERE nd.NguoiDungID = ?";
+        try (Connection conn = DBContext.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, nguoiDungID);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapRow(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

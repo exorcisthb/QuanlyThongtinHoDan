@@ -444,12 +444,13 @@
                 <div class="dc-desc">Số hộ, số nhân khẩu, tình trạng tạm trú, tạm vắng trong tổ.</div>
                 <span class="dc-btn green">Xem thống kê →</span>
             </a>
-            <a href="#" class="dash-card warn">
-                <div class="dc-icon warn">📢</div>
-                <div class="dc-title">Thông báo</div>
-                <div class="dc-desc">Gửi thông báo khẩn cấp, thu phí, lịch họp tổ đến các hộ dân.</div>
-                <span class="dc-btn warn">Tạo thông báo →</span>
-            </a>
+            <%-- Thêm card này vào cards-grid, đặt sau card Thống kê tổ --%>
+<a href="${pageContext.request.contextPath}/danh-sach-lich-hop" class="dash-card green">
+    <div class="dc-icon green">📅</div>
+    <div class="dc-title">Lịch họp tổ</div>
+    <div class="dc-desc">Tạo và quản lý lịch họp tổ dân phố, thông báo đến toàn bộ chủ hộ.</div>
+    <span class="dc-btn green">Xem lịch họp →</span>
+</a>
             <a href="#" class="dash-card red">
                 <div class="dc-icon red">📝</div>
                 <div class="dc-title">Báo cáo</div>
