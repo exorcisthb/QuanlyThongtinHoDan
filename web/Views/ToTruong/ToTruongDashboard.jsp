@@ -45,7 +45,6 @@
         .topbar-title { font-size: 13px; font-weight: 600; color: var(--muted); }
         .topbar-spacer { flex: 1; }
 
-        /* QR SCAN BUTTON */
         .qr-scan-btn {
             width: 38px; height: 38px; border-radius: 50%;
             background: var(--surface2); border: 1px solid var(--border);
@@ -55,7 +54,6 @@
         }
         .qr-scan-btn:hover { background: var(--surface); border-color: var(--accent2); }
 
-        /* BELL */
         .bell-wrap { position: relative; }
         .bell-btn {
             width: 38px; height: 38px; border-radius: 50%;
@@ -101,7 +99,6 @@
         .np-time { font-size: 10px; color: var(--muted); margin-top: 3px; }
         .np-footer { padding: 10px; text-align: center; font-size: 12px; color: var(--accent); cursor: pointer; border-top: 1px solid var(--border); }
 
-        /* QR SCAN MODAL */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,.7);
             z-index: 500; display: none; align-items: center; justify-content: center;
@@ -152,7 +149,6 @@
         .modal-btn-muted { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
         .modal-btn-muted:hover { background: var(--surface); color: var(--text); }
 
-        /* USER MENU */
         .user-menu { position: relative; }
         .avatar-btn {
             display: flex; align-items: center; gap: 10px;
@@ -294,10 +290,8 @@
     <span class="topbar-title">Tổ dân phố</span>
     <div class="topbar-spacer"></div>
 
-    <!-- NÚT QUÉT QR -->
     <button class="qr-scan-btn" onclick="openScanModal()" title="Quét mã QR hộ dân">📷</button>
 
-    <!-- CHUÔNG THÔNG BÁO -->
     <div class="bell-wrap" id="bellWrap">
         <button class="bell-btn" onclick="toggleNotif(event)">
             🔔
@@ -335,7 +329,6 @@
         </div>
     </div>
 
-    <!-- USER MENU -->
     <div class="user-menu">
         <button class="avatar-btn" id="avatarBtn" onclick="toggleMenu()">
             <div class="avatar" id="avatarInitials">TT</div>
@@ -372,19 +365,15 @@
     </div>
 </header>
 
-<!-- MODAL QUÉT QR -->
 <div class="modal-overlay" id="scanModal" onclick="closeScanModalOutside(event)">
     <div class="modal">
         <button class="modal-close" onclick="closeScanModal()">✕</button>
         <h3>Quét mã QR hộ dân</h3>
         <p>Upload ảnh QR hoặc dùng camera để quét</p>
-
         <div class="tab-group">
             <button class="tab-btn active" onclick="switchTab('upload')">📁 Upload ảnh</button>
             <button class="tab-btn" onclick="switchTab('camera')">📷 Camera</button>
         </div>
-
-        <!-- TAB UPLOAD -->
         <div class="tab-content active" id="tab-upload">
             <div class="upload-area" onclick="document.getElementById('qrFileInput').click()">
                 <input type="file" id="qrFileInput" accept="image/*" onchange="scanFromFile(event)"/>
@@ -392,14 +381,11 @@
                 <div class="upload-text">Nhấn để chọn ảnh QR<br><span style="font-size:11px">PNG, JPG, JPEG</span></div>
             </div>
         </div>
-
-        <!-- TAB CAMERA -->
         <div class="tab-content" id="tab-camera">
             <video id="video" autoplay playsinline></video>
             <canvas id="canvas" style="display:none"></canvas>
             <button class="modal-btn modal-btn-green" onclick="startCamera()" style="margin-bottom:8px">▶ Bật camera</button>
         </div>
-
         <div class="scan-status" id="scanStatus"></div>
         <div style="margin-top:16px">
             <button class="modal-btn modal-btn-muted" onclick="closeScanModal()">Đóng</button>
@@ -444,13 +430,18 @@
                 <div class="dc-desc">Số hộ, số nhân khẩu, tình trạng tạm trú, tạm vắng trong tổ.</div>
                 <span class="dc-btn green">Xem thống kê →</span>
             </a>
-            <%-- Thêm card này vào cards-grid, đặt sau card Thống kê tổ --%>
-<a href="${pageContext.request.contextPath}/danh-sach-lich-hop" class="dash-card green">
-    <div class="dc-icon green">📅</div>
-    <div class="dc-title">Lịch họp tổ</div>
-    <div class="dc-desc">Tạo và quản lý lịch họp tổ dân phố, thông báo đến toàn bộ chủ hộ.</div>
-    <span class="dc-btn green">Xem lịch họp →</span>
-</a>
+            <a href="${pageContext.request.contextPath}/danh-sach-lich-hop" class="dash-card green">
+                <div class="dc-icon green">📅</div>
+                <div class="dc-title">Lịch họp tổ</div>
+                <div class="dc-desc">Tạo và quản lý lịch họp tổ dân phố, thông báo đến toàn bộ chủ hộ.</div>
+                <span class="dc-btn green">Xem lịch họp →</span>
+            </a>
+            <a href="${pageContext.request.contextPath}/thiepmoi/danh-sach" class="dash-card warn">
+                <div class="dc-icon warn">💌</div>
+                <div class="dc-title">Thiệp mời họp</div>
+                <div class="dc-desc">Tạo và gửi thiệp mời họp theo mẫu đến toàn bộ hộ dân trong tổ.</div>
+                <span class="dc-btn warn">Quản lý thiệp →</span>
+            </a>
             <a href="#" class="dash-card red">
                 <div class="dc-icon red">📝</div>
                 <div class="dc-title">Báo cáo</div>
@@ -512,7 +503,6 @@
         }
     });
 
-    // ── SCAN MODAL ──
     let cameraStream = null;
 
     function openScanModal() {
@@ -538,7 +528,6 @@
         if (tab !== 'camera') stopCamera();
     }
 
-    // Upload ảnh QR
     function scanFromFile(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -566,7 +555,6 @@
         reader.readAsDataURL(file);
     }
 
-    // Camera
     function startCamera() {
         const video = document.getElementById('video');
         video.style.display = 'block';

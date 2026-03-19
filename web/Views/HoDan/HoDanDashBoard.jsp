@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="java.util.List, java.util.Map" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -45,17 +46,14 @@
         .topbar-title { font-size: 13px; font-weight: 600; color: var(--muted); }
         .topbar-spacer { flex: 1; }
 
-        /* QR BUTTON */
         .qr-btn {
             width: 38px; height: 38px; border-radius: 50%;
             background: var(--surface2); border: 1px solid var(--border);
             display: flex; align-items: center; justify-content: center;
-            font-size: 17px; transition: all .18s; text-decoration: none;
-            cursor: pointer;
+            font-size: 17px; transition: all .18s; text-decoration: none; cursor: pointer;
         }
         .qr-btn:hover { background: var(--surface); border-color: var(--accent2); }
 
-        /* BELL */
         .bell-wrap { position: relative; }
         .bell-btn {
             width: 38px; height: 38px; border-radius: 50%;
@@ -99,16 +97,15 @@
         .np-dot.read { background: var(--muted); }
         .np-body p { font-size: 12px; line-height: 1.5; }
         .np-time { font-size: 10px; color: var(--muted); margin-top: 3px; }
+        .np-empty { padding: 28px; text-align: center; color: var(--muted); font-size: 13px; }
         .np-footer { padding: 10px; text-align: center; font-size: 12px; color: var(--accent); cursor: pointer; border-top: 1px solid var(--border); }
 
-        /* USER MENU */
         .user-menu { position: relative; }
         .avatar-btn {
             display: flex; align-items: center; gap: 10px;
             background: none; border: 1px solid transparent;
             border-radius: 40px; padding: 5px 14px 5px 5px;
-            cursor: pointer; color: var(--text);
-            font-family: inherit; transition: all .18s;
+            cursor: pointer; color: var(--text); font-family: inherit; transition: all .18s;
         }
         .avatar-btn:hover { background: var(--surface2); border-color: var(--border); }
         .avatar {
@@ -130,10 +127,7 @@
             display: none; z-index: 300; overflow: hidden;
         }
         .user-dropdown.open { display: block; animation: dropDown .18s ease; }
-        @keyframes dropDown {
-            from { opacity: 0; transform: translateY(-8px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes dropDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
         .ud-header { padding: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
         .ud-header .avatar { width: 42px; height: 42px; font-size: 16px; }
         .ud-name  { font-size: 13px; font-weight: 700; }
@@ -144,12 +138,7 @@
             background: rgba(56,217,169,.15); color: var(--accent2);
         }
         .ud-badge::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; }
-        /* SECTION LABEL trong dropdown */
-        .ud-section {
-            font-size: 9px; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 1px; color: var(--muted);
-            padding: 10px 16px 4px;
-        }
+        .ud-section { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); padding: 10px 16px 4px; }
         .ud-item {
             display: flex; align-items: center; gap: 10px;
             padding: 9px 16px; font-size: 13px; font-weight: 500;
@@ -166,8 +155,7 @@
 
         .hero {
             background: var(--surface); border: 1px solid var(--border);
-            border-radius: var(--radius); padding: 32px 36px;
-            margin-bottom: 28px;
+            border-radius: var(--radius); padding: 32px 36px; margin-bottom: 28px;
             display: flex; align-items: center; justify-content: space-between;
             position: relative; overflow: hidden;
         }
@@ -181,26 +169,17 @@
         .hero-left h1 span { color: var(--accent); }
         .hero-left p { font-size: 14px; color: var(--muted); }
         .hero-right { display: flex; gap: 16px; flex-shrink: 0; }
-        .stat-chip {
-            background: var(--surface2); border: 1px solid var(--border);
-            border-radius: 12px; padding: 16px 22px; text-align: center; min-width: 100px;
-        }
+        .stat-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 16px 22px; text-align: center; min-width: 100px; }
         .stat-chip .sc-num { font-size: 28px; font-weight: 800; color: var(--accent); }
         .stat-chip .sc-label { font-size: 11px; color: var(--muted); margin-top: 3px; }
 
-        .section-title {
-            font-size: 11px; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 1.2px; color: var(--muted); margin-bottom: 16px;
-        }
-
-        /* CARDS GRID - 2x2 vì chỉ còn 4 card */
+        .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); margin-bottom: 16px; }
         .cards-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 32px; }
         .dash-card {
             background: var(--surface); border: 1px solid var(--border);
             border-radius: var(--radius); padding: 28px;
             text-decoration: none; color: var(--text);
-            transition: border-color .2s, transform .2s;
-            display: block; cursor: pointer;
+            transition: border-color .2s, transform .2s; display: block; cursor: pointer;
         }
         .dash-card:hover { transform: translateY(-3px); }
         .dash-card.blue:hover   { border-color: var(--accent); }
@@ -240,6 +219,14 @@
 </head>
 <body>
 
+<%
+    List<Map<String, Object>> danhSachTB =
+        (List<Map<String, Object>>) request.getAttribute("danhSachThongBao");
+    Integer soChuaDoc = (Integer) request.getAttribute("soChuaDoc");
+    if (danhSachTB == null) danhSachTB = new java.util.ArrayList<>();
+    if (soChuaDoc  == null) soChuaDoc  = 0;
+%>
+
 <header class="topbar">
     <a href="#" class="topbar-logo">
         <div class="logo-icon">🏘</div>
@@ -249,55 +236,62 @@
     <span class="topbar-title">Người dân</span>
     <div class="topbar-spacer"></div>
 
-    <!-- NÚT QR -->
     <a href="${pageContext.request.contextPath}/hodan/qr" class="qr-btn" title="QR cá nhân">📲</a>
 
-    <!-- BELL THÔNG BÁO -->
     <div class="bell-wrap" id="bellWrap">
         <button class="bell-btn" onclick="toggleNotif(event)">
             🔔
-            <span class="bell-badge" id="bellCount">3</span>
+            <span class="bell-badge" id="bellCount"
+                  style="<%= soChuaDoc == 0 ? "display:none;" : "" %>">
+                <%= soChuaDoc > 99 ? "99+" : soChuaDoc %>
+            </span>
         </button>
         <div class="notif-panel" id="notifPanel">
             <div class="np-header">
                 <h4>Thông báo</h4>
+                <% if (soChuaDoc > 0) { %>
                 <span class="np-mark" onclick="markAllRead()">Đánh dấu đã đọc</span>
+                <% } %>
             </div>
             <div class="np-list" id="notifList">
-                <div class="np-item unread">
-                    <div class="np-dot"></div>
+                <% if (danhSachTB.isEmpty()) { %>
+                <div class="np-empty">📭 Chưa có thông báo nào</div>
+                <% } else {
+                    int _cnt = 0;
+                    for (Map<String, Object> tb : danhSachTB) {
+                        if (_cnt++ >= 5) break;
+                        boolean daDoc   = Boolean.TRUE.equals(tb.get("daDoc"));
+                        String tieuDe   = String.valueOf(tb.get("tieuDe"));
+                        String noiDungR = tb.get("noiDung") != null ? String.valueOf(tb.get("noiDung")) : "";
+                        String preview  = noiDungR.length() > 72 ? noiDungR.substring(0, 72) + "…" : noiDungR;
+                        String ngayGui  = String.valueOf(tb.get("ngayGui"));
+                        Object tbID     = tb.get("thongBaoID");
+                        String tieuDeJs = tieuDe.replace("\\", "\\\\").replace("'", "\\'");
+                        // ✅ THÊM: lấy lichHopID từ thông báo
+                        Object lichHopID   = tb.get("lichHopID");
+                        String lichHopIdJs = (lichHopID != null) ? lichHopID.toString() : "0";
+                %>
+                <%-- ✅ THÊM lichHopIdJs vào onclick --%>
+                <div class="np-item <%= daDoc ? "" : "unread" %>"
+                     onclick="docThongBao(<%= tbID %>, this, '<%= tieuDeJs %>', <%= lichHopIdJs %>)">
+                    <div class="np-dot <%= daDoc ? "read" : "" %>"></div>
                     <div class="np-body">
-                        <p>Lịch họp tổ dân phố tháng 3 đã được cập nhật</p>
-                        <div class="np-time">2 giờ trước</div>
+                        <p><strong><%= tieuDe %></strong></p>
+                        <% if (!preview.isEmpty()) { %>
+                        <p style="color:var(--muted);margin-top:2px;"><%= preview %></p>
+                        <% } %>
+                        <div class="np-time"><%= ngayGui %></div>
                     </div>
                 </div>
-                <div class="np-item unread">
-                    <div class="np-dot"></div>
-                    <div class="np-body">
-                        <p>Yêu cầu cập nhật thông tin của bạn đã được duyệt</p>
-                        <div class="np-time">5 giờ trước</div>
-                    </div>
-                </div>
-                <div class="np-item unread">
-                    <div class="np-dot"></div>
-                    <div class="np-body">
-                        <p>Thông báo mới từ tổ trưởng về vệ sinh môi trường</p>
-                        <div class="np-time">1 ngày trước</div>
-                    </div>
-                </div>
-                <div class="np-item">
-                    <div class="np-dot read"></div>
-                    <div class="np-body">
-                        <p>Hồ sơ hộ khẩu của bạn đã được xác nhận</p>
-                        <div class="np-time">3 ngày trước</div>
-                    </div>
-                </div>
+                <% } } %>
             </div>
-            <div class="np-footer" onclick="location.href='${pageContext.request.contextPath}/hodan/thongbao'">Xem tất cả thông báo</div>
+            <div class="np-footer"
+                 onclick="location.href='${pageContext.request.contextPath}/thong-bao'">
+                Xem tất cả thông báo
+            </div>
         </div>
     </div>
 
-    <!-- USER MENU — chứa thêm các chức năng cá nhân -->
     <div class="user-menu">
         <button class="avatar-btn" id="avatarBtn" onclick="toggleMenu()">
             <div class="avatar" id="avatarInitials">ND</div>
@@ -316,8 +310,6 @@
                     <span class="ud-badge">Đang hoạt động</span>
                 </div>
             </div>
-
-            <!-- NHÓM: Hộ dân & Cá nhân -->
             <div class="ud-section">Hộ dân & Cá nhân</div>
             <a class="ud-item" href="${pageContext.request.contextPath}/hodan/ho-dan">
                 <span class="ud-icon">🏡</span> Thông tin hộ dân
@@ -328,13 +320,10 @@
             <a class="ud-item" href="${pageContext.request.contextPath}/hodan/sua-profile">
                 <span class="ud-icon">✏️</span> Thêm quan hệ
             </a>
-
-            <!-- NHÓM: Tài khoản -->
             <div class="ud-section">Tài khoản</div>
             <a class="ud-item" href="${pageContext.request.contextPath}/admin/change_password">
                 <span class="ud-icon">🔑</span> Đổi mật khẩu
             </a>
-
             <hr class="ud-divider">
             <a class="ud-item danger" href="${pageContext.request.contextPath}/"
                onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
@@ -347,11 +336,11 @@
 <main class="main">
     <div class="content">
 
-        <!-- HERO -->
         <div class="hero">
             <div class="hero-left">
                 <h1>Xin chào, <span>${currentUser.ten}</span> 👋</h1>
-                <p>Chào mừng bạn đến với cổng dịch vụ người dân — Tổ dân phố <strong style="color:var(--accent2)">${not empty tenTo ? tenTo : 'của bạn'}</strong></p>
+                <p>Chào mừng bạn đến với cổng dịch vụ người dân — Tổ dân phố
+                   <strong style="color:var(--accent2)">${not empty tenTo ? tenTo : 'của bạn'}</strong></p>
             </div>
             <div class="hero-right">
                 <div class="stat-chip">
@@ -365,7 +354,6 @@
             </div>
         </div>
 
-        <!-- CHỨC NĂNG CHÍNH — chỉ còn 4 card -->
         <div class="section-title">Chức năng chính</div>
         <div class="cards-grid">
 
@@ -376,19 +364,14 @@
                 <span class="dc-btn warn">Xem lịch sử →</span>
             </a>
 
-            <a href="${pageContext.request.contextPath}/hodan/lich-hop" class="dash-card green">
+            <a href="${pageContext.request.contextPath}/nguoidan/lich-hop" class="dash-card green">
                 <div class="dc-icon green">📅</div>
                 <div class="dc-title">Lịch họp tổ dân phố</div>
                 <div class="dc-desc">Theo dõi lịch họp định kỳ, thông tin cuộc họp sắp tới của tổ.</div>
                 <span class="dc-btn green">Xem lịch →</span>
             </a>
 
-            <a href="${pageContext.request.contextPath}/hodan/yeu-cau-cap-nhat" class="dash-card blue">
-                <div class="dc-icon blue">📝</div>
-                <div class="dc-title">Gửi yêu cầu cập nhật</div>
-                <div class="dc-desc">Gửi yêu cầu thay đổi, bổ sung thông tin hộ khẩu đến cán bộ phường.</div>
-                <span class="dc-btn blue">Gửi yêu cầu →</span>
-            </a>
+          
 
             <a href="${pageContext.request.contextPath}/hodan/phan-anh" class="dash-card danger">
                 <div class="dc-icon danger">💬</div>
@@ -396,15 +379,17 @@
                 <div class="dc-desc">Gửi phản ánh, kiến nghị đến tổ trưởng hoặc cán bộ phường.</div>
                 <span class="dc-btn danger">Gửi phản ánh →</span>
             </a>
-
+<a href="${pageContext.request.contextPath}/hodan/thiepmoi" class="dash-card warn">
+    <div class="dc-icon warn">💌</div>
+    <div class="dc-title">Thiệp mời họp</div>
+    <div class="dc-desc">Xem danh sách thiệp mời họp tổ dân phố, thời gian và địa điểm tổ chức.</div>
+    <span class="dc-btn warn">Xem thiệp mời →</span>
+</a>
         </div>
 
-        <!-- HOẠT ĐỘNG GẦN ĐÂY -->
         <div class="section-title">Hoạt động gần đây</div>
         <div class="activity-card">
-            <div class="ac-header">
-                <h3>Nhật ký hoạt động</h3>
-            </div>
+            <div class="ac-header"><h3>Nhật ký hoạt động</h3></div>
             <c:choose>
                 <c:when test="${not empty hoatDong}">
                     <c:forEach var="hd" items="${hoatDong}">
@@ -453,16 +438,69 @@
         panel.classList.toggle('open');
     }
 
+    /* ✅ SỬA: thêm tham số lichHopID */
+    function docThongBao(id, el, tieuDe, lichHopID) {
+        const params = new URLSearchParams({ action: 'doc', id: id });
+        fetch('${pageContext.request.contextPath}/thong-bao?' + params, { method: 'POST' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    el.classList.remove('unread');
+                    const dot = el.querySelector('.np-dot');
+                    if (dot) dot.classList.add('read');
+                    _giamBadge(1);
+                }
+                _redirect(tieuDe, lichHopID);
+            })
+            .catch(() => _redirect(tieuDe, lichHopID));
+    }
+
+    /* ✅ SỬA: redirect thẳng đến lịch họp cụ thể nếu có lichHopID */
+    function _redirect(tieuDe, lichHopID) {
+        if (!tieuDe) return;
+        const t = tieuDe.toLowerCase();
+        if (t.includes('lịch họp') && lichHopID && lichHopID > 0) {
+            location.href = '${pageContext.request.contextPath}/nguoidan/lich-hop?id=' + lichHopID;
+        } else if (t.includes('lịch họp')) {
+            location.href = '${pageContext.request.contextPath}/nguoidan/lich-hop';
+        } else if (t.includes('yêu cầu') || t.includes('hộ khẩu')) {
+            location.href = '${pageContext.request.contextPath}/hodan/yeu-cau-cap-nhat';
+        } else if (t.includes('phản ánh') || t.includes('kiến nghị')) {
+            location.href = '${pageContext.request.contextPath}/hodan/phan-anh';
+        } else {
+            location.href = '${pageContext.request.contextPath}/thong-bao';
+        }
+    }
+
+    /* ── Đánh dấu tất cả đã đọc ── */
     function markAllRead() {
-        document.querySelectorAll('.np-item.unread').forEach(el => el.classList.remove('unread'));
-        document.querySelectorAll('.np-dot').forEach(d => d.classList.add('read'));
-        document.getElementById('bellCount').style.display = 'none';
+        fetch('${pageContext.request.contextPath}/thong-bao?action=docTatCa', { method: 'POST' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelectorAll('#notifList .np-item.unread')
+                            .forEach(el => el.classList.remove('unread'));
+                    document.querySelectorAll('#notifList .np-dot')
+                            .forEach(d => d.classList.add('read'));
+                    const badge = document.getElementById('bellCount');
+                    if (badge) badge.style.display = 'none';
+                }
+            }).catch(console.error);
+    }
+
+    /* ── Giảm số badge ── */
+    function _giamBadge(so) {
+        const badge = document.getElementById('bellCount');
+        if (!badge) return;
+        let cur = parseInt(badge.textContent) || 0;
+        cur = Math.max(0, cur - so);
+        if (cur === 0) badge.style.display = 'none';
+        else { badge.textContent = cur; badge.style.display = ''; }
     }
 
     document.addEventListener('click', function(e) {
-        if (!document.getElementById('bellWrap').contains(e.target)) {
+        if (!document.getElementById('bellWrap').contains(e.target))
             document.getElementById('notifPanel').classList.remove('open');
-        }
         if (!document.querySelector('.user-menu').contains(e.target)) {
             document.getElementById('userDropdown').classList.remove('open');
             document.getElementById('avatarBtn').classList.remove('open');

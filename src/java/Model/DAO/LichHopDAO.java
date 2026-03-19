@@ -10,17 +10,35 @@ public class LichHopDAO {
 
     // ==================== HELPER ====================
 
-    // Tính trạng thái tự động theo thời gian thực
-    // TrangThai = 4 (Đã hủy) do tổ trưởng set thủ công → giữ nguyên, không tính lại
     private int tinhTrangThai(Timestamp batDau, Timestamp ketThuc, int trangThaiHienTai) {
-        if (trangThaiHienTai == 4) return 4; // Đã hủy → không đổi
+        if (trangThaiHienTai == 4) return 4;
         if (batDau == null) return 1;
         LocalDateTime now   = LocalDateTime.now();
         LocalDateTime bdLdt = batDau.toLocalDateTime();
         LocalDateTime ktLdt = ketThuc != null ? ketThuc.toLocalDateTime() : null;
-        if (now.isBefore(bdLdt))                          return 1; // Sắp diễn ra
-        if (ktLdt == null || now.isBefore(ktLdt))         return 2; // Đang diễn ra
-        return 3;                                                     // Đã kết thúc
+        if (now.isBefore(bdLdt))                  return 1;
+        if (ktLdt == null || now.isBefore(ktLdt)) return 2;
+        return 3;
+    }
+
+    // Helper dùng chung cho mapRow danh sách (không có tenTo, toDanPhoID, nguoiTaoID)
+    private Map<String, Object> mapRowDanhSach(ResultSet rs) throws SQLException {
+        Timestamp batDau    = rs.getTimestamp("ThoiGianBatDau");
+        Timestamp ketThuc   = rs.getTimestamp("ThoiGianKetThuc");
+        int       ttHienTai = rs.getInt("TrangThai");
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("lichHopID",       rs.getInt("LichHopID"));
+        row.put("tieuDe",          rs.getString("TieuDe"));
+        row.put("noiDung",         rs.getString("NoiDung"));
+        row.put("diaDiem",         rs.getString("DiaDiem"));
+        row.put("thoiGianBatDau",  batDau);
+        row.put("thoiGianKetThuc", ketThuc);
+        row.put("trangThai",       tinhTrangThai(batDau, ketThuc, ttHienTai));
+        row.put("ngayTao",         rs.getTimestamp("NgayTao"));
+        row.put("mucDo",           rs.getInt("MucDo"));
+        row.put("doiTuong",        rs.getString("DoiTuong"));
+        row.put("nguoiTao",        rs.getString("NguoiTao"));
+        return row;
     }
 
     // ==================== LỊCH HỌP ====================
@@ -91,24 +109,7 @@ public class LichHopDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, toDanPhoID);
             ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Timestamp batDau   = rs.getTimestamp("ThoiGianBatDau");
-                Timestamp ketThuc  = rs.getTimestamp("ThoiGianKetThuc");
-                int ttHienTai      = rs.getInt("TrangThai");
-                Map<String, Object> row = new LinkedHashMap<>();
-                row.put("lichHopID",       rs.getInt("LichHopID"));
-                row.put("tieuDe",          rs.getString("TieuDe"));
-                row.put("noiDung",         rs.getString("NoiDung"));
-                row.put("diaDiem",         rs.getString("DiaDiem"));
-                row.put("thoiGianBatDau",  batDau);
-                row.put("thoiGianKetThuc", ketThuc);
-                row.put("trangThai",       tinhTrangThai(batDau, ketThuc, ttHienTai));
-                row.put("ngayTao",         rs.getTimestamp("NgayTao"));
-                row.put("mucDo",           rs.getInt("MucDo"));
-                row.put("doiTuong",        rs.getString("DoiTuong"));
-                row.put("nguoiTao",        rs.getString("NguoiTao"));
-                list.add(row);
-            }
+            while (rs.next()) list.add(mapRowDanhSach(rs));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -145,6 +146,103 @@ public class LichHopDAO {
                 row.put("ngayTao",         rs.getTimestamp("NgayTao"));
                 row.put("toDanPhoID",      rs.getInt("ToDanPhoID"));
                 row.put("nguoiTaoID",      rs.getInt("NguoiTaoID"));
+                row.put("mucDo",           rs.getInt("MucDo"));
+                row.put("doiTuong",        rs.getString("DoiTuong"));
+                row.put("nguoiTao",        rs.getString("NguoiTao"));
+                row.put("tenTo",           rs.getString("TenTo"));
+                return row;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // ==================== [MỚI] DÀNH CHO NGƯỜI DÂN ====================
+
+    /**
+     * Lấy danh sách lịch họp theo tổ với bộ lọc linh hoạt — dành cho người dân.
+     *
+     * @param toDanPhoID  tổ của người dân (lấy từ session)
+     * @param trangThai   null = tất cả | 1 = Sắp diễn ra | 2 = Đang họp | 3 = Kết thúc | 4 = Hủy
+     * @param tuNgay      null = không lọc từ ngày
+     * @param denNgay     null = không lọc đến ngày
+     */
+    public List<Map<String, Object>> getLichHopNguoiDan(int toDanPhoID,
+                                                         Integer trangThai,
+                                                         Timestamp tuNgay,
+                                                         Timestamp denNgay) {
+        List<Map<String, Object>> list = new ArrayList<>();
+
+        StringBuilder sql = new StringBuilder(
+            "SELECT lh.LichHopID, lh.TieuDe, lh.NoiDung, lh.DiaDiem, " +
+            "       lh.ThoiGianBatDau, lh.ThoiGianKetThuc, lh.TrangThai, lh.NgayTao, " +
+            "       lh.MucDo, lh.DoiTuong, " +
+            "       nd.Ho + ' ' + nd.Ten AS NguoiTao " +
+            "FROM LichHop lh " +
+            "JOIN NguoiDung nd ON lh.NguoiTaoID = nd.NguoiDungID " +
+            "WHERE lh.ToDanPhoID = ? "
+        );
+
+        if (trangThai != null) sql.append("AND lh.TrangThai = ? ");
+        if (tuNgay    != null) sql.append("AND lh.ThoiGianBatDau >= ? ");
+        if (denNgay   != null) sql.append("AND lh.ThoiGianBatDau <= ? ");
+        sql.append("ORDER BY lh.ThoiGianBatDau DESC");
+
+        try (Connection conn = DBContext.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int idx = 1;
+            ps.setInt(idx++, toDanPhoID);
+            if (trangThai != null) ps.setInt(idx++, trangThai);
+            if (tuNgay    != null) ps.setTimestamp(idx++, tuNgay);
+            if (denNgay   != null) ps.setTimestamp(idx++, denNgay);
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapRowDanhSach(rs));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    /**
+     * Lấy chi tiết lịch họp — bảo mật bằng cách JOIN thêm điều kiện toDanPhoID.
+     * Trả về null nếu lichHopID không thuộc tổ của người dân.
+     */
+    public Map<String, Object> getLichHopChiTietNguoiDan(int lichHopID, int toDanPhoID) {
+        String sql =
+            "SELECT lh.LichHopID, lh.TieuDe, lh.NoiDung, lh.DiaDiem, " +
+            "       lh.ThoiGianBatDau, lh.ThoiGianKetThuc, lh.TrangThai, lh.NgayTao, " +
+            "       lh.ToDanPhoID, lh.MucDo, lh.DoiTuong, " +
+            "       nd.Ho + ' ' + nd.Ten AS NguoiTao, " +
+            "       td.TenTo " +
+            "FROM LichHop lh " +
+            "JOIN NguoiDung nd ON lh.NguoiTaoID = nd.NguoiDungID " +
+            "JOIN ToDanPho  td ON lh.ToDanPhoID  = td.ToDanPhoID " +
+            "WHERE lh.LichHopID = ? AND lh.ToDanPhoID = ?";
+
+        try (Connection conn = DBContext.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, lichHopID);
+            ps.setInt(2, toDanPhoID);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                Timestamp batDau  = rs.getTimestamp("ThoiGianBatDau");
+                Timestamp ketThuc = rs.getTimestamp("ThoiGianKetThuc");
+                int ttHienTai     = rs.getInt("TrangThai");
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("lichHopID",       rs.getInt("LichHopID"));
+                row.put("tieuDe",          rs.getString("TieuDe"));
+                row.put("noiDung",         rs.getString("NoiDung"));
+                row.put("diaDiem",         rs.getString("DiaDiem"));
+                row.put("thoiGianBatDau",  batDau);
+                row.put("thoiGianKetThuc", ketThuc);
+                row.put("trangThai",       tinhTrangThai(batDau, ketThuc, ttHienTai));
+                row.put("ngayTao",         rs.getTimestamp("NgayTao"));
+                row.put("toDanPhoID",      rs.getInt("ToDanPhoID"));
                 row.put("mucDo",           rs.getInt("MucDo"));
                 row.put("doiTuong",        rs.getString("DoiTuong"));
                 row.put("nguoiTao",        rs.getString("NguoiTao"));
@@ -219,7 +317,6 @@ public class LichHopDAO {
             "WHERE hd.ToDanPhoID = ? AND hd.TrangThaiID = 1";
         try (Connection conn = DBContext.getInstance().getConnection()) {
             conn.setAutoCommit(false);
-
             int thongBaoID = -1;
             try (PreparedStatement ps = conn.prepareStatement(
                     sqlThongBao, Statement.RETURN_GENERATED_KEYS)) {
@@ -232,15 +329,12 @@ public class LichHopDAO {
                 ResultSet rs = ps.getGeneratedKeys();
                 if (rs.next()) thongBaoID = rs.getInt(1);
             }
-
             if (thongBaoID == -1) { conn.rollback(); return false; }
-
             try (PreparedStatement ps = conn.prepareStatement(sqlNguoiNhan)) {
                 ps.setInt(1, thongBaoID);
                 ps.setInt(2, toDanPhoID);
                 ps.executeUpdate();
             }
-
             conn.commit();
             return true;
         } catch (Exception e) {

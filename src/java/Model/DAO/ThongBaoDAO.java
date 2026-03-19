@@ -248,37 +248,40 @@ public class ThongBaoDAO {
     // ------------------------------------------------------------------ //
     //  LẤY THÔNG BÁO CỦA 1 NGƯỜI DÙNG (để hiển thị chuông thông báo)
     // ------------------------------------------------------------------ //
-    public List<Map<String, Object>> layThongBaoCuaNguoiDung(int nguoiDungID) {
-        String sql
-                = "SELECT tb.ThongBaoID, tb.TieuDe, tb.NoiDung, tb.NgayGui, "
-                + "       nntb.DaDoc, nntb.ThoiGianDoc, "
-                + "       (nd.Ho + ' ' + nd.Ten) AS TenNguoiGui "
-                + "FROM NguoiNhanThongBao nntb "
-                + "JOIN ThongBao  tb ON tb.ThongBaoID   = nntb.ThongBaoID "
-                + "JOIN NguoiDung nd ON nd.NguoiDungID  = tb.NguoiGuiID "
-                + "WHERE nntb.NguoiDungID = ? "
-                + "ORDER BY tb.NgayGui DESC";
+   public List<Map<String, Object>> layThongBaoCuaNguoiDung(int nguoiDungID) {
+    String sql
+            = "SELECT tb.ThongBaoID, tb.TieuDe, tb.NoiDung, tb.NgayGui, "
+            + "       tb.LichHopID, "
+            + "       nntb.DaDoc, nntb.ThoiGianDoc, "
+            + "       (nd.Ho + ' ' + nd.Ten) AS TenNguoiGui "
+            + "FROM NguoiNhanThongBao nntb "
+            + "JOIN ThongBao  tb ON tb.ThongBaoID   = nntb.ThongBaoID "
+            + "JOIN NguoiDung nd ON nd.NguoiDungID  = tb.NguoiGuiID "
+            + "WHERE nntb.NguoiDungID = ? "
+            + "ORDER BY tb.NgayGui DESC";
 
-        List<Map<String, Object>> list = new ArrayList<>();
-        try (Connection conn = DBContext.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, nguoiDungID);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Map<String, Object> row = new LinkedHashMap<>();
-                row.put("thongBaoID", rs.getInt("ThongBaoID"));
-                row.put("tieuDe", rs.getString("TieuDe"));
-                row.put("noiDung", rs.getString("NoiDung"));
-                row.put("ngayGui", rs.getString("NgayGui"));
-                row.put("daDoc", rs.getBoolean("DaDoc"));
-                row.put("thoiGianDoc", rs.getString("ThoiGianDoc"));
-                row.put("tenNguoiGui", rs.getString("TenNguoiGui"));
-                list.add(row);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+    List<Map<String, Object>> list = new ArrayList<>();
+    try (Connection conn = DBContext.getInstance().getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setInt(1, nguoiDungID);
+        ResultSet rs = ps.executeQuery();
+        while (rs.next()) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("thongBaoID",  rs.getInt("ThongBaoID"));
+            row.put("tieuDe",      rs.getString("TieuDe"));
+            row.put("noiDung",     rs.getString("NoiDung"));
+            row.put("ngayGui",     rs.getString("NgayGui"));
+            row.put("lichHopID",   rs.getObject("LichHopID")); // null nếu không phải TB lịch họp
+            row.put("daDoc",       rs.getBoolean("DaDoc"));
+            row.put("thoiGianDoc", rs.getString("ThoiGianDoc"));
+            row.put("tenNguoiGui", rs.getString("TenNguoiGui"));
+            list.add(row);
         }
-        return list;
+    } catch (Exception e) {
+        e.printStackTrace();
     }
+    return list;
+}
 
     // ------------------------------------------------------------------ //
     //  ĐẾM THÔNG BÁO CHƯA ĐỌC (cho badge chuông)

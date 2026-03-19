@@ -4,6 +4,8 @@ import Model.DAO.LichHopDAO;
 import Model.Entity.LichHop;
 import Model.Entity.LichSuSuaLichHop;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -34,80 +36,44 @@ public class LichHopService {
         return true;
     }
 
-   // Thay toàn bộ suaLichHop trong LichHopService
-public boolean suaLichHop(LichHop lhMoi, int nguoiSuaID, String lyDoSua) {
+    public boolean suaLichHop(LichHop lhMoi, int nguoiSuaID, String lyDoSua) {
 
-    if (lyDoSua == null || lyDoSua.trim().isEmpty())
-        throw new IllegalArgumentException("Vui lòng nhập lý do chỉnh sửa.");
+        if (lyDoSua == null || lyDoSua.trim().isEmpty())
+            throw new IllegalArgumentException("Vui lòng nhập lý do chỉnh sửa.");
 
-    // Lấy dữ liệu cũ
-    Map<String, Object> truoc = lichHopDAO.getLichHopByID(lhMoi.getLichHopID());
-    if (truoc == null) throw new IllegalArgumentException("Lịch họp không tồn tại.");
+        Map<String, Object> truoc = lichHopDAO.getLichHopByID(lhMoi.getLichHopID());
+        if (truoc == null) throw new IllegalArgumentException("Lịch họp không tồn tại.");
 
-    // Chỉ cho sửa khi trạng thái = 1 (Sắp diễn ra)
-    int trangThaiHienTai = (int) truoc.get("trangThai");
-    if (trangThaiHienTai != 1)
-        throw new IllegalArgumentException(
-            "Không thể chỉnh sửa lịch họp đã bắt đầu hoặc kết thúc.");
+        int trangThaiHienTai = (int) truoc.get("trangThai");
+        if (trangThaiHienTai != 1)
+            throw new IllegalArgumentException(
+                "Không thể chỉnh sửa lịch họp đã bắt đầu hoặc kết thúc.");
 
-    // Validate nội dung (không validate thời gian quá khứ vì tổ trưởng chỉ sửa trước giờ họp)
-    String loi = validateNoiDung(lhMoi);
-    if (loi != null) throw new IllegalArgumentException(loi);
+        String loi = validateNoiDung(lhMoi);
+        if (loi != null) throw new IllegalArgumentException(loi);
 
-    // Giữ nguyên trangThai = 1, không cho set từ ngoài vào
-    lhMoi.setTrangThai(1);
+        lhMoi.setTrangThai(1);
 
-    boolean ok = lichHopDAO.suaLichHop(lhMoi);
-    if (!ok) return false;
+        boolean ok = lichHopDAO.suaLichHop(lhMoi);
+        if (!ok) return false;
 
-    // Ghi lịch sử
-    String snapshot = buildSnapshot(truoc, toMap(lhMoi));
-    LichSuSuaLichHop ls = new LichSuSuaLichHop();
-    ls.setLichHopID(lhMoi.getLichHopID());
-    ls.setNguoiSuaID(nguoiSuaID);
-    ls.setThoiGianSua(LocalDateTime.now());
-    ls.setNoiDungThayDoi(snapshot);
-    ls.setLyDoSua(lyDoSua.trim());
-    lichHopDAO.ghiLichSuSua(ls);
+        String snapshot = buildSnapshot(truoc, toMap(lhMoi));
+        LichSuSuaLichHop ls = new LichSuSuaLichHop();
+        ls.setLichHopID(lhMoi.getLichHopID());
+        ls.setNguoiSuaID(nguoiSuaID);
+        ls.setThoiGianSua(LocalDateTime.now());
+        ls.setNoiDungThayDoi(snapshot);
+        ls.setLyDoSua(lyDoSua.trim());
+        lichHopDAO.ghiLichSuSua(ls);
 
-    // Gửi thông báo cập nhật
-    String tieuDe  = "[Cập nhật lịch họp] " + lhMoi.getTieuDe();
-    String noiDung = buildNoiDungThongBao(lhMoi, true)
-                   + "\nLý do thay đổi: " + lyDoSua.trim();
-    lichHopDAO.guiThongBaoDenChuHo(lhMoi.getLichHopID(), lhMoi.getToDanPhoID(),
-            nguoiSuaID, tieuDe, noiDung);
+        String tieuDe  = "[Cập nhật lịch họp] " + lhMoi.getTieuDe();
+        String noiDung = buildNoiDungThongBao(lhMoi, true)
+                       + "\nLý do thay đổi: " + lyDoSua.trim();
+        lichHopDAO.guiThongBaoDenChuHo(lhMoi.getLichHopID(), lhMoi.getToDanPhoID(),
+                nguoiSuaID, tieuDe, noiDung);
 
-    return true;
-}
-
-// Tách validate nội dung riêng — dùng cho cả tạo lẫn sửa
-private String validateNoiDung(LichHop lh) {
-    if (lh.getTieuDe() == null || lh.getTieuDe().trim().isEmpty())
-        return "Tiêu đề không được để trống.";
-    if (lh.getDiaDiem() == null || lh.getDiaDiem().trim().isEmpty())
-        return "Địa điểm không được để trống.";
-    if (lh.getThoiGianBatDau() == null)
-        return "Thời gian bắt đầu không được để trống.";
-    if (lh.getThoiGianKetThuc() != null &&
-        !lh.getThoiGianKetThuc().isAfter(lh.getThoiGianBatDau()))
-        return "Thời gian kết thúc phải sau thời gian bắt đầu.";
-    if (lh.getToDanPhoID() <= 0)
-        return "Tổ dân phố không hợp lệ.";
-    if (lh.getMucDo() < 1 || lh.getMucDo() > 3)
-        return "Mức độ quan trọng không hợp lệ.";
-    if (lh.getDoiTuong() == null || lh.getDoiTuong().trim().isEmpty())
-        return "Vui lòng chọn đối tượng tham gia.";
-    return null;
-}
-
-// validateLichHop dùng riêng cho tạo — thêm check thời gian tương lai
-private String validateLichHop(LichHop lh) {
-    String loi = validateNoiDung(lh);
-    if (loi != null) return loi;
-    if (!lh.getThoiGianBatDau().isAfter(LocalDateTime.now()))
-        return "Thời gian bắt đầu phải sau thời điểm hiện tại.";
-    return null;
-}
+        return true;
+    }
 
     public List<Map<String, Object>> getLichHopByToDanPho(int toDanPhoID) {
         if (toDanPhoID <= 0) throw new IllegalArgumentException("ToDanPhoID không hợp lệ.");
@@ -118,6 +84,51 @@ private String validateLichHop(LichHop lh) {
         if (lichHopID <= 0) throw new IllegalArgumentException("LichHopID không hợp lệ.");
         Map<String, Object> lh = lichHopDAO.getLichHopByID(lichHopID);
         if (lh == null) throw new IllegalArgumentException("Lịch họp không tồn tại.");
+        return lh;
+    }
+
+    // ==================== [MỚI] DÀNH CHO NGƯỜI DÂN ====================
+
+    /**
+     * Lấy danh sách lịch họp có lọc — dành cho người dân.
+     *
+     * @param toDanPhoID   lấy từ session (NguoiDung.toDanPhoID)
+     * @param trangThaiStr "1"/"2"/"3"/"4" hoặc null/rỗng = tất cả
+     * @param tuNgayStr    "yyyy-MM-dd" hoặc null/rỗng
+     * @param denNgayStr   "yyyy-MM-dd" hoặc null/rỗng
+     */
+    public List<Map<String, Object>> getLichHopNguoiDan(int toDanPhoID,
+                                                         String trangThaiStr,
+                                                         String tuNgayStr,
+                                                         String denNgayStr) {
+        if (toDanPhoID <= 0) throw new IllegalArgumentException("Tổ dân phố không hợp lệ.");
+
+        Integer   trangThai = parseIntSafe(trangThaiStr);
+        Timestamp tuNgay    = parseNgayBatDau(tuNgayStr);   // 00:00:00
+        Timestamp denNgay   = parseNgayKetThuc(denNgayStr); // 23:59:59
+
+        // Validate khoảng ngày nếu cả hai đều có
+        if (tuNgay != null && denNgay != null && tuNgay.after(denNgay))
+            throw new IllegalArgumentException("Ngày bắt đầu phải trước ngày kết thúc.");
+
+        return lichHopDAO.getLichHopNguoiDan(toDanPhoID, trangThai, tuNgay, denNgay);
+    }
+
+    /**
+     * Lấy chi tiết lịch họp — người dân chỉ xem được của đúng tổ mình.
+     *
+     * @param lichHopID         ID lịch họp muốn xem
+     * @param toDanPhoCuaNguoiDan  lấy từ session
+     * @throws IllegalArgumentException nếu không tìm thấy hoặc không có quyền
+     */
+    public Map<String, Object> getChiTietLichHopNguoiDan(int lichHopID, int toDanPhoCuaNguoiDan) {
+        if (lichHopID <= 0)           throw new IllegalArgumentException("LichHopID không hợp lệ.");
+        if (toDanPhoCuaNguoiDan <= 0) throw new IllegalArgumentException("Tổ dân phố không hợp lệ.");
+
+        Map<String, Object> lh = lichHopDAO.getLichHopChiTietNguoiDan(lichHopID, toDanPhoCuaNguoiDan);
+        if (lh == null)
+            throw new IllegalArgumentException("Lịch họp không tồn tại hoặc bạn không có quyền xem.");
+
         return lh;
     }
 
@@ -137,7 +148,32 @@ private String validateLichHop(LichHop lh) {
 
     // ==================== PRIVATE HELPERS ====================
 
-   
+    private String validateNoiDung(LichHop lh) {
+        if (lh.getTieuDe() == null || lh.getTieuDe().trim().isEmpty())
+            return "Tiêu đề không được để trống.";
+        if (lh.getDiaDiem() == null || lh.getDiaDiem().trim().isEmpty())
+            return "Địa điểm không được để trống.";
+        if (lh.getThoiGianBatDau() == null)
+            return "Thời gian bắt đầu không được để trống.";
+        if (lh.getThoiGianKetThuc() != null &&
+            !lh.getThoiGianKetThuc().isAfter(lh.getThoiGianBatDau()))
+            return "Thời gian kết thúc phải sau thời gian bắt đầu.";
+        if (lh.getToDanPhoID() <= 0)
+            return "Tổ dân phố không hợp lệ.";
+        if (lh.getMucDo() < 1 || lh.getMucDo() > 3)
+            return "Mức độ quan trọng không hợp lệ.";
+        if (lh.getDoiTuong() == null || lh.getDoiTuong().trim().isEmpty())
+            return "Vui lòng chọn đối tượng tham gia.";
+        return null;
+    }
+
+    private String validateLichHop(LichHop lh) {
+        String loi = validateNoiDung(lh);
+        if (loi != null) return loi;
+        if (!lh.getThoiGianBatDau().isAfter(LocalDateTime.now()))
+            return "Thời gian bắt đầu phải sau thời điểm hiện tại.";
+        return null;
+    }
 
     private String buildNoiDungThongBao(LichHop lh, boolean laCauNhat) {
         String[] mucDoLabel = {"", "Bình thường", "Quan trọng", "Khẩn cấp"};
@@ -176,5 +212,26 @@ private String validateLichHop(LichHop lh) {
         } catch (Exception e) {
             return "{\"loi\":\"Không thể tạo snapshot\"}";
         }
+    }
+
+    // Parse an toàn cho Integer
+    private Integer parseIntSafe(String s) {
+        if (s == null || s.trim().isEmpty()) return null;
+        try { return Integer.parseInt(s.trim()); }
+        catch (NumberFormatException e) { return null; }
+    }
+
+    // Parse "yyyy-MM-dd" → Timestamp lúc 00:00:00 (dùng cho tuNgay)
+    private Timestamp parseNgayBatDau(String s) {
+        if (s == null || s.trim().isEmpty()) return null;
+        try { return Timestamp.valueOf(LocalDate.parse(s.trim()).atStartOfDay()); }
+        catch (Exception e) { return null; }
+    }
+
+    // Parse "yyyy-MM-dd" → Timestamp lúc 23:59:59 (dùng cho denNgay)
+    private Timestamp parseNgayKetThuc(String s) {
+        if (s == null || s.trim().isEmpty()) return null;
+        try { return Timestamp.valueOf(LocalDate.parse(s.trim()).atTime(23, 59, 59)); }
+        catch (Exception e) { return null; }
     }
 }
