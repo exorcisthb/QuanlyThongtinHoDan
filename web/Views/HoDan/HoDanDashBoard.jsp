@@ -286,7 +286,7 @@
                 <% } } %>
             </div>
             <div class="np-footer"
-                 onclick="location.href='${pageContext.request.contextPath}/thong-bao'">
+                 onclick="location.href='${pageContext.request.contextPath}/thong-bao/lich-su'">
                 Xem tất cả thông báo
             </div>
         </div>
@@ -457,20 +457,24 @@
 
     /* ✅ SỬA: redirect thẳng đến lịch họp cụ thể nếu có lichHopID */
     function _redirect(tieuDe, lichHopID) {
-        if (!tieuDe) return;
-        const t = tieuDe.toLowerCase();
-        if (t.includes('lịch họp') && lichHopID && lichHopID > 0) {
-            location.href = '${pageContext.request.contextPath}/nguoidan/lich-hop?id=' + lichHopID;
-        } else if (t.includes('lịch họp')) {
-            location.href = '${pageContext.request.contextPath}/nguoidan/lich-hop';
-        } else if (t.includes('yêu cầu') || t.includes('hộ khẩu')) {
-            location.href = '${pageContext.request.contextPath}/hodan/yeu-cau-cap-nhat';
-        } else if (t.includes('phản ánh') || t.includes('kiến nghị')) {
-            location.href = '${pageContext.request.contextPath}/hodan/phan-anh';
-        } else {
-            location.href = '${pageContext.request.contextPath}/thong-bao';
-        }
+    if (!tieuDe) return;
+    const t = tieuDe.toLowerCase();
+    if (t.includes('thông báo họp') || t.includes('thiệp')
+        || t.includes('tạm hoãn') || t.includes('mở lại')
+        || t.includes('[cập nhật]') || t.includes('[hủy]')) {
+        location.href = '${pageContext.request.contextPath}/hodan/thiepmoi';
+    } else if (t.includes('lịch họp') && lichHopID && lichHopID > 0) {
+        location.href = '${pageContext.request.contextPath}/nguoidan/lich-hop?id=' + lichHopID;
+    } else if (t.includes('lịch họp')) {
+        location.href = '${pageContext.request.contextPath}/nguoidan/lich-hop';
+    } else if (t.includes('yêu cầu') || t.includes('hộ khẩu')) {
+        location.href = '${pageContext.request.contextPath}/hodan/yeu-cau-cap-nhat';
+    } else if (t.includes('phản ánh') || t.includes('kiến nghị')) {
+        location.href = '${pageContext.request.contextPath}/hodan/phan-anh';
+    } else {
+        location.href = '${pageContext.request.contextPath}/thong-bao/lich-su';
     }
+}
 
     /* ── Đánh dấu tất cả đã đọc ── */
     function markAllRead() {

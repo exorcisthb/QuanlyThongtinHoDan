@@ -1,17 +1,26 @@
 package Controller.ToTruong;
+
+import Model.DAO.ThongBaoDAO;
+import Model.Entity.NguoiDung;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+
 import java.io.IOException;
-import Model.Entity.NguoiDung;
+import java.util.List;
+import java.util.Map;
+
 @WebServlet("/totruong/dashboard")
 public class ToTruongDashboardServlet extends HttpServlet {
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+
+    private final ThongBaoDAO thongBaoDAO = new ThongBaoDAO();
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("nguoiDung") == null) {
             response.sendRedirect(request.getContextPath() + "/login");
@@ -24,9 +33,16 @@ public class ToTruongDashboardServlet extends HttpServlet {
             return;
         }
 
-        // Truyền dữ liệu cần thiết
-        request.setAttribute("currentUser", user);
-        // Nếu cần tên tổ: query DB hoặc lưu vào session lúc login
+        // Load thông báo từ DB
+        List<Map<String, Object>> danhSachThongBao =
+                thongBaoDAO.layThongBaoCuaNguoiDung(user.getNguoiDungID());
+        int soChuaDoc = (int) danhSachThongBao.stream()
+                .filter(tb -> Boolean.FALSE.equals(tb.get("daDoc")))
+                .count();
+
+        request.setAttribute("currentUser",       user);
+        request.setAttribute("danhSachThongBao",  danhSachThongBao);
+        request.setAttribute("soChuaDoc",         soChuaDoc);
 
         request.getRequestDispatcher("/Views/ToTruong/ToTruongDashboard.jsp")
                .forward(request, response);

@@ -29,7 +29,6 @@ public class ThongBaoDAO {
                 ps.setString(2, noiDung);
                 ps.setInt(3, nguoiGuiID);
                 ps.executeUpdate();
-
                 ResultSet keys = ps.getGeneratedKeys();
                 if (!keys.next()) {
                     conn.rollback();
@@ -72,7 +71,7 @@ public class ThongBaoDAO {
     }
 
     // ------------------------------------------------------------------ //
-    //  GỬI THÔNG BÁO THEO VAI TRÒ (toàn bộ người dùng có vaiTroID)
+    //  GỬI THÔNG BÁO THEO VAI TRÒ
     // ------------------------------------------------------------------ //
     public boolean guiThongBaoTheoVaiTro(String tieuDe, String noiDung,
             int nguoiGuiID, String tenVaiTro) {
@@ -91,7 +90,6 @@ public class ThongBaoDAO {
             conn = DBContext.getInstance().getConnection();
             conn.setAutoCommit(false);
 
-            // 1. Tạo thông báo
             int thongBaoID;
             try (PreparedStatement ps = conn.prepareStatement(sqlThongBao,
                     Statement.RETURN_GENERATED_KEYS)) {
@@ -107,10 +105,9 @@ public class ThongBaoDAO {
                 thongBaoID = keys.getInt(1);
             }
 
-            // 2. Lấy danh sách người nhận theo tên vai trò
             List<Integer> danhSachNguoiNhan = new ArrayList<>();
             try (PreparedStatement ps = conn.prepareStatement(sqlLayNguoiNhan)) {
-                ps.setString(1, tenVaiTro);   // ← setString thay vì setInt
+                ps.setString(1, tenVaiTro);
                 ResultSet rs = ps.executeQuery();
                 while (rs.next()) {
                     danhSachNguoiNhan.add(rs.getInt("NguoiDungID"));
@@ -122,7 +119,6 @@ public class ThongBaoDAO {
                 return false;
             }
 
-            // 3. Batch insert người nhận
             try (PreparedStatement ps = conn.prepareStatement(sqlNguoiNhan)) {
                 for (int nguoiNhanID : danhSachNguoiNhan) {
                     ps.setInt(1, thongBaoID);
@@ -186,7 +182,6 @@ public class ThongBaoDAO {
                 ps.setInt(3, nguoiGuiID);
                 ps.setInt(4, toDanPhoID);
                 ps.executeUpdate();
-
                 ResultSet keys = ps.getGeneratedKeys();
                 if (!keys.next()) {
                     conn.rollback();
@@ -246,50 +241,48 @@ public class ThongBaoDAO {
     }
 
     // ------------------------------------------------------------------ //
-    //  LẤY THÔNG BÁO CỦA 1 NGƯỜI DÙNG (để hiển thị chuông thông báo)
+    //  LẤY THÔNG BÁO CỦA 1 NGƯỜI DÙNG — có ThiepMoiID
     // ------------------------------------------------------------------ //
-   public List<Map<String, Object>> layThongBaoCuaNguoiDung(int nguoiDungID) {
-    String sql
-            = "SELECT tb.ThongBaoID, tb.TieuDe, tb.NoiDung, tb.NgayGui, "
-            + "       tb.LichHopID, "
-            + "       nntb.DaDoc, nntb.ThoiGianDoc, "
-            + "       (nd.Ho + ' ' + nd.Ten) AS TenNguoiGui "
-            + "FROM NguoiNhanThongBao nntb "
-            + "JOIN ThongBao  tb ON tb.ThongBaoID   = nntb.ThongBaoID "
-            + "JOIN NguoiDung nd ON nd.NguoiDungID  = tb.NguoiGuiID "
-            + "WHERE nntb.NguoiDungID = ? "
-            + "ORDER BY tb.NgayGui DESC";
+    public List<Map<String, Object>> layThongBaoCuaNguoiDung(int nguoiDungID) {
+        String sql
+                = "SELECT tb.ThongBaoID, tb.TieuDe, tb.NoiDung, tb.NgayGui, "
+                + "       tb.LichHopID, tb.ThiepMoiID, "
+                + "       nntb.DaDoc, nntb.ThoiGianDoc, "
+                + "       (nd.Ho + ' ' + nd.Ten) AS TenNguoiGui "
+                + "FROM NguoiNhanThongBao nntb "
+                + "JOIN ThongBao  tb ON tb.ThongBaoID   = nntb.ThongBaoID "
+                + "JOIN NguoiDung nd ON nd.NguoiDungID  = tb.NguoiGuiID "
+                + "WHERE nntb.NguoiDungID = ? "
+                + "ORDER BY tb.NgayGui DESC";
 
-    List<Map<String, Object>> list = new ArrayList<>();
-    try (Connection conn = DBContext.getInstance().getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql)) {
-        ps.setInt(1, nguoiDungID);
-        ResultSet rs = ps.executeQuery();
-        while (rs.next()) {
-            Map<String, Object> row = new LinkedHashMap<>();
-            row.put("thongBaoID",  rs.getInt("ThongBaoID"));
-            row.put("tieuDe",      rs.getString("TieuDe"));
-            row.put("noiDung",     rs.getString("NoiDung"));
-            row.put("ngayGui",     rs.getString("NgayGui"));
-            row.put("lichHopID",   rs.getObject("LichHopID")); // null nếu không phải TB lịch họp
-            row.put("daDoc",       rs.getBoolean("DaDoc"));
-            row.put("thoiGianDoc", rs.getString("ThoiGianDoc"));
-            row.put("tenNguoiGui", rs.getString("TenNguoiGui"));
-            list.add(row);
+        List<Map<String, Object>> list = new ArrayList<>();
+        try (Connection conn = DBContext.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, nguoiDungID);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("thongBaoID", rs.getInt("ThongBaoID"));
+                row.put("tieuDe", rs.getString("TieuDe"));
+                row.put("noiDung", rs.getString("NoiDung"));
+                row.put("ngayGui", rs.getString("NgayGui"));
+                row.put("lichHopID", rs.getObject("LichHopID"));
+                row.put("thiepMoiID", rs.getObject("ThiepMoiID")); // << THÊM
+                row.put("daDoc", rs.getBoolean("DaDoc"));
+                row.put("thoiGianDoc", rs.getString("ThoiGianDoc"));
+                row.put("tenNguoiGui", rs.getString("TenNguoiGui"));
+                list.add(row);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    } catch (Exception e) {
-        e.printStackTrace();
+        return list;
     }
-    return list;
-}
 
     // ------------------------------------------------------------------ //
-    //  ĐẾM THÔNG BÁO CHƯA ĐỌC (cho badge chuông)
+    //  ĐẾM CHƯA ĐỌC
     // ------------------------------------------------------------------ //
     public int demChuaDoc(int nguoiDungID) {
-        String sql
-                = "SELECT COUNT(1) FROM NguoiNhanThongBao "
-                + "WHERE NguoiDungID = ? AND DaDoc = 0";
+        String sql = "SELECT COUNT(1) FROM NguoiNhanThongBao WHERE NguoiDungID = ? AND DaDoc = 0";
         try (Connection conn = DBContext.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, nguoiDungID);
             ResultSet rs = ps.executeQuery();
@@ -303,12 +296,10 @@ public class ThongBaoDAO {
     }
 
     // ------------------------------------------------------------------ //
-    //  ĐÁNH DẤU ĐÃ ĐỌC 1 THÔNG BÁO
+    //  ĐÁNH DẤU ĐÃ ĐỌC 1
     // ------------------------------------------------------------------ //
     public boolean danhDauDaDoc(int thongBaoID, int nguoiDungID) {
-        String sql
-                = "UPDATE NguoiNhanThongBao "
-                + "SET DaDoc = 1, ThoiGianDoc = GETDATE() "
+        String sql = "UPDATE NguoiNhanThongBao SET DaDoc = 1, ThoiGianDoc = GETDATE() "
                 + "WHERE ThongBaoID = ? AND NguoiDungID = ? AND DaDoc = 0";
         try (Connection conn = DBContext.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, thongBaoID);
@@ -324,9 +315,7 @@ public class ThongBaoDAO {
     //  ĐÁNH DẤU ĐỌC TẤT CẢ
     // ------------------------------------------------------------------ //
     public boolean danhDauDocTatCa(int nguoiDungID) {
-        String sql
-                = "UPDATE NguoiNhanThongBao "
-                + "SET DaDoc = 1, ThoiGianDoc = GETDATE() "
+        String sql = "UPDATE NguoiNhanThongBao SET DaDoc = 1, ThoiGianDoc = GETDATE() "
                 + "WHERE NguoiDungID = ? AND DaDoc = 0";
         try (Connection conn = DBContext.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, nguoiDungID);
@@ -337,17 +326,15 @@ public class ThongBaoDAO {
         }
     }
 
+    // ------------------------------------------------------------------ //
+    //  OVERLOAD dùng Connection có sẵn (trong transaction)
+    // ------------------------------------------------------------------ //
     public boolean guiThongBaoCaNhan(String tieuDe, String noiDung,
             int nguoiGuiID, int nguoiNhanID, Connection conn) throws Exception {
-        String sqlThongBao
-                = "INSERT INTO ThongBao (TieuDe, NoiDung, NguoiGuiID, ToDanPhoID) "
-                + "VALUES (?, ?, ?, NULL)";
-        String sqlNguoiNhan
-                = "INSERT INTO NguoiNhanThongBao (ThongBaoID, NguoiDungID) VALUES (?, ?)";
-
+        String sqlThongBao = "INSERT INTO ThongBao (TieuDe, NoiDung, NguoiGuiID, ToDanPhoID) VALUES (?, ?, ?, NULL)";
+        String sqlNguoiNhan = "INSERT INTO NguoiNhanThongBao (ThongBaoID, NguoiDungID) VALUES (?, ?)";
         int thongBaoID;
-        try (PreparedStatement ps = conn.prepareStatement(sqlThongBao,
-                Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement ps = conn.prepareStatement(sqlThongBao, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, tieuDe);
             ps.setString(2, noiDung);
             ps.setInt(3, nguoiGuiID);
@@ -368,19 +355,11 @@ public class ThongBaoDAO {
 
     public boolean guiThongBaoTheoVaiTro(String tieuDe, String noiDung,
             int nguoiGuiID, String tenVaiTro, Connection conn) throws Exception {
-        String sqlThongBao
-                = "INSERT INTO ThongBao (TieuDe, NoiDung, NguoiGuiID, ToDanPhoID) "
-                + "VALUES (?, ?, ?, NULL)";
-        String sqlLayNguoiNhan
-                = "SELECT nd.NguoiDungID FROM NguoiDung nd "
-                + "JOIN VaiTro vt ON vt.VaiTroID = nd.VaiTroID "
-                + "WHERE vt.TenVaiTro = ? AND nd.IsActivated = 1 AND nd.TrangThaiNhanSu = 1";
-        String sqlNguoiNhan
-                = "INSERT INTO NguoiNhanThongBao (ThongBaoID, NguoiDungID) VALUES (?, ?)";
-
+        String sqlThongBao = "INSERT INTO ThongBao (TieuDe, NoiDung, NguoiGuiID, ToDanPhoID) VALUES (?, ?, ?, NULL)";
+        String sqlLayNguoiNhan = "SELECT nd.NguoiDungID FROM NguoiDung nd JOIN VaiTro vt ON vt.VaiTroID = nd.VaiTroID WHERE vt.TenVaiTro = ? AND nd.IsActivated = 1 AND nd.TrangThaiNhanSu = 1";
+        String sqlNguoiNhan = "INSERT INTO NguoiNhanThongBao (ThongBaoID, NguoiDungID) VALUES (?, ?)";
         int thongBaoID;
-        try (PreparedStatement ps = conn.prepareStatement(sqlThongBao,
-                Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement ps = conn.prepareStatement(sqlThongBao, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, tieuDe);
             ps.setString(2, noiDung);
             ps.setInt(3, nguoiGuiID);

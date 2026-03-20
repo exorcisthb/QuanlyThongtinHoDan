@@ -47,6 +47,9 @@
             .np-mark:hover{text-decoration:underline}
             .np-all{font-size:11px;color:var(--muted);cursor:pointer;font-weight:500;text-decoration:none}
             .np-all:hover{color:var(--text)}
+            .np-footer{border-top:1px solid var(--border);padding:11px 18px;text-align:center}
+            .np-footer a{font-size:12px;font-weight:600;color:var(--accent);cursor:pointer;transition:color .15s;text-decoration:none;display:block}
+            .np-footer a:hover{color:var(--accent2);text-decoration:underline}
             .np-list{max-height:340px;overflow-y:auto}
             .np-list::-webkit-scrollbar{width:4px}
             .np-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
@@ -113,16 +116,20 @@
             .dash-card:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,.3)}
             .dash-card.blue:hover{border-color:var(--accent)}
             .dash-card.green:hover{border-color:var(--accent2)}
+            .dash-card.orange:hover{border-color:var(--warn)}
             .dc-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:18px}
             .dc-icon.blue{background:rgba(79,142,247,.15)}
             .dc-icon.green{background:rgba(56,217,169,.15)}
+            .dc-icon.orange{background:rgba(251,191,36,.12)}
             .dc-title{font-size:17px;font-weight:700;margin-bottom:10px}
             .dc-desc{font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:24px}
             .dc-btn{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;padding:10px 20px;border-radius:8px;border:none;cursor:pointer;font-family:inherit;text-decoration:none;transition:all .18s}
             .dc-btn.blue{background:rgba(79,142,247,.15);color:var(--accent)}
             .dc-btn.green{background:rgba(56,217,169,.15);color:var(--accent2)}
+            .dc-btn.orange{background:rgba(251,191,36,.12);color:var(--warn)}
             .dc-btn.blue:hover{background:var(--accent);color:#fff}
             .dc-btn.green:hover{background:var(--accent2);color:#000}
+            .dc-btn.orange:hover{background:var(--warn);color:#000}
             .activity-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
             .ac-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
             .ac-header h3{font-size:15px;font-weight:700}
@@ -162,7 +169,6 @@
             .modal-body{padding:22px 26px}
             .modal-footer{padding:14px 26px 22px;display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--border)}
             .modal-body-list{padding:0}
-            /* ── TYPE TABS ── */
             .ml-type-tabs{display:flex;border-bottom:1px solid var(--border)}
             .ml-type-tab{flex:1;padding:13px 20px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);border:none;background:none;font-family:inherit;border-bottom:2px solid transparent;transition:all .18s}
             .ml-type-tab:hover{color:var(--text);background:var(--surface2)}
@@ -230,6 +236,48 @@
             .toast.success{background:rgba(56,217,169,.15);border:1px solid rgba(56,217,169,.4);color:var(--accent2)}
             .toast.error{background:rgba(247,92,92,.15);border:1px solid rgba(247,92,92,.4);color:var(--danger)}
             @keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+            /* ══ MODAL THÔNG BÁO TOÀN BỘ ══ */
+            .modal-tb{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:640px;max-width:calc(100vw - 32px);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.6);animation:modalIn .22s cubic-bezier(.34,1.56,.64,1)}
+            .tb-hdr{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+            .tb-hdr-left{display:flex;align-items:center;gap:12px}
+            .tb-hdr-ico{width:44px;height:44px;border-radius:12px;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+            .tb-hdr-title{font-size:16px;font-weight:800}
+            .tb-hdr-sub{font-size:12px;color:var(--muted);margin-top:2px}
+            .tb-toolbar{padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex-shrink:0}
+            .tb-filter-tabs{display:flex;gap:6px}
+            .tb-ftab{padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-weight:600;cursor:pointer;color:var(--muted);font-family:inherit;transition:all .15s}
+            .tb-ftab:hover{border-color:var(--accent);color:var(--text)}
+            .tb-ftab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+            .tb-mark-all{margin-left:auto;font-size:11px;color:var(--accent2);cursor:pointer;font-weight:600;border:none;background:none;font-family:inherit;padding:0}
+            .tb-mark-all:hover{text-decoration:underline}
+            .tb-list{flex:1;overflow-y:auto;min-height:0}
+            .tb-list::-webkit-scrollbar{width:4px}
+            .tb-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+            .tb-item{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;gap:14px;align-items:flex-start;cursor:pointer;transition:background .12s}
+            .tb-item:hover{background:var(--surface2)}
+            .tb-item:last-child{border-bottom:none}
+            .tb-item.unread{border-left:3px solid var(--accent);padding-left:19px}
+            .tb-item.unread:hover{background:rgba(79,142,247,.05)}
+            .tb-dot{width:9px;height:9px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px;transition:background .2s}
+            .tb-dot.read{background:var(--border)}
+            .tb-body{flex:1;min-width:0}
+            .tb-tag{display:inline-block;font-size:9px;font-weight:700;padding:1px 7px;border-radius:10px;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+            .tb-tag.yeucau{background:rgba(251,191,36,.15);color:var(--warn)}
+            .tb-tag.duyet{background:rgba(56,217,169,.15);color:var(--accent2)}
+            .tb-tag.hethong{background:rgba(79,142,247,.15);color:var(--accent)}
+            .tb-title{font-size:13px;font-weight:500;line-height:1.45;color:var(--muted);margin-bottom:5px}
+            .tb-item.unread .tb-title{font-weight:700;color:var(--text)}
+            .tb-preview{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+            .tb-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+            .tb-time{font-size:11px;color:var(--muted)}
+            .tb-sender{font-size:11px;color:var(--muted)}
+            .tb-arrow{font-size:12px;color:var(--accent);opacity:0;transition:opacity .15s;flex-shrink:0;margin-top:4px}
+            .tb-item:hover .tb-arrow{opacity:1}
+            .tb-empty{padding:60px 20px;text-align:center;color:var(--muted)}
+            .tb-empty-ico{font-size:40px;margin-bottom:14px;opacity:.5}
+            .tb-empty p{font-size:13px}
+            .tb-footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;flex-shrink:0}
         </style>
     </head>
     <body>
@@ -253,11 +301,14 @@
                         <h4>Thông báo</h4>
                         <div class="np-actions">
                             <span class="np-mark" onclick="markAllRead()">Đánh dấu đã đọc</span>
-                            <a href="${pageContext.request.contextPath}/yeu-cau-doi-trang-thai" class="np-all">Xem tất cả →</a>
+                            <a href="${pageContext.request.contextPath}/thong-bao/lich-su" class="np-all">Xem tất cả →</a>
                         </div>
                     </div>
                     <div class="np-list" id="notifList">
                         <div class="np-status"><span class="np-spinner"></span>Đang tải...</div>
+                    </div>
+                    <div class="np-footer">
+                        <a href="${pageContext.request.contextPath}/thong-bao/lich-su">Xem tất cả thông báo</a>
                     </div>
                 </div>
             </div>
@@ -355,6 +406,40 @@
             </div>
         </main>
 
+        <!-- ══ MODAL TẤT CẢ THÔNG BÁO ══ -->
+        <div class="modal-overlay" id="modalTatCaTB" onclick="if(event.target===this)closeM('modalTatCaTB')">
+            <div class="modal-tb">
+                <div class="tb-hdr">
+                    <div class="tb-hdr-left">
+                        <div class="tb-hdr-ico">🔔</div>
+                        <div>
+                            <div class="tb-hdr-title">Tất cả thông báo</div>
+                            <div class="tb-hdr-sub" id="tbSub">Đang tải...</div>
+                        </div>
+                    </div>
+                    <button class="mclose" onclick="closeM('modalTatCaTB')">✕</button>
+                </div>
+                <div class="tb-toolbar">
+                    <div class="tb-filter-tabs">
+                        <button class="tb-ftab active" data-f="all"    onclick="tbFilter('all',this)">Tất cả</button>
+                        <button class="tb-ftab"        data-f="unread" onclick="tbFilter('unread',this)">Chưa đọc</button>
+                        <button class="tb-ftab"        data-f="read"   onclick="tbFilter('read',this)">Đã đọc</button>
+                    </div>
+                    <button class="tb-mark-all" id="tbMarkAllBtn" onclick="tbMarkAllRead()">✓ Đánh dấu tất cả đã đọc</button>
+                </div>
+                <div class="tb-list" id="tbList">
+                    <div class="tb-empty" id="tbLoading">
+                        <div class="tb-empty-ico">⏳</div>
+                        <p><span class="np-spinner"></span> Đang tải...</p>
+                    </div>
+                </div>
+                <div class="tb-footer">
+                    <button class="btn-m btn-cancel" onclick="closeM('modalTatCaTB')">Đóng</button>
+                    <a href="${pageContext.request.contextPath}/thong-bao" class="btn-m btn-goto">Trang lịch sử đầy đủ &#8594;</a>
+                </div>
+            </div>
+        </div>
+
         <!-- MODAL DANH SÁCH YÊU CẦU -->
         <div class="modal-overlay" id="modalYCList" onclick="closeMOutside(event, 'modalYCList')">
             <div class="modal modal-wide">
@@ -369,7 +454,6 @@
                     <button class="mclose" onclick="closeM('modalYCList')">✕</button>
                 </div>
                 <div class="modal-body modal-body-list">
-                    <!-- ── 2 TAB LOẠI ── -->
                     <div class="ml-type-tabs">
                         <button class="ml-type-tab active" id="typeTab1" onclick="mlTypeFilter(1)">🏠 Cư trú</button>
                         <button class="ml-type-tab tab2"   id="typeTab2" onclick="mlTypeFilter(2)">👤 Thông tin cá nhân</button>
@@ -451,8 +535,127 @@
     var _mlData   = [];
     var _mlFilter = 'all';
     var _mlLoaded = false;
-    var _mlType   = 1; // 1 = cư trú, 2 = thông tin cá nhân
+    var _mlType   = 1;
 
+    /* ══ ALL-NOTIFICATIONS MODAL ══ */
+    var _tbData      = [];
+    var _tbLoaded    = false;
+    var _tbFilter    = 'all';
+
+    function openModalTatCaThongBao() {
+        openM('modalTatCaTB');
+        if (_tbLoaded) {
+            renderTbList(_tbFilter);
+            return;
+        }
+        document.getElementById('tbList').innerHTML =
+            '<div class="tb-empty" id="tbLoading"><div class="tb-empty-ico">⏳</div><p><span class="np-spinner"></span> Đang tải...</p></div>';
+        fetch(CTX + '/thong-bao?action=list', {credentials: 'include'})
+            .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+            .then(function(data) {
+                _tbData   = data.danhSach || [];
+                _tbLoaded = true;
+                var chuaDoc = (data.chuaDoc || 0);
+                document.getElementById('tbSub').textContent =
+                    _tbData.length + ' thông báo · ' + chuaDoc + ' chưa đọc';
+                document.getElementById('tbMarkAllBtn').style.display = chuaDoc > 0 ? '' : 'none';
+                renderTbList('all');
+                updateBadge(chuaDoc);
+            })
+            .catch(function(err) {
+                document.getElementById('tbList').innerHTML =
+                    '<div class="tb-empty"><div class="tb-empty-ico">⚠️</div><p>Lỗi: ' + err.message + '</p></div>';
+            });
+    }
+
+    function tbFilter(f, btn) {
+        _tbFilter = f;
+        document.querySelectorAll('.tb-ftab').forEach(function(b) { b.classList.remove('active'); });
+        if (btn) btn.classList.add('active');
+        renderTbList(f);
+    }
+
+    function renderTbList(filter) {
+        var list = _tbData;
+        if (filter === 'unread') list = _tbData.filter(function(n) { return !n.daDoc; });
+        else if (filter === 'read')  list = _tbData.filter(function(n) { return  n.daDoc; });
+
+        var el = document.getElementById('tbList');
+        if (!list.length) {
+            el.innerHTML = '<div class="tb-empty"><div class="tb-empty-ico">📭</div><p>'
+                + (filter === 'unread' ? 'Không có thông báo chưa đọc' : 'Không có thông báo nào') + '</p></div>';
+            return;
+        }
+        el.innerHTML = list.map(function(n) {
+            var tag     = detectTag(n.tieuDe);
+            var time    = formatTime(n.ngayGui);
+            var unread  = !n.daDoc;
+            var preview = (n.noiDung || '').substring(0, 100) + ((n.noiDung||'').length > 100 ? '…' : '');
+            var sender  = n.tenNguoiGui ? '· ' + esc(n.tenNguoiGui) : '';
+            return '<div class="tb-item ' + (unread ? 'unread' : '') + '"'
+                + ' id="tbitem-' + n.thongBaoID + '"'
+                + ' onclick="tbClickItem(' + n.thongBaoID + ',' + unread + ')">'
+                + '<div class="tb-dot ' + (unread ? '' : 'read') + '" id="tbdot-' + n.thongBaoID + '"></div>'
+                + '<div class="tb-body">'
+                + '<div class="tb-tag ' + tag.cls + '">' + tag.label + '</div>'
+                + '<div class="tb-title">' + esc(n.tieuDe) + '</div>'
+                + (preview ? '<div class="tb-preview">' + esc(preview) + '</div>' : '')
+                + '<div class="tb-meta"><span class="tb-time">' + time + '</span>'
+                + (sender ? '<span class="tb-sender">' + sender + '</span>' : '')
+                + '</div></div>'
+                + '<span class="tb-arrow">→</span></div>';
+        }).join('');
+    }
+
+    function tbClickItem(id, isUnread) {
+        if (isUnread) {
+            fetch(CTX + '/thong-bao', {
+                method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: new URLSearchParams({action: 'doc', id: id}).toString(), credentials: 'include'
+            }).then(r => r.json()).then(function() {
+                var item = document.getElementById('tbitem-' + id);
+                var dot  = document.getElementById('tbdot-'  + id);
+                if (item) { item.classList.remove('unread'); }
+                if (dot)  { dot.classList.add('read'); }
+                // sync _tbData
+                var entry = _tbData.find(function(n){ return n.thongBaoID == id; });
+                if (entry) entry.daDoc = true;
+                // update badge
+                var remaining = _tbData.filter(function(n){ return !n.daDoc; }).length;
+                updateBadge(remaining);
+                document.getElementById('tbSub').textContent =
+                    _tbData.length + ' thông báo · ' + remaining + ' chưa đọc';
+                if (remaining === 0) document.getElementById('tbMarkAllBtn').style.display = 'none';
+                // sync notif panel
+                var nitem = document.getElementById('nitem-' + id);
+                var ndot  = document.getElementById('ndot-'  + id);
+                if (nitem) nitem.classList.remove('unread');
+                if (ndot)  ndot.classList.add('read');
+            }).catch(function(){});
+        }
+    }
+
+    function tbMarkAllRead() {
+        fetch(CTX + '/thong-bao', {
+            method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'action=docTatCa', credentials: 'include'
+        }).then(r => r.json()).then(function(data) {
+            if (data.success) {
+                _tbData.forEach(function(n){ n.daDoc = true; });
+                renderTbList(_tbFilter);
+                updateBadge(0);
+                document.getElementById('tbMarkAllBtn').style.display = 'none';
+                document.getElementById('tbSub').textContent = _tbData.length + ' thông báo · 0 chưa đọc';
+                // sync notif panel
+                document.querySelectorAll('.np-item.unread').forEach(function(el){ el.classList.remove('unread'); });
+                document.querySelectorAll('.np-dot').forEach(function(d){ d.classList.add('read'); });
+                notifLoaded = false;
+                showToast('success', '✓ Đã đánh dấu tất cả đã đọc');
+            }
+        }).catch(function(){});
+    }
+
+    /* ══ BELL ══ */
     function closeUserMenu() {
         var dd = document.getElementById('userDropdown');
         var btn = document.getElementById('avatarBtn');
@@ -460,7 +663,6 @@
         if (btn) btn.classList.remove('open');
     }
 
-    /* ══ BELL ══ */
     function toggleNotif(e) {
         if (e) e.stopPropagation();
         closeUserMenu();
@@ -476,6 +678,8 @@
                 .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
                 .then(function(data) {
                     notifLoaded = true;
+                    _tbData = data.danhSach || [];
+                    _tbLoaded = true;
                     renderNotifs(data.danhSach || []);
                     updateBadge(data.chuaDoc || 0);
                 })
@@ -528,6 +732,9 @@
                 if (item) item.classList.remove('unread');
                 if (dot)  dot.classList.add('read');
                 updateBadge(Math.max(0, (parseInt(document.getElementById('bellBadge').textContent) || 0) - 1));
+                // sync _tbData
+                var entry = _tbData.find(function(n){ return n.thongBaoID == thongBaoID; });
+                if (entry) entry.daDoc = true;
             }).catch(() => {});
         }
         openModalChiTiet(thongBaoID);
@@ -609,14 +816,11 @@
         return 3;
     }
 
-    /* ── Tab loại yêu cầu ── */
     function mlTypeFilter(type) {
         _mlType   = type;
         _mlFilter = 'all';
-        // Cập nhật active tab loại
         document.getElementById('typeTab1').classList.toggle('active', type === 1);
         document.getElementById('typeTab2').classList.toggle('active', type === 2);
-        // Đổi icon + title modal
         var ico   = document.getElementById('mlIco');
         var title = document.getElementById('mlTitle');
         if (type === 2) {
@@ -626,9 +830,7 @@
             ico.textContent = '📋'; ico.className = 'mico green';
             title.textContent = 'Yêu cầu đổi trạng thái cư trú';
         }
-        // Đổi thead
         updateTableHeader();
-        // Render lại với data đã có
         var filteredByType = _mlData.filter(function(r) { return (r.loaiYeuCau || 1) === _mlType; });
         renderMLSummary(filteredByType);
         renderMLTable('all');
@@ -637,18 +839,9 @@
     function updateTableHeader() {
         var thead = document.getElementById('mlThead');
         if (_mlType === 2) {
-            thead.innerHTML = '<tr>'
-                + '<th>Người gửi</th><th>Tổ</th>'
-                + '<th>Thông tin thay đổi</th>'
-                + '<th>Ngày gửi</th><th>Trạng thái</th>'
-                + '<th style="text-align:center">Thao tác</th>'
-                + '</tr>';
+            thead.innerHTML = '<tr><th>Người gửi</th><th>Tổ</th><th>Thông tin thay đổi</th><th>Ngày gửi</th><th>Trạng thái</th><th style="text-align:center">Thao tác</th></tr>';
         } else {
-            thead.innerHTML = '<tr>'
-                + '<th>Mã hộ</th><th>Chủ hộ</th><th>Tổ</th>'
-                + '<th>Cũ → Mới</th><th>Ngày gửi</th><th>Trạng thái</th>'
-                + '<th style="text-align:center">Thao tác</th>'
-                + '</tr>';
+            thead.innerHTML = '<tr><th>Mã hộ</th><th>Chủ hộ</th><th>Tổ</th><th>Cũ → Mới</th><th>Ngày gửi</th><th>Trạng thái</th><th style="text-align:center">Thao tác</th></tr>';
         }
     }
 
@@ -661,7 +854,6 @@
         document.getElementById('ml_ok').textContent    = duyet;
         document.getElementById('ml_no').textContent    = tuchoi;
         document.getElementById('mlSub').textContent    = list.length + ' yêu cầu · ' + cho + ' chờ duyệt';
-        // badge statChoDuyet = tổng chờ duyệt cả 2 loại
         var totalCho = _mlData.filter(function(r) { return r.ttYC === 'cho'; }).length;
         document.getElementById('statChoDuyet').textContent = totalCho > 0 ? totalCho : '0';
         var cells   = document.querySelectorAll('#mlSummary .ml-stat');
@@ -674,30 +866,19 @@
 
     function renderMLTable(filter) {
         _mlFilter = filter;
-        // Lọc theo loại trước, rồi theo trạng thái
         var byType   = _mlData.filter(function(r) { return (r.loaiYeuCau || 1) === _mlType; });
         var filtered = filter === 'all' ? byType : byType.filter(function(r) { return r.ttYC === filter; });
-
         var tbody = document.getElementById('mlTbody');
         var empty = document.getElementById('mlEmpty');
         var tbl   = document.getElementById('mlTable');
-
         document.querySelectorAll('#mlTabs .ml-tab').forEach(function(b) { b.classList.remove('active'); });
         var activeTab = document.querySelector('#mlTabs .ml-tab[data-filter="' + filter + '"]');
         if (activeTab) activeTab.classList.add('active');
         document.querySelectorAll('#mlSummary .ml-stat').forEach(function(s) { s.classList.remove('active'); });
         var activeStat = document.querySelector('#mlSummary .ml-stat[data-filter="' + filter + '"]');
         if (activeStat) activeStat.classList.add('active');
-
-        if (!filtered.length) {
-            tbl.style.display   = 'none';
-            empty.style.display = '';
-            empty.textContent   = 'Không có yêu cầu nào';
-            return;
-        }
-        tbl.style.display   = '';
-        empty.style.display = 'none';
-
+        if (!filtered.length) { tbl.style.display='none'; empty.style.display=''; empty.textContent='Không có yêu cầu nào'; return; }
+        tbl.style.display=''; empty.style.display='none';
         tbody.innerHTML = filtered.map(function(r) {
             var ttYC    = r.ttYC.replace('badge-', '');
             var ttBadge = ttYC === 'cho'    ? '<span class="pill-cho">Chờ duyệt</span>'
@@ -710,9 +891,7 @@
                 + '<button class="btn-yc-tc"    onclick="mlQuickTuChoi(' + r.yeuCauID + ')">✕ Từ chối</button>'
                 + '</div>'
                 : '<span style="font-size:11px;color:var(--muted)">—</span>';
-
             if (_mlType === 2) {
-                // Tab thông tin cá nhân
                 var fields = [];
                 if (r.ho_Moi)        fields.push('Họ');
                 if (r.ten_Moi)       fields.push('Tên');
@@ -731,7 +910,6 @@
                     + '<td style="text-align:center">' + actBtns + '</td>'
                     + '</tr>';
             } else {
-                // Tab cư trú
                 var pillCu  = pillTT(r.trangThaiCuID,  r.tenTrangThaiCu);
                 var pillMoi = pillTT(r.trangThaiMoiID, r.tenTrangThaiMoi);
                 return '<tr id="mlrow-' + r.yeuCauID + '">'
@@ -761,11 +939,8 @@
             body: new URLSearchParams({action: 'duyet', yeuCauID: yeuCauID, ghiChu: ''}).toString(),
             credentials: 'include'
         }).then(r => r.json()).then(function(res) {
-            if (res.success) {
-                showToast('success', '✓ ' + res.message);
-                _mlLoaded = false; notifLoaded = false;
-                setTimeout(reloadAllData, 400);
-            } else showToast('error', '✕ ' + res.message);
+            if (res.success) { showToast('success', '✓ ' + res.message); _mlLoaded=false; notifLoaded=false; _tbLoaded=false; setTimeout(reloadAllData, 400); }
+            else showToast('error', '✕ ' + res.message);
         }).catch(() => showToast('error', '✕ Lỗi kết nối'));
     }
 
@@ -777,21 +952,17 @@
             body: new URLSearchParams({action: 'tuchoi', yeuCauID: yeuCauID, lyDoTuChoi: ly.trim()}).toString(),
             credentials: 'include'
         }).then(r => r.json()).then(function(res) {
-            if (res.success) {
-                showToast('success', '✓ ' + res.message);
-                _mlLoaded = false; notifLoaded = false;
-                setTimeout(reloadAllData, 400);
-            } else showToast('error', '✕ ' + res.message);
+            if (res.success) { showToast('success', '✓ ' + res.message); _mlLoaded=false; notifLoaded=false; _tbLoaded=false; setTimeout(reloadAllData, 400); }
+            else showToast('error', '✕ ' + res.message);
         }).catch(() => showToast('error', '✕ Lỗi kết nối'));
     }
 
     function reloadAllData() {
         fetchYeuCauJSON().then(function(list) {
             _mlData = list; _mlLoaded = true;
-            var byType = list.filter(function(r) { return (r.loaiYeuCau || 1) === _mlType; });
+            var byType = list.filter(function(r) { return (r.loaiYeuCau||1) === _mlType; });
             if (document.getElementById('modalYCList').classList.contains('show')) {
-                renderMLSummary(byType);
-                renderMLTable(_mlFilter);
+                renderMLSummary(byType); renderMLTable(_mlFilter);
                 document.getElementById('mlLoading').style.display = 'none';
                 document.getElementById('mlTable').style.display   = '';
             } else {
@@ -806,10 +977,8 @@
     function renderModalChiTiet(d) {
         const isCho = d.trangThaiYeuCauID === 1;
         const loai  = d.loaiYeuCau || 1;
-
         document.getElementById('myc_skeleton').style.display = 'none';
         document.getElementById('myc_content').style.display  = '';
-
         if (loai === 2) {
             document.getElementById('myc_ico').textContent   = '👤';
             document.getElementById('myc_ico').className     = 'mico blue';
@@ -821,72 +990,52 @@
             document.getElementById('myc_title').textContent = 'Yêu cầu đổi trạng thái cư trú';
             document.getElementById('myc_sub').textContent   = 'Mã hộ: ' + (d.maHoKhau || '—') + ' · ' + (d.tenTo || '');
         }
-
         var formHtml = '';
         if (isCho) {
-            formHtml = '<div id="form-duyet" style="display:none">'
-                + '<div class="sec-title">Ghi chú duyệt</div>'
+            formHtml = '<div id="form-duyet" style="display:none"><div class="sec-title">Ghi chú duyệt</div>'
                 + '<div class="form-group"><label class="form-label">Ghi chú <span style="color:var(--muted);font-weight:400">(tuỳ chọn)</span></label>'
                 + '<textarea class="form-textarea" id="inp_ghichu" placeholder="Nhập ghi chú nếu cần..."></textarea></div></div>'
-                + '<div id="form-tuchoi" style="display:none">'
-                + '<div class="sec-title">Lý do từ chối</div>'
+                + '<div id="form-tuchoi" style="display:none"><div class="sec-title">Lý do từ chối</div>'
                 + '<div class="form-group"><label class="form-label">Lý do từ chối <span style="color:var(--danger)">*</span></label>'
                 + '<textarea class="form-textarea red" id="inp_lydotc" placeholder="Bắt buộc nhập lý do từ chối..."></textarea></div></div>';
         }
-
         var contentHtml = '';
         if (loai === 1) {
-            contentHtml =
-                '<div class="sec-title">Thông tin hộ</div>'
-                + '<div class="dgrid">'
-                + '<div><div class="dlbl">Mã hộ khẩu</div><div class="dval mono">'  + orD(d.maHoKhau)  + '</div></div>'
-                + '<div><div class="dlbl">Chủ hộ</div><div class="dval">'            + orD(d.tenChuHo)  + '</div></div>'
-                + '<div><div class="dlbl">Tổ dân phố</div><div class="dval">'        + orD(d.tenTo)     + '</div></div>'
-                + '<div><div class="dlbl">Địa chỉ</div><div class="dval muted">'     + orD(d.diaChiHo)  + '</div></div>'
-                + '</div>'
-                + '<div class="sec-title">Chi tiết yêu cầu</div>'
-                + '<div class="dgrid">'
-                + '<div><div class="dlbl">Trạng thái cũ</div>'    + pillH(d.trangThaiCuID,  d.tenTrangThaiCu)  + '</div>'
+            contentHtml = '<div class="sec-title">Thông tin hộ</div><div class="dgrid">'
+                + '<div><div class="dlbl">Mã hộ khẩu</div><div class="dval mono">' + orD(d.maHoKhau) + '</div></div>'
+                + '<div><div class="dlbl">Chủ hộ</div><div class="dval">' + orD(d.tenChuHo) + '</div></div>'
+                + '<div><div class="dlbl">Tổ dân phố</div><div class="dval">' + orD(d.tenTo) + '</div></div>'
+                + '<div><div class="dlbl">Địa chỉ</div><div class="dval muted">' + orD(d.diaChiHo) + '</div></div>'
+                + '</div><div class="sec-title">Chi tiết yêu cầu</div><div class="dgrid">'
+                + '<div><div class="dlbl">Trạng thái cũ</div>' + pillH(d.trangThaiCuID, d.tenTrangThaiCu) + '</div>'
                 + '<div><div class="dlbl">→ Trạng thái mới</div>' + pillH(d.trangThaiMoiID, d.tenTrangThaiMoi) + '</div>'
-                + '<div class="full"><div class="dlbl">Lý do</div><div class="dval muted">' + orD(d.lyDoYeuCau)     + '</div></div>'
-                + '<div><div class="dlbl">Ngày gửi</div><div class="dval muted">'           + orD(d.ngayTao)        + '</div></div>'
-                + '<div><div class="dlbl">Tổ trưởng gửi</div><div class="dval">'           + orD(d.tenNguoiYeuCau) + '</div></div>'
+                + '<div class="full"><div class="dlbl">Lý do</div><div class="dval muted">' + orD(d.lyDoYeuCau) + '</div></div>'
+                + '<div><div class="dlbl">Ngày gửi</div><div class="dval muted">' + orD(d.ngayTao) + '</div></div>'
+                + '<div><div class="dlbl">Tổ trưởng gửi</div><div class="dval">' + orD(d.tenNguoiYeuCau) + '</div></div>'
                 + '</div>' + formHtml;
         } else {
             var fields = [
-                { label: 'Họ',            cu: d.ho_Cu,       moi: d.ho_Moi },
-                { label: 'Tên',           cu: d.ten_Cu,      moi: d.ten_Moi },
-                { label: 'Ngày sinh',     cu: d.ngaySinh_Cu, moi: d.ngaySinh_Moi },
-                { label: 'Giới tính',     cu: d.gioiTinh_Cu, moi: d.gioiTinh_Moi },
-                { label: 'Email',         cu: d.email_Cu,    moi: d.email_Moi },
-                { label: 'Số điện thoại', cu: d.sDT_Cu,      moi: d.sDT_Moi },
-                { label: 'CCCD',          cu: d.cCCD_Cu,     moi: d.cCCD_Moi }
+                {label:'Họ',cu:d.ho_Cu,moi:d.ho_Moi},{label:'Tên',cu:d.ten_Cu,moi:d.ten_Moi},
+                {label:'Ngày sinh',cu:d.ngaySinh_Cu,moi:d.ngaySinh_Moi},{label:'Giới tính',cu:d.gioiTinh_Cu,moi:d.gioiTinh_Moi},
+                {label:'Email',cu:d.email_Cu,moi:d.email_Moi},{label:'Số điện thoại',cu:d.sDT_Cu,moi:d.sDT_Moi},
+                {label:'CCCD',cu:d.cCCD_Cu,moi:d.cCCD_Moi}
             ];
-            var changedRows = fields
-                .filter(function(f) { return f.moi && f.moi !== 'null'; })
-                .map(function(f) {
-                    return '<tr>'
-                        + '<td style="color:var(--muted);font-size:12px;padding:8px 12px;border-bottom:1px solid var(--border)">' + esc(f.label) + '</td>'
-                        + '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-decoration:line-through;color:var(--muted)">' + orD(f.cu)  + '</td>'
-                        + '<td style="padding:8px 12px;border-bottom:1px solid var(--border);color:var(--accent2);font-weight:600">→ ' + orD(f.moi) + '</td>'
-                        + '</tr>';
+            var changedRows = fields.filter(function(f){return f.moi&&f.moi!=='null';})
+                .map(function(f){
+                    return '<tr><td style="color:var(--muted);font-size:12px;padding:8px 12px;border-bottom:1px solid var(--border)">'+esc(f.label)+'</td>'
+                        +'<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-decoration:line-through;color:var(--muted)">'+orD(f.cu)+'</td>'
+                        +'<td style="padding:8px 12px;border-bottom:1px solid var(--border);color:var(--accent2);font-weight:600">→ '+orD(f.moi)+'</td></tr>';
                 }).join('');
-            contentHtml =
-                '<div class="sec-title">Thông tin người gửi</div>'
-                + '<div class="dgrid">'
-                + '<div><div class="dlbl">Họ tên</div><div class="dval">'         + orD(d.tenNguoiYeuCau) + '</div></div>'
-                + '<div><div class="dlbl">Ngày gửi</div><div class="dval muted">' + orD(d.ngayTao)        + '</div></div>'
+            contentHtml = '<div class="sec-title">Thông tin người gửi</div><div class="dgrid">'
+                + '<div><div class="dlbl">Họ tên</div><div class="dval">' + orD(d.tenNguoiYeuCau) + '</div></div>'
+                + '<div><div class="dlbl">Ngày gửi</div><div class="dval muted">' + orD(d.ngayTao) + '</div></div>'
                 + '<div class="full"><div class="dlbl">Lý do</div><div class="dval muted">' + orD(d.lyDoYeuCau) + '</div></div>'
-                + '</div>'
-                + '<div class="sec-title">Thông tin muốn thay đổi</div>'
-                + '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:18px">'
-                + '<thead><tr>'
+                + '</div><div class="sec-title">Thông tin muốn thay đổi</div>'
+                + '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:18px"><thead><tr>'
                 + '<th style="padding:8px 12px;text-align:left;color:var(--muted);font-size:11px;font-weight:700;border-bottom:1px solid var(--border)">Trường</th>'
                 + '<th style="padding:8px 12px;text-align:left;color:var(--muted);font-size:11px;font-weight:700;border-bottom:1px solid var(--border)">Hiện tại</th>'
                 + '<th style="padding:8px 12px;text-align:left;color:var(--muted);font-size:11px;font-weight:700;border-bottom:1px solid var(--border)">Muốn đổi thành</th>'
-                + '</tr></thead>'
-                + '<tbody>' + (changedRows || '<tr><td colspan="3" style="padding:16px;text-align:center;color:var(--muted)">Không có thông tin</td></tr>') + '</tbody>'
-                + '</table>' + formHtml;
+                + '</tr></thead><tbody>' + (changedRows||'<tr><td colspan="3" style="padding:16px;text-align:center;color:var(--muted)">Không có thông tin</td></tr>') + '</tbody></table>' + formHtml;
         }
         document.getElementById('myc_content').innerHTML = contentHtml;
         setModalFooter(isCho ? 'chitiet' : 'readonly');
@@ -895,118 +1044,77 @@
     function setModalFooter(state) {
         var el    = document.getElementById('myc_footer');
         var urlYC = CTX + '/yeu-cau-doi-trang-thai';
-        if (state === 'loading') {
-            el.innerHTML = '<button class="btn-m btn-cancel" onclick="closeM(\'modalYeuCau\')">Đóng</button>';
-        } else if (state === 'readonly') {
-            el.innerHTML = '<button class="btn-m btn-cancel" onclick="closeM(\'modalYeuCau\')">Đóng</button>'
-                + '<a href="' + urlYC + '" class="btn-m btn-goto">Xem toàn bộ →</a>';
-        } else if (state === 'chitiet') {
-            el.innerHTML = '<button class="btn-m btn-cancel" onclick="closeM(\'modalYeuCau\')">Đóng</button>'
-                + '<a href="' + urlYC + '" class="btn-m btn-goto">Xem tất cả</a>'
-                + '<button class="btn-m btn-no" onclick="switchState(\'tuchoi\')">✕ Từ chối</button>'
-                + '<button class="btn-m btn-ok" onclick="switchState(\'duyet\')">✓ Duyệt</button>';
-        } else if (state === 'duyet') {
-            el.innerHTML = '<button class="btn-m btn-cancel" onclick="switchState(\'chitiet\')">← Quay lại</button>'
-                + '<button class="btn-m btn-ok" onclick="submitDuyet()" id="btnConfirmDuyet">✓ Xác nhận duyệt</button>';
-        } else if (state === 'tuchoi') {
-            el.innerHTML = '<button class="btn-m btn-cancel" onclick="switchState(\'chitiet\')">← Quay lại</button>'
-                + '<button class="btn-m btn-no" onclick="submitTuChoi()" id="btnConfirmTC">✕ Xác nhận từ chối</button>';
-        }
+        if (state==='loading') { el.innerHTML='<button class="btn-m btn-cancel" onclick="closeM(\'modalYeuCau\')">Đóng</button>'; }
+        else if (state==='readonly') { el.innerHTML='<button class="btn-m btn-cancel" onclick="closeM(\'modalYeuCau\')">Đóng</button><a href="'+urlYC+'" class="btn-m btn-goto">Xem toàn bộ →</a>'; }
+        else if (state==='chitiet') { el.innerHTML='<button class="btn-m btn-cancel" onclick="closeM(\'modalYeuCau\')">Đóng</button><a href="'+urlYC+'" class="btn-m btn-goto">Xem tất cả</a><button class="btn-m btn-no" onclick="switchState(\'tuchoi\')">✕ Từ chối</button><button class="btn-m btn-ok" onclick="switchState(\'duyet\')">✓ Duyệt</button>'; }
+        else if (state==='duyet') { el.innerHTML='<button class="btn-m btn-cancel" onclick="switchState(\'chitiet\')">← Quay lại</button><button class="btn-m btn-ok" onclick="submitDuyet()" id="btnConfirmDuyet">✓ Xác nhận duyệt</button>'; }
+        else if (state==='tuchoi') { el.innerHTML='<button class="btn-m btn-cancel" onclick="switchState(\'chitiet\')">← Quay lại</button><button class="btn-m btn-no" onclick="submitTuChoi()" id="btnConfirmTC">✕ Xác nhận từ chối</button>'; }
     }
 
     function switchState(state) {
-        const fDuyet   = document.getElementById('form-duyet');
-        const fTuChoi  = document.getElementById('form-tuchoi');
-        const isCapNhat = document.getElementById('myc_title').textContent.includes('cá nhân');
-        if (state === 'duyet') {
-            if (fDuyet)  fDuyet.style.display  = '';
-            if (fTuChoi) fTuChoi.style.display = 'none';
-            setModalFooter('duyet');
-            document.getElementById('myc_ico').textContent   = '✓';
-            document.getElementById('myc_ico').className     = 'mico green';
-            document.getElementById('myc_title').textContent = isCapNhat ? 'Duyệt cập nhật thông tin cá nhân' : 'Duyệt yêu cầu cư trú';
-        } else if (state === 'tuchoi') {
-            if (fDuyet)  fDuyet.style.display  = 'none';
-            if (fTuChoi) fTuChoi.style.display = '';
-            setModalFooter('tuchoi');
-            document.getElementById('myc_ico').textContent   = '✕';
-            document.getElementById('myc_ico').className     = 'mico red';
-            document.getElementById('myc_title').textContent = isCapNhat ? 'Từ chối cập nhật thông tin cá nhân' : 'Từ chối yêu cầu cư trú';
+        const fDuyet=document.getElementById('form-duyet');
+        const fTuChoi=document.getElementById('form-tuchoi');
+        const isCapNhat=document.getElementById('myc_title').textContent.includes('cá nhân');
+        if (state==='duyet') {
+            if(fDuyet)fDuyet.style.display=''; if(fTuChoi)fTuChoi.style.display='none'; setModalFooter('duyet');
+            document.getElementById('myc_ico').textContent='✓'; document.getElementById('myc_ico').className='mico green';
+            document.getElementById('myc_title').textContent=isCapNhat?'Duyệt cập nhật thông tin cá nhân':'Duyệt yêu cầu cư trú';
+        } else if (state==='tuchoi') {
+            if(fDuyet)fDuyet.style.display='none'; if(fTuChoi)fTuChoi.style.display=''; setModalFooter('tuchoi');
+            document.getElementById('myc_ico').textContent='✕'; document.getElementById('myc_ico').className='mico red';
+            document.getElementById('myc_title').textContent=isCapNhat?'Từ chối cập nhật thông tin cá nhân':'Từ chối yêu cầu cư trú';
         } else {
-            if (fDuyet)  fDuyet.style.display  = 'none';
-            if (fTuChoi) fTuChoi.style.display = 'none';
-            setModalFooter('chitiet');
-            document.getElementById('myc_ico').textContent   = isCapNhat ? '👤' : '📋';
-            document.getElementById('myc_ico').className     = isCapNhat ? 'mico blue' : 'mico warn';
-            document.getElementById('myc_title').textContent = isCapNhat ? 'Yêu cầu cập nhật thông tin cá nhân' : 'Yêu cầu đổi trạng thái cư trú';
+            if(fDuyet)fDuyet.style.display='none'; if(fTuChoi)fTuChoi.style.display='none'; setModalFooter('chitiet');
+            document.getElementById('myc_ico').textContent=isCapNhat?'👤':'📋';
+            document.getElementById('myc_ico').className=isCapNhat?'mico blue':'mico warn';
+            document.getElementById('myc_title').textContent=isCapNhat?'Yêu cầu cập nhật thông tin cá nhân':'Yêu cầu đổi trạng thái cư trú';
         }
     }
 
     function submitDuyet() {
-        if (!_activeYeuCauID) return;
-        const ghiChu = (document.getElementById('inp_ghichu')?.value || '').trim();
-        const btn = document.getElementById('btnConfirmDuyet');
-        btn.disabled = true; btn.textContent = 'Đang xử lý...';
-        fetch(CTX + '/yeu-cau-doi-trang-thai', {
-            method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: new URLSearchParams({action: 'duyet', yeuCauID: _activeYeuCauID, ghiChu}).toString(),
-            credentials: 'include'
-        }).then(r => r.json()).then(res => {
-            if (res.success) {
-                closeM('modalYeuCau'); showToast('success', '✓ ' + res.message);
-                notifLoaded = false; _mlLoaded = false;
-                setTimeout(reloadAllData, 400);
-            } else { btn.disabled = false; btn.textContent = '✓ Xác nhận duyệt'; showToast('error', '✕ ' + res.message); }
-        }).catch(() => { btn.disabled = false; btn.textContent = '✓ Xác nhận duyệt'; showToast('error', '✕ Lỗi kết nối'); });
+        if(!_activeYeuCauID) return;
+        const ghiChu=(document.getElementById('inp_ghichu')?.value||'').trim();
+        const btn=document.getElementById('btnConfirmDuyet');
+        btn.disabled=true; btn.textContent='Đang xử lý...';
+        fetch(CTX+'/yeu-cau-doi-trang-thai',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+            body:new URLSearchParams({action:'duyet',yeuCauID:_activeYeuCauID,ghiChu}).toString(),credentials:'include'
+        }).then(r=>r.json()).then(res=>{
+            if(res.success){closeM('modalYeuCau');showToast('success','✓ '+res.message);notifLoaded=false;_mlLoaded=false;_tbLoaded=false;setTimeout(reloadAllData,400);}
+            else{btn.disabled=false;btn.textContent='✓ Xác nhận duyệt';showToast('error','✕ '+res.message);}
+        }).catch(()=>{btn.disabled=false;btn.textContent='✓ Xác nhận duyệt';showToast('error','✕ Lỗi kết nối');});
     }
 
     function submitTuChoi() {
-        if (!_activeYeuCauID) return;
-        const lyDoTC = (document.getElementById('inp_lydotc')?.value || '').trim();
-        if (!lyDoTC) { showToast('error', '⚠ Vui lòng nhập lý do từ chối.'); return; }
-        const btn = document.getElementById('btnConfirmTC');
-        btn.disabled = true; btn.textContent = 'Đang xử lý...';
-        fetch(CTX + '/yeu-cau-doi-trang-thai', {
-            method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: new URLSearchParams({action: 'tuchoi', yeuCauID: _activeYeuCauID, lyDoTuChoi: lyDoTC}).toString(),
-            credentials: 'include'
-        }).then(r => r.json()).then(res => {
-            if (res.success) {
-                closeM('modalYeuCau'); showToast('success', '✓ ' + res.message);
-                notifLoaded = false; _mlLoaded = false;
-                setTimeout(reloadAllData, 400);
-            } else { btn.disabled = false; btn.textContent = '✕ Xác nhận từ chối'; showToast('error', '✕ ' + res.message); }
-        }).catch(() => { btn.disabled = false; btn.textContent = '✕ Xác nhận từ chối'; showToast('error', '✕ Lỗi kết nối'); });
+        if(!_activeYeuCauID) return;
+        const lyDoTC=(document.getElementById('inp_lydotc')?.value||'').trim();
+        if(!lyDoTC){showToast('error','⚠ Vui lòng nhập lý do từ chối.');return;}
+        const btn=document.getElementById('btnConfirmTC');
+        btn.disabled=true; btn.textContent='Đang xử lý...';
+        fetch(CTX+'/yeu-cau-doi-trang-thai',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+            body:new URLSearchParams({action:'tuchoi',yeuCauID:_activeYeuCauID,lyDoTuChoi:lyDoTC}).toString(),credentials:'include'
+        }).then(r=>r.json()).then(res=>{
+            if(res.success){closeM('modalYeuCau');showToast('success','✓ '+res.message);notifLoaded=false;_mlLoaded=false;_tbLoaded=false;setTimeout(reloadAllData,400);}
+            else{btn.disabled=false;btn.textContent='✕ Xác nhận từ chối';showToast('error','✕ '+res.message);}
+        }).catch(()=>{btn.disabled=false;btn.textContent='✕ Xác nhận từ chối';showToast('error','✕ Lỗi kết nối');});
     }
 
     /* ══ BADGE ══ */
-    function markOneRead(thongBaoID) {
-        fetch(CTX + '/thong-bao', {method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
-            body: new URLSearchParams({action:'doc',id:thongBaoID}).toString(), credentials:'include'
-        }).then(r=>r.json()).then(()=>{
-            var item=document.getElementById('nitem-'+thongBaoID);
-            var dot=document.getElementById('ndot-'+thongBaoID);
-            if(item)item.classList.remove('unread');
-            if(dot)dot.classList.add('read');
-            updateBadge(Math.max(0,(parseInt(document.getElementById('bellBadge').textContent)||0)-1));
-        }).catch(()=>{});
-    }
-
     function markAllRead() {
         fetch(CTX+'/thong-bao',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
             body:'action=docTatCa',credentials:'include'
         }).then(r=>r.json()).then(()=>{
             document.querySelectorAll('.np-item.unread').forEach(el=>el.classList.remove('unread'));
             document.querySelectorAll('.np-dot').forEach(d=>d.classList.add('read'));
+            _tbData.forEach(function(n){n.daDoc=true;}); _tbLoaded=false;
             updateBadge(0); notifLoaded=false;
         }).catch(()=>{});
     }
 
     function updateBadge(count) {
-        const b = document.getElementById('bellBadge');
-        if (count > 0) { b.textContent = count > 99 ? '99+' : count; b.classList.remove('hidden'); }
+        const b=document.getElementById('bellBadge');
+        if(count>0){b.textContent=count>99?'99+':count;b.classList.remove('hidden');}
         else b.classList.add('hidden');
-        document.getElementById('statChoDuyet').textContent = count > 0 ? count : '0';
+        document.getElementById('statChoDuyet').textContent=count>0?count:'0';
     }
 
     function pollBadge() {
@@ -1014,91 +1122,78 @@
             .then(r=>r.json()).then(d=>updateBadge(d.chuaDoc||0)).catch(()=>{});
     }
     pollBadge();
-    setInterval(pollBadge, 60000);
+    setInterval(pollBadge,60000);
 
     /* ══ USER MENU ══ */
     function toggleMenu() {
         document.getElementById('notifPanel').classList.remove('open');
-        const dd=document.getElementById('userDropdown'), btn=document.getElementById('avatarBtn');
+        const dd=document.getElementById('userDropdown'),btn=document.getElementById('avatarBtn');
         const open=dd.classList.toggle('open');
         btn.classList.toggle('open',open);
     }
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click',function(e){
         var bellWrap=document.getElementById('bellWrap');
         var userMenu=document.querySelector('.user-menu');
-        if(bellWrap&&!bellWrap.contains(e.target)) document.getElementById('notifPanel').classList.remove('open');
-        if(userMenu&&!userMenu.contains(e.target)) closeUserMenu();
+        if(bellWrap&&!bellWrap.contains(e.target))document.getElementById('notifPanel').classList.remove('open');
+        if(userMenu&&!userMenu.contains(e.target))closeUserMenu();
     });
 
     /* ══ MODAL HELPERS ══ */
-    function openM(id) { document.getElementById(id).classList.add('show'); document.body.style.overflow='hidden'; }
-    function closeM(id) { document.getElementById(id).classList.remove('show'); document.body.style.overflow=''; }
-    function closeMOutside(e, id) { if(e.target===document.getElementById(id)) closeM(id); }
-    document.addEventListener('keydown', function(e) {
-        if(e.key==='Escape'){ closeM('modalYeuCau'); closeM('modalYCList'); }
+    function openM(id){document.getElementById(id).classList.add('show');document.body.style.overflow='hidden';}
+    function closeM(id){document.getElementById(id).classList.remove('show');document.body.style.overflow='';}
+    function closeMOutside(e,id){if(e.target===document.getElementById(id))closeM(id);}
+    document.addEventListener('keydown',function(e){
+        if(e.key==='Escape'){closeM('modalYeuCau');closeM('modalYCList');closeM('modalTatCaTB');}
     });
 
     /* ══ HELPERS ══ */
-    function pillH(id, label) {
-        const m={1:'p-tt',2:'p-tv',3:'p-tm'};
-        return '<span class="pill '+(m[id]||'p-tt')+'">'+esc(label||'—')+'</span>';
-    }
-    function orD(v) { return (v&&v!=='null') ? esc(String(v)) : '—'; }
-    function esc(s) {
-        return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-    function formatTime(d) {
-        if(!d) return '';
-        try {
+    function pillH(id,label){const m={1:'p-tt',2:'p-tv',3:'p-tm'};return '<span class="pill '+(m[id]||'p-tt')+'">'+esc(label||'—')+'</span>';}
+    function orD(v){return(v&&v!=='null')?esc(String(v)):'—';}
+    function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+    function formatTime(d){
+        if(!d)return'';
+        try{
             const diff=Math.floor((Date.now()-new Date(d))/1000);
-            if(diff<60) return 'Vừa xong';
-            if(diff<3600) return Math.floor(diff/60)+' phút trước';
-            if(diff<86400) return Math.floor(diff/3600)+' giờ trước';
-            if(diff<604800) return Math.floor(diff/86400)+' ngày trước';
+            if(diff<60)return'Vừa xong';
+            if(diff<3600)return Math.floor(diff/60)+' phút trước';
+            if(diff<86400)return Math.floor(diff/3600)+' giờ trước';
+            if(diff<604800)return Math.floor(diff/86400)+' ngày trước';
             return new Date(d).toLocaleDateString('vi-VN');
-        } catch(e) { return d; }
+        }catch(e){return d;}
     }
-    function showToast(type, msg) {
+    function showToast(type,msg){
         const t=document.getElementById('toast');
-        t.className='toast '+type+' show'; t.textContent=msg;
-        clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),3500);
+        t.className='toast '+type+' show';t.textContent=msg;
+        clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3500);
     }
 
     function openModalYCList(callback) {
-        // Reset về tab cư trú khi mở
-        _mlType   = 1;
-        _mlFilter = 'all';
+        _mlType=1; _mlFilter='all';
         document.getElementById('typeTab1').classList.add('active');
         document.getElementById('typeTab2').classList.remove('active');
-        document.getElementById('mlIco').textContent   = '📋';
-        document.getElementById('mlIco').className     = 'mico green';
-        document.getElementById('mlTitle').textContent = 'Yêu cầu đổi trạng thái cư trú';
-        updateTableHeader();
-        openM('modalYCList');
-
-        if (_mlLoaded && _mlData.length > 0) {
-            var byType = _mlData.filter(function(r) { return (r.loaiYeuCau||1) === _mlType; });
-            renderMLSummary(byType);
-            renderMLTable('all');
-            document.getElementById('mlLoading').style.display = 'none';
-            document.getElementById('mlTable').style.display   = '';
-            if (callback) callback();
-            return;
+        document.getElementById('mlIco').textContent='📋'; document.getElementById('mlIco').className='mico green';
+        document.getElementById('mlTitle').textContent='Yêu cầu đổi trạng thái cư trú';
+        updateTableHeader(); openM('modalYCList');
+        if(_mlLoaded&&_mlData.length>0){
+            var byType=_mlData.filter(function(r){return(r.loaiYeuCau||1)===_mlType;});
+            renderMLSummary(byType); renderMLTable('all');
+            document.getElementById('mlLoading').style.display='none';
+            document.getElementById('mlTable').style.display='';
+            if(callback)callback(); return;
         }
-        document.getElementById('mlLoading').style.display = '';
-        document.getElementById('mlLoading').innerHTML     = '<span class="np-spinner"></span> Đang tải dữ liệu...';
-        document.getElementById('mlTable').style.display   = 'none';
-        document.getElementById('mlEmpty').style.display   = 'none';
-        fetchYeuCauJSON().then(function(list) {
-            _mlData = list; _mlLoaded = true;
-            var byType = list.filter(function(r) { return (r.loaiYeuCau||1) === _mlType; });
-            renderMLSummary(byType);
-            renderMLTable('all');
-            document.getElementById('mlLoading').style.display = 'none';
-            document.getElementById('mlTable').style.display   = '';
-            if (callback) callback();
-        }).catch(function(err) {
-            document.getElementById('mlLoading').innerHTML = '⚠ Không thể tải dữ liệu: ' + err.message;
+        document.getElementById('mlLoading').style.display='';
+        document.getElementById('mlLoading').innerHTML='<span class="np-spinner"></span> Đang tải dữ liệu...';
+        document.getElementById('mlTable').style.display='none';
+        document.getElementById('mlEmpty').style.display='none';
+        fetchYeuCauJSON().then(function(list){
+            _mlData=list;_mlLoaded=true;
+            var byType=list.filter(function(r){return(r.loaiYeuCau||1)===_mlType;});
+            renderMLSummary(byType); renderMLTable('all');
+            document.getElementById('mlLoading').style.display='none';
+            document.getElementById('mlTable').style.display='';
+            if(callback)callback();
+        }).catch(function(err){
+            document.getElementById('mlLoading').innerHTML='⚠ Không thể tải dữ liệu: '+err.message;
         });
     }
         </script>
