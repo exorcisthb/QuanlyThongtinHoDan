@@ -1169,6 +1169,22 @@
                 color: var(--danger);
             }
 
+            /* ══ MODAL ĐĂNG XUẤT ══ */
+            .logout-overlay { display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.7); backdrop-filter:blur(6px); align-items:center; justify-content:center; }
+            .logout-overlay.show { display:flex; animation:fadeInModal .2s ease; }
+            @keyframes fadeInModal { from{opacity:0} to{opacity:1} }
+            .logout-box { background:var(--surface); border:1px solid var(--border); border-radius:16px; width:380px; max-width:calc(100vw - 32px); box-shadow:0 24px 64px rgba(0,0,0,.6); overflow:hidden; animation:popIn .22s cubic-bezier(.34,1.56,.64,1); }
+            @keyframes popIn { from{opacity:0;transform:scale(.93) translateY(10px)} to{opacity:1;transform:none} }
+            .logout-body { padding:28px 28px 20px; text-align:center; }
+            .logout-ico { font-size:40px; margin-bottom:14px; }
+            .logout-title { font-size:17px; font-weight:800; margin-bottom:6px; }
+            .logout-sub { font-size:13px; color:var(--muted); line-height:1.5; }
+            .logout-footer { padding:16px 24px 24px; display:flex; gap:10px; }
+            .btn-logout-cancel { flex:1; height:40px; border-radius:10px; background:var(--surface2); border:1px solid var(--border); color:var(--muted); font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; transition:all .15s; }
+            .btn-logout-cancel:hover { border-color:var(--text); color:var(--text); }
+            .btn-logout-confirm { flex:1; height:40px; border-radius:10px; background:var(--danger); border:none; color:#fff; font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; transition:opacity .15s; }
+            .btn-logout-confirm:hover { opacity:.85; }
+
             @media (max-width: 768px) {
                 .sidebar {
                     transform: translateX(-100%);
@@ -1238,10 +1254,10 @@
                             <span class="pi-icon">🔑</span> Đổi mật khẩu
                         </a>
                         <hr class="popup-divider">
-                        <a class="popup-item danger" href="${pageContext.request.contextPath}/"
-                           onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
+                        <%-- ✅ MODAL thay vì confirm() --%>
+                        <div class="popup-item danger" onclick="showLogoutModal()">
                             <span class="pi-icon">🚪</span> Đăng xuất
-                        </a>
+                        </div>
                     </div>
                     <button class="user-bar-btn" id="userBarBtn" onclick="toggleUserMenu()">
                         <div class="avatar" id="avatarBtn">AD</div>
@@ -1773,6 +1789,21 @@
             </main>
         </div>
 
+        <!-- ✅ MODAL ĐĂNG XUẤT -->
+        <div class="logout-overlay" id="logoutModal" onclick="if(event.target===this)hideLogoutModal()">
+            <div class="logout-box">
+                <div class="logout-body">
+                    <div class="logout-ico">🚪</div>
+                    <div class="logout-title">Đăng xuất?</div>
+                    <div class="logout-sub">Bạn sẽ được đưa về trang đăng nhập.<br>Mọi phiên làm việc hiện tại sẽ kết thúc.</div>
+                </div>
+                <div class="logout-footer">
+                    <button class="btn-logout-cancel" onclick="hideLogoutModal()">Ở lại</button>
+                    <button class="btn-logout-confirm" onclick="doLogout()">🚪 Đăng xuất</button>
+                </div>
+            </div>
+        </div>
+
         <script>
             /* ─── Avatar ─── */
             (function () {
@@ -1995,6 +2026,24 @@
             document.addEventListener('click', function () {
                 document.querySelectorAll('.ts-menu').forEach(m => m.style.display = 'none');
                 document.querySelectorAll('.ts-btn').forEach(b => b.classList.remove('open'));
+            });
+
+            /* ── ✅ MODAL ĐĂNG XUẤT ── */
+            function showLogoutModal() {
+                document.getElementById('userPopup').classList.remove('open');
+                document.getElementById('userBarBtn').classList.remove('open');
+                document.getElementById('logoutModal').classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }
+            function hideLogoutModal() {
+                document.getElementById('logoutModal').classList.remove('show');
+                document.body.style.overflow = '';
+            }
+            function doLogout() {
+                window.location.href = '${pageContext.request.contextPath}/logout';
+            }
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') hideLogoutModal();
             });
         </script>
     </body>

@@ -278,6 +278,38 @@
             .tb-empty-ico{font-size:40px;margin-bottom:14px;opacity:.5}
             .tb-empty p{font-size:13px}
             .tb-footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;flex-shrink:0}
+
+            /* ══ MODAL ĐĂNG XUẤT ══ */
+            .logout-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);align-items:center;justify-content:center}
+            .logout-overlay.show{display:flex;animation:fadeIn .2s ease}
+            @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+            .logout-box,.tc-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:380px;max-width:calc(100vw - 32px);box-shadow:0 24px 64px rgba(0,0,0,.6);overflow:hidden;animation:popIn .22s cubic-bezier(.34,1.56,.64,1)}
+            .tc-box{width:440px}
+            @keyframes popIn{from{opacity:0;transform:scale(.93) translateY(10px)}to{opacity:1;transform:none}}
+            .logout-body{padding:28px 28px 20px;text-align:center}
+            .logout-ico{font-size:40px;margin-bottom:14px}
+            .logout-title{font-size:17px;font-weight:800;margin-bottom:6px}
+            .logout-sub{font-size:13px;color:var(--muted);line-height:1.5}
+            .logout-footer,.tc-footer{padding:16px 24px 24px;display:flex;gap:10px}
+            .btn-lo-cancel,.btn-tc-cancel{flex:1;height:40px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s}
+            .btn-lo-cancel:hover,.btn-tc-cancel:hover{border-color:var(--text);color:var(--text)}
+            .btn-lo-confirm{flex:1;height:40px;border-radius:10px;background:var(--danger);border:none;color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;transition:opacity .15s}
+            .btn-lo-confirm:hover{opacity:.85}
+            .btn-tc-confirm{flex:1;height:40px;border-radius:10px;background:rgba(247,92,92,.15);border:1px solid rgba(247,92,92,.3);color:var(--danger);font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .15s}
+            .btn-tc-confirm:hover{background:var(--danger);color:#fff}
+            .btn-tc-confirm:disabled{opacity:.5;cursor:not-allowed}
+            /* tc body */
+            .tc-hdr{padding:20px 24px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)}
+            .tc-ico{width:44px;height:44px;border-radius:12px;background:rgba(247,92,92,.15);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+            .tc-title{font-size:15px;font-weight:800}
+            .tc-sub{font-size:12px;color:var(--muted);margin-top:2px}
+            .tc-body{padding:18px 24px 4px}
+            .tc-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:block}
+            .tc-textarea{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:10px;font-size:14px;font-family:inherit;resize:none;height:88px;transition:border-color .18s;outline:none;line-height:1.6}
+            .tc-textarea:focus{border-color:var(--danger);box-shadow:0 0 0 3px rgba(247,92,92,.1)}
+            .tc-textarea.err{border-color:var(--danger)}
+            .tc-err{font-size:11px;color:var(--danger);margin-top:5px;margin-bottom:0;display:none}
+            .tc-err.show{display:block}
         </style>
     </head>
     <body>
@@ -348,10 +380,9 @@
                     <a class="ud-item" href="${pageContext.request.contextPath}/profile"><span class="ud-icon">👤</span> Thông tin cá nhân</a>
                     <a class="ud-item" href="${pageContext.request.contextPath}/change_password"><span class="ud-icon">🔑</span> Đổi mật khẩu</a>
                     <hr class="ud-divider">
-                    <a class="ud-item danger" href="${pageContext.request.contextPath}/"
-                       onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
+                    <div class="ud-item danger" onclick="showLogoutModal()">
                         <span class="ud-icon">🚪</span> Đăng xuất
-                    </a>
+                    </div>
                 </div>
             </div>
         </header>
@@ -526,6 +557,43 @@
             </div>
         </div>
 
+        <!-- ══ MODAL ĐĂNG XUẤT ══ -->
+        <div class="logout-overlay" id="logoutModal" onclick="if(event.target===this)hideLogoutModal()">
+            <div class="logout-box">
+                <div class="logout-body">
+                    <div class="logout-ico">🚪</div>
+                    <div class="logout-title">Đăng xuất?</div>
+                    <div class="logout-sub">Bạn sẽ được đưa về trang đăng nhập.<br>Mọi phiên làm việc hiện tại sẽ kết thúc.</div>
+                </div>
+                <div class="logout-footer">
+                    <button class="btn-lo-cancel" onclick="hideLogoutModal()">Ở lại</button>
+                    <button class="btn-lo-confirm" onclick="window.location.href=CTX+'/logout'">🚪 Đăng xuất</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ MODAL TỪ CHỐI YÊU CẦU ══ -->
+        <div class="logout-overlay" id="modalTuChoi" onclick="if(event.target===this)closeTuChoi()">
+            <div class="tc-box">
+                <div class="tc-hdr">
+                    <div class="tc-ico">✕</div>
+                    <div>
+                        <div class="tc-title">Từ chối yêu cầu</div>
+                        <div class="tc-sub">Hộ dân sẽ được thông báo lý do từ chối</div>
+                    </div>
+                </div>
+                <div class="tc-body">
+                    <label class="tc-label">Lý do từ chối <span style="color:var(--danger)">*</span></label>
+                    <textarea class="tc-textarea" id="tcLyDo" placeholder="Nhập lý do từ chối yêu cầu này..."></textarea>
+                    <div class="tc-err" id="tcErr">Vui lòng nhập lý do từ chối.</div>
+                </div>
+                <div class="tc-footer">
+                    <button class="btn-tc-cancel" onclick="closeTuChoi()">Hủy bỏ</button>
+                    <button class="btn-tc-confirm" id="btnConfirmTC2" onclick="confirmTuChoi()">✕ Xác nhận từ chối</button>
+                </div>
+            </div>
+        </div>
+
         <div class="toast" id="toast"></div>
 
         <script>
@@ -656,6 +724,16 @@
     }
 
     /* ══ BELL ══ */
+
+    function showLogoutModal() {
+        closeUserMenu();
+        document.getElementById('logoutModal').classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+    function hideLogoutModal() {
+        document.getElementById('logoutModal').classList.remove('show');
+        document.body.style.overflow = '';
+    }
     function closeUserMenu() {
         var dd = document.getElementById('userDropdown');
         var btn = document.getElementById('avatarBtn');
@@ -944,17 +1022,39 @@
         }).catch(() => showToast('error', '✕ Lỗi kết nối'));
     }
 
+    let _tcYeuCauID = null;
     function mlQuickTuChoi(yeuCauID) {
-        var ly = prompt('Nhập lý do từ chối:');
-        if (!ly || !ly.trim()) return;
+        _tcYeuCauID = yeuCauID;
+        document.getElementById('tcLyDo').value = '';
+        document.getElementById('tcErr').classList.remove('show');
+        document.getElementById('tcLyDo').classList.remove('err');
+        document.getElementById('modalTuChoi').classList.add('show');
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => document.getElementById('tcLyDo').focus(), 100);
+    }
+    function closeTuChoi() {
+        document.getElementById('modalTuChoi').classList.remove('show');
+        document.body.style.overflow = '';
+    }
+    function confirmTuChoi() {
+        const ly = document.getElementById('tcLyDo').value.trim();
+        if (!ly) {
+            document.getElementById('tcErr').classList.add('show');
+            document.getElementById('tcLyDo').classList.add('err');
+            return;
+        }
+        const btn = document.getElementById('btnConfirmTC2');
+        btn.disabled = true; btn.textContent = 'Đang xử lý...';
         fetch(CTX + '/yeu-cau-doi-trang-thai', {
             method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: new URLSearchParams({action: 'tuchoi', yeuCauID: yeuCauID, lyDoTuChoi: ly.trim()}).toString(),
+            body: new URLSearchParams({action: 'tuchoi', yeuCauID: _tcYeuCauID, lyDoTuChoi: ly}).toString(),
             credentials: 'include'
         }).then(r => r.json()).then(function(res) {
+            btn.disabled = false; btn.textContent = '✕ Xác nhận từ chối';
+            closeTuChoi();
             if (res.success) { showToast('success', '✓ ' + res.message); _mlLoaded=false; notifLoaded=false; _tbLoaded=false; setTimeout(reloadAllData, 400); }
             else showToast('error', '✕ ' + res.message);
-        }).catch(() => showToast('error', '✕ Lỗi kết nối'));
+        }).catch(() => { btn.disabled=false; btn.textContent='✕ Xác nhận từ chối'; showToast('error', '✕ Lỗi kết nối'); });
     }
 
     function reloadAllData() {
@@ -1143,7 +1243,7 @@
     function closeM(id){document.getElementById(id).classList.remove('show');document.body.style.overflow='';}
     function closeMOutside(e,id){if(e.target===document.getElementById(id))closeM(id);}
     document.addEventListener('keydown',function(e){
-        if(e.key==='Escape'){closeM('modalYeuCau');closeM('modalYCList');closeM('modalTatCaTB');}
+        if(e.key==='Escape'){closeM('modalYeuCau');closeM('modalYCList');closeM('modalTatCaTB');hideLogoutModal();closeTuChoi();}
     });
 
     /* ══ HELPERS ══ */

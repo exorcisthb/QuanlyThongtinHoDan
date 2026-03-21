@@ -54,6 +54,7 @@
         .np-footer{padding:10px;text-align:center;font-size:12px;color:var(--accent);cursor:pointer;border-top:1px solid var(--border);}
         .np-empty{padding:24px;text-align:center;color:var(--muted);font-size:13px;}
 
+        /* QR Modal */
         .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:none;align-items:center;justify-content:center;}
         .modal-overlay.open{display:flex;animation:fadeIn .2s ease;}
         @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -99,7 +100,7 @@
         .ud-email{font-size:11px;color:var(--muted);margin-top:2px;}
         .ud-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:5px;background:rgba(56,217,169,.15);color:var(--accent2);}
         .ud-badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;}
-        .ud-item{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:13px;font-weight:500;color:var(--text);text-decoration:none;transition:background .15s;}
+        .ud-item{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:13px;font-weight:500;color:var(--text);text-decoration:none;transition:background .15s;cursor:pointer;}
         .ud-item:hover{background:var(--surface);}
         .ud-item .ud-icon{font-size:16px;width:20px;text-align:center;}
         .ud-item.danger{color:var(--danger);}
@@ -146,6 +147,21 @@
         .ac-header h3{font-size:15px;font-weight:700;}
         .ac-empty{padding:40px;text-align:center;color:var(--muted);font-size:13px;}
         .ac-empty .ac-empty-icon{font-size:32px;margin-bottom:10px;}
+
+        /* ══ MODAL ĐĂNG XUẤT ══ */
+        .logout-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);align-items:center;justify-content:center;}
+        .logout-overlay.show{display:flex;animation:fadeIn .2s ease;}
+        .logout-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:380px;max-width:calc(100vw - 32px);box-shadow:0 24px 64px rgba(0,0,0,.6);overflow:hidden;animation:popIn .22s cubic-bezier(.34,1.56,.64,1);}
+        @keyframes popIn{from{opacity:0;transform:scale(.93) translateY(10px)}to{opacity:1;transform:none}}
+        .logout-body{padding:28px 28px 20px;text-align:center;}
+        .logout-ico{font-size:40px;margin-bottom:14px;}
+        .logout-title{font-size:17px;font-weight:800;margin-bottom:6px;}
+        .logout-sub{font-size:13px;color:var(--muted);line-height:1.5;}
+        .logout-footer{padding:16px 24px 24px;display:flex;gap:10px;}
+        .btn-lo-cancel{flex:1;height:40px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s;}
+        .btn-lo-cancel:hover{border-color:var(--text);color:var(--text);}
+        .btn-lo-confirm{flex:1;height:40px;border-radius:10px;background:var(--danger);border:none;color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;transition:opacity .15s;}
+        .btn-lo-confirm:hover{opacity:.85;}
     </style>
 </head>
 <body>
@@ -233,17 +249,22 @@
                     <span class="ud-badge">Đang hoạt động</span>
                 </div>
             </div>
-            <a class="ud-item" href="${pageContext.request.contextPath}/profile"><span class="ud-icon">👤</span> Thông tin cá nhân</a>
-            <a class="ud-item" href="${pageContext.request.contextPath}/change_password"><span class="ud-icon">🔑</span> Đổi mật khẩu</a>
-            <hr class="ud-divider">
-            <a class="ud-item danger" href="${pageContext.request.contextPath}/"
-               onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
-                <span class="ud-icon">🚪</span> Đăng xuất
+            <a class="ud-item" href="${pageContext.request.contextPath}/profile">
+                <span class="ud-icon">👤</span> Thông tin cá nhân
             </a>
+            <a class="ud-item" href="${pageContext.request.contextPath}/change_password">
+                <span class="ud-icon">🔑</span> Đổi mật khẩu
+            </a>
+            <hr class="ud-divider">
+            <%-- ✅ SỬA: modal thay vì href + confirm --%>
+            <div class="ud-item danger" onclick="showLogoutModal()">
+                <span class="ud-icon">🚪</span> Đăng xuất
+            </div>
         </div>
     </div>
 </header>
 
+<!-- QR Modal -->
 <div class="modal-overlay" id="scanModal" onclick="closeScanModalOutside(event)">
     <div class="modal">
         <button class="modal-close" onclick="closeScanModal()">✕</button>
@@ -268,6 +289,21 @@
         <div class="scan-status" id="scanStatus"></div>
         <div style="margin-top:16px">
             <button class="modal-btn modal-btn-muted" onclick="closeScanModal()">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ MODAL ĐĂNG XUẤT -->
+<div class="logout-overlay" id="logoutModal" onclick="if(event.target===this)hideLogoutModal()">
+    <div class="logout-box">
+        <div class="logout-body">
+            <div class="logout-ico">🚪</div>
+            <div class="logout-title">Đăng xuất?</div>
+            <div class="logout-sub">Bạn sẽ được đưa về trang đăng nhập.<br>Mọi phiên làm việc hiện tại sẽ kết thúc.</div>
+        </div>
+        <div class="logout-footer">
+            <button class="btn-lo-cancel" onclick="hideLogoutModal()">Ở lại</button>
+            <button class="btn-lo-confirm" onclick="window.location.href='<%= ctx %>/logout'">🚪 Đăng xuất</button>
         </div>
     </div>
 </div>
@@ -409,6 +445,22 @@
         if (cur === 0) badge.style.display = 'none';
         else { badge.textContent = cur; badge.style.display = ''; }
     }
+
+    // ✅ MODAL ĐĂNG XUẤT
+    function showLogoutModal() {
+        document.getElementById('userDropdown').classList.remove('open');
+        document.getElementById('avatarBtn').classList.remove('open');
+        document.getElementById('logoutModal').classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+    function hideLogoutModal() {
+        document.getElementById('logoutModal').classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { hideLogoutModal(); closeScanModal(); }
+    });
 
     document.addEventListener('click', function(e) {
         if (!document.getElementById('bellWrap').contains(e.target))
