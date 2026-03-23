@@ -53,8 +53,6 @@
         .np-time{font-size:10px;color:var(--muted);margin-top:3px;}
         .np-footer{padding:10px;text-align:center;font-size:12px;color:var(--accent);cursor:pointer;border-top:1px solid var(--border);}
         .np-empty{padding:24px;text-align:center;color:var(--muted);font-size:13px;}
-
-        /* QR Modal */
         .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:none;align-items:center;justify-content:center;}
         .modal-overlay.open{display:flex;animation:fadeIn .2s ease;}
         @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -81,7 +79,6 @@
         .modal-btn-green:hover{background:var(--accent2);color:#000;}
         .modal-btn-muted{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
         .modal-btn-muted:hover{background:var(--surface);color:var(--text);}
-
         .user-menu{position:relative;}
         .avatar-btn{display:flex;align-items:center;gap:10px;background:none;border:1px solid transparent;border-radius:40px;padding:5px 14px 5px 5px;cursor:pointer;color:var(--text);font-family:inherit;transition:all .18s;}
         .avatar-btn:hover{background:var(--surface2);border-color:var(--border);}
@@ -106,7 +103,6 @@
         .ud-item.danger{color:var(--danger);}
         .ud-item.danger:hover{background:rgba(247,92,92,.1);}
         .ud-divider{border:none;border-top:1px solid var(--border);margin:4px 0;}
-
         .main{padding-top:64px;}
         .content{max-width:1200px;margin:0 auto;padding:40px 32px;}
         .hero{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px 36px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden;}
@@ -147,8 +143,6 @@
         .ac-header h3{font-size:15px;font-weight:700;}
         .ac-empty{padding:40px;text-align:center;color:var(--muted);font-size:13px;}
         .ac-empty .ac-empty-icon{font-size:32px;margin-bottom:10px;}
-
-        /* ══ MODAL ĐĂNG XUẤT ══ */
         .logout-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);align-items:center;justify-content:center;}
         .logout-overlay.show{display:flex;animation:fadeIn .2s ease;}
         .logout-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:380px;max-width:calc(100vw - 32px);box-shadow:0 24px 64px rgba(0,0,0,.6);overflow:hidden;animation:popIn .22s cubic-bezier(.34,1.56,.64,1);}
@@ -206,13 +200,11 @@
                         String _ngayGui = String.valueOf(tb.get("ngayGui"));
                         Object _tbID    = tb.get("thongBaoID");
                         Object _lichHopID  = tb.get("lichHopID");
-                        Object _thiepMoiID = tb.get("thiepMoiID");
-                        String _lichHopJs  = (_lichHopID  != null) ? _lichHopID.toString()  : "0";
-                        String _thiepMoiJs = (_thiepMoiID != null) ? _thiepMoiID.toString() : "0";
+                        String _lichHopJs  = (_lichHopID != null) ? _lichHopID.toString() : "0";
                         String _tieuDeJs = _tieuDe.replace("\\","\\\\").replace("'","\\'");
                 %>
                 <div class="np-item <%= _daDoc ? "" : "unread" %>"
-                     onclick="docThongBao(<%= _tbID %>, this, '<%= _tieuDeJs %>', <%= _lichHopJs %>, <%= _thiepMoiJs %>)">
+                     onclick="docThongBao(<%= _tbID %>, this, '<%= _tieuDeJs %>', <%= _lichHopJs %>)">
                     <div class="np-dot <%= _daDoc ? "read" : "" %>"></div>
                     <div class="np-body">
                         <p><strong><%= _tieuDe %></strong></p>
@@ -224,8 +216,7 @@
                 </div>
                 <% } } %>
             </div>
-            <div class="np-footer"
-                 onclick="location.href='<%= ctx %>/thong-bao/lich-su'">
+            <div class="np-footer" onclick="location.href='<%= ctx %>/thong-bao/lich-su'">
                 Xem tất cả thông báo
             </div>
         </div>
@@ -256,7 +247,6 @@
                 <span class="ud-icon">🔑</span> Đổi mật khẩu
             </a>
             <hr class="ud-divider">
-            <%-- ✅ SỬA: modal thay vì href + confirm --%>
             <div class="ud-item danger" onclick="showLogoutModal()">
                 <span class="ud-icon">🚪</span> Đăng xuất
             </div>
@@ -293,7 +283,7 @@
     </div>
 </div>
 
-<!-- ✅ MODAL ĐĂNG XUẤT -->
+<!-- MODAL ĐĂNG XUẤT -->
 <div class="logout-overlay" id="logoutModal" onclick="if(event.target===this)hideLogoutModal()">
     <div class="logout-box">
         <div class="logout-body">
@@ -330,7 +320,8 @@
                 <div class="dc-desc">Xem danh sách, thêm, sửa, xóa thông tin hộ khẩu trong tổ dân phố.</div>
                 <span class="dc-btn blue">Xem danh sách →</span>
             </a>
-            <a href="#" class="dash-card green">
+            <%-- ✅ SỬA: link thống kê --%>
+            <a href="${pageContext.request.contextPath}/totruong/thong-ke" class="dash-card green">
                 <div class="dc-icon green">📊</div>
                 <div class="dc-title">Thống kê tổ</div>
                 <div class="dc-desc">Số hộ, số nhân khẩu, tình trạng tạm trú, tạm vắng trong tổ.</div>
@@ -348,11 +339,17 @@
                 <div class="dc-desc">Tạo và gửi thiệp mời họp theo mẫu đến toàn bộ hộ dân trong tổ.</div>
                 <span class="dc-btn warn">Quản lý thiệp →</span>
             </a>
-            <a href="#" class="dash-card red">
-                <div class="dc-icon red">📝</div>
+            <a href="${pageContext.request.contextPath}/totruong/phan-anh" class="dash-card red">
+                <div class="dc-icon red">💬</div>
+                <div class="dc-title">Phản ánh / Kiến nghị</div>
+                <div class="dc-desc">Tiếp nhận và xử lý phản ánh, kiến nghị từ người dân trong tổ dân phố.</div>
+                <span class="dc-btn red">Xem phản ánh →</span>
+            </a>
+            <a href="#" class="dash-card blue">
+                <div class="dc-icon blue">📝</div>
                 <div class="dc-title">Báo cáo</div>
                 <div class="dc-desc">Lập báo cáo định kỳ gửi lên cấp trên về tình hình tổ dân phố.</div>
-                <span class="dc-btn red">Tạo báo cáo →</span>
+                <span class="dc-btn blue">Tạo báo cáo →</span>
             </a>
         </div>
 
@@ -393,7 +390,9 @@
         document.getElementById('notifPanel').classList.toggle('open');
     }
 
-    function docThongBao(id, el, tieuDe, lichHopID, thiepMoiID) {
+    // ── Tổ trưởng chỉ nhận TB về: phản ánh, yêu cầu hộ khẩu, lịch họp
+    // Không redirect về thiệp mời vì tổ trưởng là người tạo, không cần nhận TB
+    function docThongBao(id, el, tieuDe, lichHopID) {
         const params = new URLSearchParams({ action: 'doc', id: id });
         fetch(ctx + '/thong-bao?' + params, { method: 'POST' })
             .then(r => r.json())
@@ -404,23 +403,29 @@
                     if (dot) dot.classList.add('read');
                     _giamBadge(1);
                 }
-                _redirect(tieuDe, lichHopID, thiepMoiID);
+                _redirect(tieuDe, lichHopID);
             })
-            .catch(() => _redirect(tieuDe, lichHopID, thiepMoiID));
+            .catch(() => _redirect(tieuDe, lichHopID));
     }
 
-    function _redirect(tieuDe, lichHopID, thiepMoiID) {
+    function _redirect(tieuDe, lichHopID) {
         const t = (tieuDe || '').toLowerCase();
-        if (t.includes('thông báo họp') || t.includes('thiệp')
-            || t.includes('tạm hoãn') || t.includes('mở lại')
-            || t.includes('[cập nhật]') || t.includes('[hủy]')) {
-            location.href = ctx + '/thiepmoi/danh-sach';
+        // Phản ánh / kiến nghị
+        if (t.includes('phản ánh') || t.includes('kiến nghị')) {
+            location.href = ctx + '/totruong/phan-anh';
             return;
         }
+        // Lịch họp
         if (t.includes('lịch họp') || (lichHopID && lichHopID > 0)) {
             location.href = ctx + '/danh-sach-lich-hop' + (lichHopID > 0 ? '?id=' + lichHopID : '');
             return;
         }
+        // Yêu cầu đổi trạng thái hộ khẩu
+        if (t.includes('yêu cầu') || t.includes('hộ khẩu') || t.includes('trạng thái')) {
+            location.href = ctx + '/todan/hodan';
+            return;
+        }
+        // Mặc định
         location.href = ctx + '/thong-bao/lich-su';
     }
 
@@ -446,7 +451,6 @@
         else { badge.textContent = cur; badge.style.display = ''; }
     }
 
-    // ✅ MODAL ĐĂNG XUẤT
     function showLogoutModal() {
         document.getElementById('userDropdown').classList.remove('open');
         document.getElementById('avatarBtn').classList.remove('open');

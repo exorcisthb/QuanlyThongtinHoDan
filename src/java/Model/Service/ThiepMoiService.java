@@ -3,10 +3,13 @@ package Model.Service;
 import Model.DAO.ThiepMoiDAO;
 import Model.Entity.ThiepMoi;
 import java.util.List;
+import java.util.Map;
 
 public class ThiepMoiService {
 
     private final ThiepMoiDAO dao = new ThiepMoiDAO();
+
+    // ── CRUD & nghiệp vụ hiện có ────────────────────────────────────
 
     public List<ThiepMoi> getDanhSach(String keyword, int toDanPhoID, int trangThaiID) {
         if (keyword != null && !keyword.trim().isEmpty()) {
@@ -35,12 +38,9 @@ public class ThiepMoiService {
     public boolean suaThiepMoi(ThiepMoi t, int nguoiSuaID) {
         if (t.getTieuDe() == null || t.getTieuDe().trim().isEmpty()) return false;
         if (t.getThoiGianBatDau() == null) return false;
-
         ThiepMoi hienTai = dao.getByID(t.getThiepMoiID());
         if (hienTai == null) return false;
         if (hienTai.isDaIn()) return false;
-
-        // Validation trạng thái để DAO tự xử lý
         return dao.suaThiepMoi(t, nguoiSuaID);
     }
 
@@ -58,7 +58,8 @@ public class ThiepMoiService {
     }
 
     public boolean moLaiThiepMoi(int thiepMoiID, int nguoiThucHienID,
-                                  java.sql.Timestamp thoiGianBatDau, java.sql.Timestamp thoiGianKetThuc,
+                                  java.sql.Timestamp thoiGianBatDau,
+                                  java.sql.Timestamp thoiGianKetThuc,
                                   String noiDung, String diaDiem) {
         if (thoiGianBatDau == null) return false;
         if (thoiGianBatDau.getTime() <= System.currentTimeMillis()) return false;
@@ -66,5 +67,23 @@ public class ThiepMoiService {
         return dao.moLaiThiepMoi(thiepMoiID, nguoiThucHienID,
                                   thoiGianBatDau, thoiGianKetThuc,
                                   noiDung, diaDiem.trim());
+    }
+
+    // ── THỐNG KÊ ────────────────────────────────────────────────────
+
+    public int getTongThiepMoi(int toDanPhoID, int nam) {
+        return dao.thongKe_TongThiepMoi(toDanPhoID, nam);
+    }
+
+    public int getThiepMoiDaIn(int toDanPhoID, int nam) {
+        return dao.thongKe_ThiepMoiDaIn(toDanPhoID, nam);
+    }
+
+    public Map<String, Integer> getThiepMoiTheoThang(int toDanPhoID, int nam) {
+        return dao.thongKe_ThiepMoiTheoThang(toDanPhoID, nam);
+    }
+
+    public Map<String, Integer> getThiepMoiTheoTrangThai(int toDanPhoID, int nam) {
+        return dao.thongKe_ThiepMoiTheoTrangThai(toDanPhoID, nam);
     }
 }

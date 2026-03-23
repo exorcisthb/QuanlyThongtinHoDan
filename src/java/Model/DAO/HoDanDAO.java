@@ -1025,4 +1025,118 @@ public class HoDanDAO {
             ps.executeUpdate();
         }
     }
+    // ════════════════════════════════════════════════════════════════════
+// ── THỐNG KÊ — thêm vào cuối class HoDanDAO (trước dấu } cuối cùng)
+// ════════════════════════════════════════════════════════════════════
+
+    /** Tổng số hộ trong tổ */
+    public int thongKe_TongSoHo(int toDanPhoID) {
+        String sql = "SELECT COUNT(*) FROM HoDan WHERE ToDanPhoID = ?";
+        try (Connection conn = DBContext.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, toDanPhoID);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (Exception e) { e.printStackTrace(); }
+        return 0;
+    }
+
+    /** Tổng số nhân khẩu đang ở (NgayRa IS NULL) trong tổ */
+    public int thongKe_TongSoNhanKhau(int toDanPhoID) {
+        String sql = "SELECT COUNT(*) FROM ThanhVienHo tv "
+                   + "JOIN HoDan h ON tv.HoDanID = h.HoDanID "
+                   + "WHERE h.ToDanPhoID = ? AND tv.NgayRa IS NULL";
+        try (Connection conn = DBContext.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, toDanPhoID);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (Exception e) { e.printStackTrace(); }
+        return 0;
+    }
+
+    /**
+     * Số hộ theo từng trạng thái cư trú trong tổ.
+     * Key: tên trạng thái (VD: "Thường trú"), Value: số lượng
+     */
+    public Map<String, Integer> thongKe_HoTheoCuTru(int toDanPhoID) {
+        String sql = "SELECT tt.TenTrangThai, COUNT(*) AS SoLuong "
+                   + "FROM HoDan h "
+                   + "JOIN TrangThaiHoKhau tt ON h.TrangThaiID = tt.TrangThaiID "
+                   + "WHERE h.ToDanPhoID = ? "
+                   + "GROUP BY tt.TenTrangThai, tt.TrangThaiID "
+                   + "ORDER BY tt.TrangThaiID";
+        Map<String, Integer> result = new LinkedHashMap<>();
+        try (Connection conn = DBContext.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, toDanPhoID);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                result.put(rs.getString("TenTrangThai"), rs.getInt("SoLuong"));
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return result;
+    }
+
+    /**
+     * Số nhân khẩu theo giới tính trong tổ (chỉ thành viên đang ở).
+     * Key: "Nam" / "Nữ" / "Khác", Value: số lượng
+     */
+    public Map<String, Integer> thongKe_NhanKhauTheoGioiTinh(int toDanPhoID) {
+        String sql = "SELECT nd.GioiTinh, COUNT(*) AS SoLuong "
+                   + "FROM ThanhVienHo tv "
+                   + "JOIN HoDan h ON tv.HoDanID = h.HoDanID "
+                   + "JOIN NguoiDung nd ON tv.NguoiDungID = nd.NguoiDungID "
+                   + "WHERE h.ToDanPhoID = ? AND tv.NgayRa IS NULL "
+                   + "GROUP BY nd.GioiTinh";
+        Map<String, Integer> result = new LinkedHashMap<>();
+        result.put("Nam", 0); result.put("Nữ", 0); result.put("Khác", 0);
+        try (Connection conn = DBContext.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, toDanPhoID);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                String gt = rs.getString("GioiTinh");
+                if (gt == null) gt = "Khác";
+                result.put(gt, rs.getInt("SoLuong"));
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return result;
+    }
+
+    /**
+     * Số nhân khẩu theo nhóm tuổi trong tổ.
+     * Key: nhãn nhóm tuổi, Value: số lượng
+     */
+    public Map<String, Integer> thongKe_NhanKhauTheoNhomTuoi(int toDanPhoID) {
+        String sql = "SELECT "
+                   + "  SUM(CASE WHEN DATEDIFF(YEAR, nd.NgaySinh, GETDATE()) < 6  THEN 1 ELSE 0 END) AS NhiNhi, "
+                   + "  SUM(CASE WHEN DATEDIFF(YEAR, nd.NgaySinh, GETDATE()) BETWEEN 6  AND 17 THEN 1 ELSE 0 END) AS ThieuNien, "
+                   + "  SUM(CASE WHEN DATEDIFF(YEAR, nd.NgaySinh, GETDATE()) BETWEEN 18 AND 35 THEN 1 ELSE 0 END) AS ThanhNien, "
+                   + "  SUM(CASE WHEN DATEDIFF(YEAR, nd.NgaySinh, GETDATE()) BETWEEN 36 AND 59 THEN 1 ELSE 0 END) AS TrungNien, "
+                   + "  SUM(CASE WHEN DATEDIFF(YEAR, nd.NgaySinh, GETDATE()) >= 60 THEN 1 ELSE 0 END) AS NguoiCao "
+                   + "FROM ThanhVienHo tv "
+                   + "JOIN HoDan h ON tv.HoDanID = h.HoDanID "
+                   + "JOIN NguoiDung nd ON tv.NguoiDungID = nd.NguoiDungID "
+                   + "WHERE h.ToDanPhoID = ? AND tv.NgayRa IS NULL AND nd.NgaySinh IS NOT NULL";
+        Map<String, Integer> result = new LinkedHashMap<>();
+        result.put("Dưới 6 tuổi", 0);
+        result.put("6 - 17 tuổi", 0);
+        result.put("18 - 35 tuổi", 0);
+        result.put("36 - 59 tuổi", 0);
+        result.put("Từ 60 tuổi", 0);
+        try (Connection conn = DBContext.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, toDanPhoID);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                result.put("Dưới 6 tuổi",  rs.getInt("NhiNhi"));
+                result.put("6 - 17 tuổi",  rs.getInt("ThieuNien"));
+                result.put("18 - 35 tuổi", rs.getInt("ThanhNien"));
+                result.put("36 - 59 tuổi", rs.getInt("TrungNien"));
+                result.put("Từ 60 tuổi",   rs.getInt("NguoiCao"));
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return result;
+    }
 }

@@ -17,11 +17,8 @@ public class PhanAnhService {
 
     private final PhanAnhDAO phanAnhDAO = new PhanAnhDAO();
 
-    // Thư mục lưu ảnh (tương đối so với webroot)
-    private static final String UPLOAD_DIR = "uploads/phan-anh/";
-    // Dung lượng tối đa mỗi ảnh: 5MB
+    private static final String UPLOAD_DIR    = "uploads/phan-anh/";
     private static final long   MAX_FILE_SIZE = 5 * 1024 * 1024L;
-    // Định dạng cho phép
     private static final Set<String> ALLOWED_TYPES = Set.of(
             "image/jpeg", "image/png", "image/webp", "image/gif"
     );
@@ -30,21 +27,13 @@ public class PhanAnhService {
     //  HỘ DÂN
     // ================================================================== //
 
-    /**
-     * Hộ dân gửi phản ánh mới.
-     * @param appPath   đường dẫn thực của webroot (lấy từ request.getServletContext().getRealPath("/"))
-     * @param parts     danh sách Part ảnh từ multipart request (tối đa 3)
-     * @return Map kết quả: success, message, phanAnhID
-     */
     public Map<String, Object> guiPhanAnh(int nguoiGuiID, int toDanPhoID,
                                            int loaiID, int mucDoUuTien,
                                            String tieuDe, String noiDung,
                                            List<Part> parts, String appPath) {
-        // Validate đầu vào
         String err = validateInput(tieuDe, noiDung, loaiID, mucDoUuTien);
         if (err != null) return fail(err);
 
-        // Upload ảnh
         List<String> duongDanAnh = new ArrayList<>();
         try {
             duongDanAnh = uploadAnh(parts, appPath);
@@ -61,11 +50,6 @@ public class PhanAnhService {
         return ok("Gửi phản ánh thành công!", Map.of("phanAnhID", id));
     }
 
-    /**
-     * Hộ dân sửa phản ánh.
-     * @param fileIDXoa  danh sách FileID ảnh muốn xóa
-     * @param partsAnhMoi danh sách Part ảnh mới muốn thêm
-     */
     public Map<String, Object> suaPhanAnh(int phanAnhID, int nguoiGuiID,
                                            int loaiID, int mucDoUuTien,
                                            String tieuDe, String noiDung,
@@ -75,7 +59,6 @@ public class PhanAnhService {
         String err = validateInput(tieuDe, noiDung, loaiID, mucDoUuTien);
         if (err != null) return fail(err);
 
-        // Kiểm tra quyền — chỉ chủ sở hữu mới được sửa
         Map<String, Object> hien = phanAnhDAO.getPhanAnhByID(phanAnhID);
         if (hien == null) return fail("Không tìm thấy phản ánh.");
         if ((int) hien.get("nguoiGuiID") != nguoiGuiID)
@@ -85,7 +68,6 @@ public class PhanAnhService {
         if (ttHienTai == 4 || ttHienTai == 5 || ttHienTai == 6 || ttHienTai == 7)
             return fail("Không thể sửa phản ánh ở trạng thái hiện tại.");
 
-        // Upload ảnh mới
         List<String> duongDanAnhMoi = new ArrayList<>();
         try {
             duongDanAnhMoi = uploadAnh(partsAnhMoi, appPath);
@@ -103,9 +85,6 @@ public class PhanAnhService {
                   : fail("Không thể cập nhật phản ánh. Vui lòng thử lại.");
     }
 
-    /**
-     * Hộ dân hủy phản ánh.
-     */
     public Map<String, Object> huyPhanAnh(int phanAnhID, int nguoiGuiID, String lyDo) {
         if (lyDo == null || lyDo.trim().isEmpty())
             return fail("Vui lòng nhập lý do hủy.");
@@ -115,10 +94,9 @@ public class PhanAnhService {
         if ((int) hien.get("nguoiGuiID") != nguoiGuiID)
             return fail("Bạn không có quyền hủy phản ánh này.");
 
-        int ttHienTai = (int) hien.get("trangThaiID");
-        if (ttHienTai == 3)
-            return fail("Phản ánh đã chuyển cấp, không thể hủy.");
-        if (ttHienTai == 4 || ttHienTai == 5 || ttHienTai == 6 || ttHienTai == 7)
+        int tt = (int) hien.get("trangThaiID");
+        if (tt == 3) return fail("Phản ánh đã chuyển cấp, không thể hủy.");
+        if (tt == 4 || tt == 5 || tt == 6 || tt == 7)
             return fail("Không thể hủy phản ánh ở trạng thái hiện tại.");
 
         boolean ok = phanAnhDAO.huyPhanAnh(phanAnhID, nguoiGuiID, lyDo.trim());
@@ -142,6 +120,20 @@ public class PhanAnhService {
                   : fail("Không thể tiếp nhận. Vui lòng thử lại.");
     }
 
+    public Map<String, Object> giaiQuyetToTruong(int phanAnhID, int toTruongID, String ketQua) {
+        if (ketQua == null || ketQua.trim().isEmpty())
+            return fail("Vui lòng nhập kết quả giải quyết.");
+
+        Map<String, Object> hien = phanAnhDAO.getPhanAnhByID(phanAnhID);
+        if (hien == null) return fail("Không tìm thấy phản ánh.");
+        if ((int) hien.get("trangThaiID") != 2)
+            return fail("Chỉ có thể giải quyết khi phản ánh đang ở trạng thái Đang xử lý.");
+
+        boolean ok = phanAnhDAO.giaiQuyetToTruong(phanAnhID, toTruongID, ketQua.trim());
+        return ok ? ok("Đã giải quyết phản ánh và thông báo đến người dân.", null)
+                  : fail("Không thể giải quyết. Vui lòng thử lại.");
+    }
+
     public Map<String, Object> tuChoi(int phanAnhID, int toTruongID, String lyDo) {
         if (lyDo == null || lyDo.trim().isEmpty())
             return fail("Vui lòng nhập lý do từ chối.");
@@ -153,7 +145,7 @@ public class PhanAnhService {
             return fail("Phản ánh không ở trạng thái có thể từ chối.");
 
         boolean ok = phanAnhDAO.tuChoi(phanAnhID, toTruongID, lyDo.trim());
-        return ok ? ok("Đã từ chối phản ánh.", null)
+        return ok ? ok("Đã từ chối phản ánh và thông báo đến người dân.", null)
                   : fail("Không thể từ chối. Vui lòng thử lại.");
     }
 
@@ -168,7 +160,7 @@ public class PhanAnhService {
             return fail("Phản ánh không ở trạng thái có thể đánh dấu spam.");
 
         boolean ok = phanAnhDAO.danhDauSpam(phanAnhID, toTruongID, ghiChu.trim());
-        return ok ? ok("Đã đánh dấu spam.", null)
+        return ok ? ok("Đã đánh dấu spam và thông báo đến người dân.", null)
                   : fail("Không thể đánh dấu spam. Vui lòng thử lại.");
     }
 
@@ -178,12 +170,32 @@ public class PhanAnhService {
 
         Map<String, Object> hien = phanAnhDAO.getPhanAnhByID(phanAnhID);
         if (hien == null) return fail("Không tìm thấy phản ánh.");
-        if ((int) hien.get("trangThaiID") != 2)
-            return fail("Chỉ có thể chuyển cấp khi đang xử lý.");
+        if ((int) hien.get("trangThaiID") != 1)
+            return fail("Chỉ có thể chuyển cấp khi phản ánh chưa được tiếp nhận.");
 
         boolean ok = phanAnhDAO.chuyenCapCanBo(phanAnhID, toTruongID, ghiChu.trim());
-        return ok ? ok("Đã chuyển lên cán bộ phường.", null)
+        return ok ? ok("Đã chuyển lên cán bộ phường và thông báo đến người dân.", null)
                   : fail("Không thể chuyển cấp. Vui lòng thử lại.");
+    }
+
+    public Map<String, Object> guiPhanHoi(int phanAnhID, int toTruongID, String noiDung) {
+        if (noiDung == null || noiDung.trim().isEmpty())
+            return fail("Vui lòng nhập nội dung phản hồi.");
+
+        Map<String, Object> hien = phanAnhDAO.getPhanAnhByID(phanAnhID);
+        if (hien == null) return fail("Không tìm thấy phản ánh.");
+        int tt = (int) hien.get("trangThaiID");
+        if (tt == 3) return fail("Phản ánh đã chuyển cấp, không thể gửi phản hồi trực tiếp.");
+        if (tt == 4 || tt == 5 || tt == 6 || tt == 7)
+            return fail("Phản ánh đã kết thúc, không thể gửi phản hồi.");
+
+        int nguoiNhanID = (int) hien.get("nguoiGuiID");
+        String tieuDe   = "[Phản hồi] " + hien.get("tieuDe");
+
+        boolean ok = phanAnhDAO.guiPhanHoiToTruong(
+                phanAnhID, toTruongID, nguoiNhanID, tieuDe, noiDung.trim());
+        return ok ? ok("Đã gửi phản hồi đến người dân.", null)
+                  : fail("Không thể gửi phản hồi. Vui lòng thử lại.");
     }
 
     // ================================================================== //
@@ -205,15 +217,14 @@ public class PhanAnhService {
     }
 
     // ================================================================== //
-    //  QUERY — dùng thẳng DAO
+    //  QUERY
     // ================================================================== //
 
     public Map<String, Object> getChiTiet(int phanAnhID) {
         Map<String, Object> pa = phanAnhDAO.getPhanAnhByID(phanAnhID);
         if (pa == null) return null;
-        // Gắn thêm ảnh và lịch sử
-        pa.put("danhSachAnh",    phanAnhDAO.getAnhDinhKem(phanAnhID));
-        pa.put("lichSuXuLy",     phanAnhDAO.getLichSuXuLy(phanAnhID));
+        pa.put("danhSachAnh", phanAnhDAO.getAnhDinhKem(phanAnhID));
+        pa.put("lichSuXuLy",  phanAnhDAO.getLichSuXuLy(phanAnhID));
         return pa;
     }
 
@@ -234,47 +245,55 @@ public class PhanAnhService {
     }
 
     // ================================================================== //
+    //  THỐNG KÊ
+    // ================================================================== //
+
+    public Map<String, Integer> getTongHopPhanAnh(int toDanPhoID, int nam) {
+        return phanAnhDAO.thongKe_TongHopPhanAnh(toDanPhoID, nam);
+    }
+
+    public Map<String, Integer> getPhanAnhTheoThang(int toDanPhoID, int nam) {
+        return phanAnhDAO.thongKe_PhanAnhTheoThang(toDanPhoID, nam);
+    }
+
+    public Map<String, Integer> getPhanAnhTheoTrangThai(int toDanPhoID, int nam) {
+        return phanAnhDAO.thongKe_PhanAnhTheoTrangThai(toDanPhoID, nam);
+    }
+
+    public Map<String, Integer> getPhanAnhTheoLoai(int toDanPhoID, int nam) {
+        return phanAnhDAO.thongKe_PhanAnhTheoLoai(toDanPhoID, nam);
+    }
+
+    // ================================================================== //
     //  UPLOAD ẢNH
     // ================================================================== //
 
-    /**
-     * Upload danh sách Part ảnh lên server.
-     * Validate định dạng và dung lượng.
-     * @return danh sách đường dẫn tương đối đã lưu (dùng cho DB)
-     */
     public List<String> uploadAnh(List<Part> parts, String appPath) throws IOException {
         List<String> result = new ArrayList<>();
         if (parts == null || parts.isEmpty()) return result;
 
-        // Tạo thư mục nếu chưa có
         String uploadPath = appPath + File.separator + UPLOAD_DIR.replace("/", File.separator);
         Files.createDirectories(Paths.get(uploadPath));
 
         for (Part part : parts) {
             if (part == null || part.getSize() == 0) continue;
 
-            // Validate định dạng
             String contentType = part.getContentType();
             if (contentType == null || !ALLOWED_TYPES.contains(contentType.toLowerCase()))
                 throw new IllegalArgumentException(
                         "Định dạng ảnh không hợp lệ. Chỉ chấp nhận JPG, PNG, WEBP, GIF.");
 
-            // Validate dung lượng
             if (part.getSize() > MAX_FILE_SIZE)
-                throw new IllegalArgumentException(
-                        "Ảnh không được vượt quá 5MB.");
+                throw new IllegalArgumentException("Ảnh không được vượt quá 5MB.");
 
-            // Tạo tên file duy nhất
             String ext      = contentType.substring(contentType.lastIndexOf('/') + 1);
             String fileName = UUID.randomUUID().toString() + "." + ext;
             String fullPath = uploadPath + File.separator + fileName;
 
-            // Lưu file
             try (InputStream is = part.getInputStream()) {
                 Files.copy(is, Paths.get(fullPath), StandardCopyOption.REPLACE_EXISTING);
             }
 
-            // Lưu đường dẫn tương đối vào DB
             result.add(UPLOAD_DIR + fileName);
         }
         return result;

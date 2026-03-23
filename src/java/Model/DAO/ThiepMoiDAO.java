@@ -540,4 +540,75 @@ public class ThiepMoiDAO {
                "\"DiaDiem\":\"" + t.getDiaDiem() + "\"," +
                "\"ThoiGianBatDau\":\"" + t.getThoiGianBatDau() + "\"}";
     }
+        public Map<String, Integer> thongKe_ThiepMoiTheoThang(int toDanPhoID, int nam) {
+        String sql = "SELECT MONTH(NgayTao) AS Thang, COUNT(*) AS SoLuong "
+                   + "FROM ThiepMoi "
+                   + "WHERE ToDanPhoID = ? AND YEAR(NgayTao) = ? "
+                   + "GROUP BY MONTH(NgayTao) "
+                   + "ORDER BY Thang";
+        Map<String, Integer> result = new LinkedHashMap<>();
+        for (int i = 1; i <= 12; i++) result.put("Th." + i, 0);
+        try (Connection conn = DBContext.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, toDanPhoID);
+            ps.setInt(2, nam);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                result.put("Th." + rs.getInt("Thang"), rs.getInt("SoLuong"));
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return result;
+    }
+ 
+    /**
+     * Số thiệp mời theo trạng thái của tổ trong năm.
+     * Key: tên trạng thái, Value: số lượng
+     */
+    public Map<String, Integer> thongKe_ThiepMoiTheoTrangThai(int toDanPhoID, int nam) {
+        String sql = "SELECT tt.TenTrangThai, COUNT(*) AS SoLuong "
+                   + "FROM ThiepMoi tm "
+                   + "JOIN TrangThaiThiepMoi tt ON tm.TrangThaiID = tt.TrangThaiID "
+                   + "WHERE tm.ToDanPhoID = ? AND YEAR(tm.NgayTao) = ? "
+                   + "GROUP BY tt.TenTrangThai, tt.TrangThaiID "
+                   + "ORDER BY tt.TrangThaiID";
+        Map<String, Integer> result = new LinkedHashMap<>();
+        try (Connection conn = DBContext.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, toDanPhoID);
+            ps.setInt(2, nam);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                result.put(rs.getString("TenTrangThai"), rs.getInt("SoLuong"));
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return result;
+    }
+ 
+    /** Tổng số thiệp mời đã tạo trong năm của tổ */
+    public int thongKe_TongThiepMoi(int toDanPhoID, int nam) {
+        String sql = "SELECT COUNT(*) FROM ThiepMoi "
+                   + "WHERE ToDanPhoID = ? AND YEAR(NgayTao) = ?";
+        try (Connection conn = DBContext.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, toDanPhoID);
+            ps.setInt(2, nam);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (Exception e) { e.printStackTrace(); }
+        return 0;
+    }
+ 
+    /** Số thiệp mời đã in trong năm của tổ */
+    public int thongKe_ThiepMoiDaIn(int toDanPhoID, int nam) {
+        String sql = "SELECT COUNT(*) FROM ThiepMoi "
+                   + "WHERE ToDanPhoID = ? AND YEAR(NgayTao) = ? AND DaIn = 1";
+        try (Connection conn = DBContext.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, toDanPhoID);
+            ps.setInt(2, nam);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (Exception e) { e.printStackTrace(); }
+        return 0;
+    }
 }

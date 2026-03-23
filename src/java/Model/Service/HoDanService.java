@@ -324,5 +324,24 @@ public class HoDanService {
             return false;
         }
     }
-
+ 
+    public int getTongSoHo(int toDanPhoID) {
+        return hoDanDAO.thongKe_TongSoHo(toDanPhoID);
+    }
+ 
+    public int getTongSoNhanKhau(int toDanPhoID) {
+        return hoDanDAO.thongKe_TongSoNhanKhau(toDanPhoID);
+    }
+ 
+    public Map<String, Integer> getHoTheoCuTru(int toDanPhoID) {
+        return hoDanDAO.thongKe_HoTheoCuTru(toDanPhoID);
+    }
+ 
+    public Map<String, Integer> getNhanKhauTheoGioiTinh(int toDanPhoID) {
+        return hoDanDAO.thongKe_NhanKhauTheoGioiTinh(toDanPhoID);
+    }
+ 
+    public Map<String, Integer> getNhanKhauTheoNhomTuoi(int toDanPhoID) {
+        return hoDanDAO.thongKe_NhanKhauTheoNhomTuoi(toDanPhoID);
+    }
 }
