@@ -68,22 +68,4 @@ public class ThiepMoiService {
                                   thoiGianBatDau, thoiGianKetThuc,
                                   noiDung, diaDiem.trim());
     }
-
-    // ── THỐNG KÊ ────────────────────────────────────────────────────
-
-    public int getTongThiepMoi(int toDanPhoID, int nam) {
-        return dao.thongKe_TongThiepMoi(toDanPhoID, nam);
-    }
-
-    public int getThiepMoiDaIn(int toDanPhoID, int nam) {
-        return dao.thongKe_ThiepMoiDaIn(toDanPhoID, nam);
-    }
-
-    public Map<String, Integer> getThiepMoiTheoThang(int toDanPhoID, int nam) {
-        return dao.thongKe_ThiepMoiTheoThang(toDanPhoID, nam);
-    }
-
-    public Map<String, Integer> getThiepMoiTheoTrangThai(int toDanPhoID, int nam) {
-        return dao.thongKe_ThiepMoiTheoTrangThai(toDanPhoID, nam);
-    }
 }

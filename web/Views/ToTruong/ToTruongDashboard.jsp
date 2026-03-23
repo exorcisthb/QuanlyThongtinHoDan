@@ -320,13 +320,7 @@
                 <div class="dc-desc">Xem danh sách, thêm, sửa, xóa thông tin hộ khẩu trong tổ dân phố.</div>
                 <span class="dc-btn blue">Xem danh sách →</span>
             </a>
-            <%-- ✅ SỬA: link thống kê --%>
-            <a href="${pageContext.request.contextPath}/totruong/thong-ke" class="dash-card green">
-                <div class="dc-icon green">📊</div>
-                <div class="dc-title">Thống kê tổ</div>
-                <div class="dc-desc">Số hộ, số nhân khẩu, tình trạng tạm trú, tạm vắng trong tổ.</div>
-                <span class="dc-btn green">Xem thống kê →</span>
-            </a>
+            
             <a href="${pageContext.request.contextPath}/danh-sach-lich-hop" class="dash-card green">
                 <div class="dc-icon green">📅</div>
                 <div class="dc-title">Lịch họp tổ</div>

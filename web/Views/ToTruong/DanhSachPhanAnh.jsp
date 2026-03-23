@@ -198,6 +198,12 @@
         .btn-lc:hover{border-color:var(--text);color:var(--text);}
         .btn-lx{flex:1;height:40px;border-radius:10px;background:var(--danger);border:none;color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;}
         .btn-lx:hover{opacity:.85;}
+        .detail-anh-thumb{width:90px;height:70px;border-radius:8px;object-fit:cover;border:1px solid var(--border);cursor:zoom-in;transition:opacity .15s;}
+        .detail-anh-thumb:hover{opacity:.8;}
+        .lightbox{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);align-items:center;justify-content:center;}
+        .lightbox.show{display:flex;}
+        .lightbox img{max-width:90vw;max-height:90vh;border-radius:10px;}
+        .lightbox-close{position:absolute;top:20px;right:24px;color:#fff;font-size:28px;cursor:pointer;line-height:1;}
         @media(max-width:1200px){.stats-grid{grid-template-columns:repeat(3,1fr);}}
         @media(max-width:768px){.topbar-nav{display:none;}.content{padding:20px 16px;}.stats-grid{grid-template-columns:repeat(2,1fr);}.filter-bar{flex-wrap:wrap;}.detail-grid{grid-template-columns:1fr;}}
     </style>
@@ -488,6 +494,10 @@
                     <div class="detail-section-title">Nội dung phản ánh</div>
                     <div class="detail-noidung" id="dt-noidung">—</div>
                 </div>
+                <div class="detail-section" id="dt-anh-section" style="display:none">
+                    <div class="detail-section-title">Ảnh đính kèm</div>
+                    <div id="dt-anh" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px"></div>
+                </div>
                 <div class="detail-section">
                     <div class="detail-section-title">Lịch sử xử lý</div>
                     <div class="detail-lichsu" id="dt-lichsu">
@@ -597,6 +607,12 @@
     </div>
 </div>
 
+<!-- ══ LIGHTBOX ══ -->
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('show')">
+    <span class="lightbox-close">✕</span>
+    <img id="lightboxImg" src="" alt="">
+</div>
+
 <script>
 const CTX = '${pageContext.request.contextPath}';
 const KW  = '${keyword}';
@@ -659,46 +675,69 @@ const ACT_LABEL = {
 };
 
 function xemChiTiet(btn) {
-    const d = btn.dataset;
-    const ttID = parseInt(d.ttid);
-    const mucDo = parseInt(d.mucdo);
-
+    var d = btn.dataset;
+    var ttID  = parseInt(d.ttid);
+    var mucDo = parseInt(d.mucdo);
     closeInlinePanel();
+
+    // Hiện dữ liệu cơ bản từ data-* trước (không cần chờ AJAX)
     document.getElementById('dt-title').textContent = d.title;
-
-    const p = PILL[ttID]||['gray',d.tentt];
-    const m = MUCD[mucDo]||['gray','—'];
-    const isCap = d.chuyencap === 'true';
+    var p = PILL[ttID]||['gray',d.tentt];
+    var m = MUCD[mucDo]||['gray','—'];
+    var isCap = d.chuyencap === 'true';
     document.getElementById('dt-meta').innerHTML =
-        `<span class="pill ${p[0]}">${p[1]}</span>` +
-        `<span class="pill ${m[0]}">${m[1]}</span>` +
-        (isCap ? '<span class="tag cap">🔼 Chuyển cấp</span>' : '');
-
+        '<span class="pill ' + p[0] + '">' + p[1] + '</span>'
+        + '<span class="pill ' + m[0] + '">' + m[1] + '</span>'
+        + (isCap ? '<span class="tag cap">🔼 Chuyển cấp</span>' : '');
     document.getElementById('dt-nguoigui').textContent = d.nguoigui || '—';
     document.getElementById('dt-loai').textContent     = d.loai     || '—';
     document.getElementById('dt-ngay').textContent     = d.ngay     || '—';
-    document.getElementById('dt-mucdo').innerHTML      = `<span class="pill ${m[0]}">${m[1]}</span>`;
+    document.getElementById('dt-mucdo').innerHTML      = '<span class="pill ' + m[0] + '">' + m[1] + '</span>';
     document.getElementById('dt-noidung').textContent  = d.noidung  || '(Không có nội dung)';
 
-    loadLichSu(d.id);
-    renderActions(ttID, d.id, d.title);
+    // Reset ảnh và lịch sử
+    document.getElementById('dt-anh-section').style.display = 'none';
+    document.getElementById('dt-anh').innerHTML = '';
+    document.getElementById('dt-lichsu').innerHTML =
+        '<div style="color:var(--muted);font-size:13px;padding:8px 0">Đang tải...</div>';
 
+    renderActions(ttID, d.id, d.title);
     document.getElementById('m-chiTiet').classList.add('show');
     document.body.style.overflow = 'hidden';
+
+    // AJAX lấy ảnh + lịch sử
+    loadChiTiet(d.id, ttID, d.id, d.title);
 }
 
-function loadLichSu(id) {
-    const el = document.getElementById('dt-lichsu');
-    el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">Đang tải...</div>';
-    fetch(CTX + '/totruong/phan-anh?action=lichSu&phanAnhID=' + id)
-        .then(r => r.json())
-        .then(data => {
-            if (!data || !data.length) {
-                el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">Chưa có lịch sử.</div>';
+function loadChiTiet(id, ttID, actionId, actionTitle) {
+    fetch(CTX + '/totruong/phan-anh?action=chiTiet&phanAnhID=' + id)
+        .then(function(r){ return r.json(); })
+        .then(function(data) {
+            // ── Render ảnh ──
+            var anhList = data.danhSachAnh;
+            if (anhList && anhList.length > 0) {
+                document.getElementById('dt-anh-section').style.display = '';
+                var anhHtml = '';
+                for (var i = 0; i < anhList.length; i++) {
+                    var url = CTX + '/' + anhList[i].duongDan.replace(/^\//, '');
+                    anhHtml += '<img class="detail-anh-thumb" src="' + url + '" '
+                             + 'onerror="this.style.display=\'none\'" '
+                             + 'onclick="xemAnh(\'' + url + '\')" alt="Ảnh ' + (i+1) + '">';
+                }
+                document.getElementById('dt-anh').innerHTML = anhHtml;
+            }
+
+            // ── Render lịch sử ──
+            var lsEl = document.getElementById('dt-lichsu');
+            var lsList = data.lichSuXuLy;
+            if (!lsList || !lsList.length) {
+                lsEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">Chưa có lịch sử.</div>';
                 return;
             }
-            el.innerHTML = data.map(function(ls) {
-                return '<div class="ls-item">'
+            var lsHtml = '';
+            for (var j = 0; j < lsList.length; j++) {
+                var ls = lsList[j];
+                lsHtml += '<div class="ls-item">'
                     + '<div class="ls-dot"></div>'
                     + '<div>'
                     + '<div class="ls-time">' + (ls.thoiGian || '') + '</div>'
@@ -707,9 +746,18 @@ function loadLichSu(id) {
                     + '<div class="ls-person">👤 ' + (ls.tenNguoiThucHien || '—') + '</div>'
                     + '</div>'
                     + '</div>';
-            }).join('');
+            }
+            lsEl.innerHTML = lsHtml;
         })
-        .catch(() => { el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">Không thể tải lịch sử.</div>'; });
+        .catch(function() {
+            document.getElementById('dt-lichsu').innerHTML =
+                '<div style="color:var(--muted);font-size:13px;padding:8px 0">Không thể tải dữ liệu.</div>';
+        });
+}
+
+function xemAnh(url) {
+    document.getElementById('lightboxImg').src = url;
+    document.getElementById('lightbox').classList.add('show');
 }
 
 function renderActions(ttID, id, title) {
@@ -749,18 +797,18 @@ function renderActions(ttID, id, title) {
 
 function showInlinePanel(action, id, fieldName, labelText, btnText, btnClass) {
     closeInlinePanel();
-    document.getElementById('inline-action').value   = action;
-    document.getElementById('inline-id').value       = id;
+    document.getElementById('inline-action').value = action;
+    document.getElementById('inline-id').value     = id;
     document.getElementById('inline-label').textContent = labelText + ' *';
-    const ta = document.getElementById('inline-textarea');
+    var ta = document.getElementById('inline-textarea');
     ta.name        = fieldName;
     ta.value       = '';
     ta.placeholder = 'Nhập ' + labelText.toLowerCase() + '...';
-    const sub = document.getElementById('inline-submit');
+    var sub = document.getElementById('inline-submit');
     sub.textContent = btnText;
     sub.className   = 'btn ' + btnClass;
     document.getElementById('inline-panel').classList.add('show');
-    setTimeout(() => ta.focus(), 100);
+    setTimeout(function(){ ta.focus(); }, 100);
 }
 
 function closeInlinePanel() {
@@ -784,9 +832,10 @@ function hideLogoutModal(){
     document.body.style.overflow='';
 }
 
-document.addEventListener('keydown',e=>{
+document.addEventListener('keydown',function(e){
     if(e.key!=='Escape')return;
-    ['giaiQuyet','chuyenCap','tuChoi','spam','phanHoi'].forEach(t=>closeModal(t));
+    ['giaiQuyet','chuyenCap','tuChoi','spam','phanHoi'].forEach(function(t){closeModal(t);});
+    document.getElementById('lightbox').classList.remove('show');
     closeDetail();
     hideLogoutModal();
 });

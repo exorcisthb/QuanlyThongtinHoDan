@@ -243,27 +243,6 @@ public class PhanAnhService {
     public List<LoaiPhanAnh> getDanhSachLoai() {
         return phanAnhDAO.getDanhSachLoai();
     }
-
-    // ================================================================== //
-    //  THỐNG KÊ
-    // ================================================================== //
-
-    public Map<String, Integer> getTongHopPhanAnh(int toDanPhoID, int nam) {
-        return phanAnhDAO.thongKe_TongHopPhanAnh(toDanPhoID, nam);
-    }
-
-    public Map<String, Integer> getPhanAnhTheoThang(int toDanPhoID, int nam) {
-        return phanAnhDAO.thongKe_PhanAnhTheoThang(toDanPhoID, nam);
-    }
-
-    public Map<String, Integer> getPhanAnhTheoTrangThai(int toDanPhoID, int nam) {
-        return phanAnhDAO.thongKe_PhanAnhTheoTrangThai(toDanPhoID, nam);
-    }
-
-    public Map<String, Integer> getPhanAnhTheoLoai(int toDanPhoID, int nam) {
-        return phanAnhDAO.thongKe_PhanAnhTheoLoai(toDanPhoID, nam);
-    }
-
     // ================================================================== //
     //  UPLOAD ẢNH
     // ================================================================== //

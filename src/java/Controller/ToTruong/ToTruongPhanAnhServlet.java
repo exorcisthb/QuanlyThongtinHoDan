@@ -3,6 +3,8 @@ package Controller.ToTruong;
 import Model.Entity.NguoiDung;
 import Model.Service.PhanAnhService;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
@@ -14,6 +16,7 @@ import java.util.Map;
 public class ToTruongPhanAnhServlet extends HttpServlet {
 
     private final PhanAnhService service = new PhanAnhService();
+    private final Gson gson = new GsonBuilder().serializeNulls().create();
 
     private NguoiDung getToTruong(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
@@ -31,7 +34,36 @@ public class ToTruongPhanAnhServlet extends HttpServlet {
         NguoiDung toTruong = getToTruong(req, resp);
         if (toTruong == null) return;
 
-        int toDanPhoID = toTruong.getToDanPhoID();
+        String action = req.getParameter("action");
+
+        // ── action=chiTiet: trả JSON đầy đủ (ảnh + lịch sử) ──
+        if ("chiTiet".equals(action) || "lichSu".equals(action)) {
+            String idParam = req.getParameter("phanAnhID");
+            if (idParam == null || !idParam.matches("\\d+")) {
+                sendJson(resp, 400, List.of());
+                return;
+            }
+            int phanAnhID = Integer.parseInt(idParam);
+            Map<String, Object> data = service.getChiTiet(phanAnhID);
+            if (data == null) {
+                sendJson(resp, 404, List.of());
+                return;
+            }
+            normalizeTimestamps(data);
+
+            // action=lichSu → chỉ trả mảng lịch sử
+            if ("lichSu".equals(action)) {
+                Object ls = data.get("lichSuXuLy");
+                sendJson(resp, 200, ls != null ? ls : List.of());
+            } else {
+                // action=chiTiet → trả toàn bộ
+                sendJson(resp, 200, data);
+            }
+            return;
+        }
+
+        // ── Trang danh sách ──
+        int toDanPhoID    = toTruong.getToDanPhoID();
         String keyword    = req.getParameter("keyword");
         String ttParam    = req.getParameter("trangThai");
         String mucDoParam = req.getParameter("mucDo");
@@ -39,7 +71,6 @@ public class ToTruongPhanAnhServlet extends HttpServlet {
         List<Map<String, Object>> goc      = service.getDanhSachTheoTo(toDanPhoID);
         List<Map<String, Object>> danhSach = service.getDanhSachTheoTo(toDanPhoID);
 
-        // Thống kê từ danh sách gốc (trước filter)
         long soChoXuLy   = goc.stream().filter(p -> (int)p.get("trangThaiID") == 1).count();
         long soDangXuLy  = goc.stream().filter(p -> (int)p.get("trangThaiID") == 2).count();
         long soChuyenCap = goc.stream().filter(p -> (int)p.get("trangThaiID") == 3).count();
@@ -47,7 +78,6 @@ public class ToTruongPhanAnhServlet extends HttpServlet {
         long soTuChoi    = goc.stream().filter(p -> (int)p.get("trangThaiID") == 5).count();
         long soSpam      = goc.stream().filter(p -> Boolean.TRUE.equals(p.get("isSpam"))).count();
 
-        // Filter ở tầng Java
         if (ttParam != null && !ttParam.isBlank()) {
             int ttFilter = Integer.parseInt(ttParam);
             danhSach.removeIf(p -> (int) p.get("trangThaiID") != ttFilter);
@@ -100,40 +130,43 @@ public class ToTruongPhanAnhServlet extends HttpServlet {
         int phanAnhID = Integer.parseInt(idParam);
 
         Map<String, Object> result = switch (action == null ? "" : action) {
-
-            case "tiepNhan" -> service.tiepNhan(phanAnhID, nguoiID, null);
-
-            case "giaiQuyet" -> {
-                String ketQua = req.getParameter("ketQua");
-                yield service.giaiQuyetToTruong(phanAnhID, nguoiID, ketQua);
-            }
-
-            case "tuChoi" -> {
-                String lyDo = req.getParameter("lyDo");
-                yield service.tuChoi(phanAnhID, nguoiID, lyDo);
-            }
-
-            case "danhDauSpam" -> {
-                String ghiChu = req.getParameter("ghiChu");
-                yield service.danhDauSpam(phanAnhID, nguoiID, ghiChu);
-            }
-
-            case "chuyenCap" -> {
-                String ghiChu = req.getParameter("ghiChu");
-                yield service.chuyenCapCanBo(phanAnhID, nguoiID, ghiChu);
-            }
-
-            case "phanHoi" -> {
-                String noiDung = req.getParameter("noiDungPhanHoi");
-                yield service.guiPhanHoi(phanAnhID, nguoiID, noiDung);
-            }
-
+            case "tiepNhan"    -> service.tiepNhan(phanAnhID, nguoiID, null);
+            case "giaiQuyet"   -> service.giaiQuyetToTruong(phanAnhID, nguoiID, req.getParameter("ketQua"));
+            case "tuChoi"      -> service.tuChoi(phanAnhID, nguoiID, req.getParameter("lyDo"));
+            case "danhDauSpam" -> service.danhDauSpam(phanAnhID, nguoiID, req.getParameter("ghiChu"));
+            case "chuyenCap"   -> service.chuyenCapCanBo(phanAnhID, nguoiID, req.getParameter("ghiChu"));
+            case "phanHoi"     -> service.guiPhanHoi(phanAnhID, nguoiID, req.getParameter("noiDungPhanHoi"));
             default -> Map.of("success", false, "message", "Hành động không được hỗ trợ.");
         };
 
         boolean ok = Boolean.TRUE.equals(result.get("success"));
         setFlash(req, (String) result.get("message"), !ok);
         redirect(req, resp);
+    }
+
+    // ── Helpers ────────────────────────────────────────────────────────
+    private void sendJson(HttpServletResponse resp, int status, Object data) throws IOException {
+        resp.setStatus(status);
+        resp.setContentType("application/json;charset=UTF-8");
+        resp.getWriter().write(gson.toJson(data));
+    }
+
+    @SuppressWarnings("unchecked")
+    private void normalizeTimestamps(Map<String, Object> map) {
+        map.replaceAll((k, v) -> (v instanceof java.sql.Timestamp || v instanceof java.util.Date)
+                ? v.toString() : v);
+        for (String key : new String[]{"danhSachAnh", "lichSuXuLy"}) {
+            Object list = map.get(key);
+            if (list instanceof List) {
+                for (Object item : (List<?>) list) {
+                    if (item instanceof Map) {
+                        ((Map<String, Object>) item).replaceAll((k, v) ->
+                                (v instanceof java.sql.Timestamp || v instanceof java.util.Date)
+                                        ? v.toString() : v);
+                    }
+                }
+            }
+        }
     }
 
     private void setFlash(HttpServletRequest req, String msg, boolean isError) {

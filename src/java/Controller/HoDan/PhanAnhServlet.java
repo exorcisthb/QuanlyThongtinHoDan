@@ -3,6 +3,7 @@ package Controller.HoDan;
 import Model.Entity.NguoiDung;
 import Model.Service.PhanAnhService;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -14,13 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Servlet xử lý trang danh sách phản ánh của hộ dân.
- * GET  /hodan/phan-anh                    → hiển thị danh sách
- * GET  /hodan/phan-anh?action=chiTiet&id= → trả JSON chi tiết
- * POST /hodan/phan-anh?action=sua         → sửa phản ánh (multipart)
- * POST /hodan/phan-anh?action=huy         → hủy phản ánh
- */
 @WebServlet("/hodan/phan-anh")
 @MultipartConfig(
     fileSizeThreshold = 1024 * 1024,
@@ -30,11 +24,8 @@ import java.util.Map;
 public class PhanAnhServlet extends HttpServlet {
 
     private final PhanAnhService phanAnhService = new PhanAnhService();
-    private final Gson gson = new Gson();
+    private final Gson gson = new GsonBuilder().serializeNulls().create();
 
-    // ------------------------------------------------------------------ //
-    //  GET
-    // ------------------------------------------------------------------ //
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -52,18 +43,17 @@ public class PhanAnhServlet extends HttpServlet {
         if ("chiTiet".equals(action)) {
             int id = parseInt(req.getParameter("id"), 0);
             if (id == 0) {
-                sendJson(resp, HttpServletResponse.SC_BAD_REQUEST,
-                        Map.of("success", false, "message", "Thiếu ID phản ánh."));
+                sendJson(resp, 400, Map.of("success", false, "message", "Thiếu ID phản ánh."));
                 return;
             }
             Map<String, Object> data = phanAnhService.getChiTiet(id);
-            // Kiểm tra quyền — chỉ cho xem của chính mình
             if (data == null || (int) data.get("nguoiGuiID") != nd.getNguoiDungID()) {
-                sendJson(resp, HttpServletResponse.SC_NOT_FOUND,
-                        Map.of("success", false, "message", "Không tìm thấy phản ánh."));
+                sendJson(resp, 404, Map.of("success", false, "message", "Không tìm thấy phản ánh."));
                 return;
             }
-            sendJson(resp, HttpServletResponse.SC_OK, data);
+            // ── Chuẩn hóa Timestamp → String để Gson serialize đúng ──
+            normalizeTimestamps(data);
+            sendJson(resp, 200, data);
             return;
         }
 
@@ -71,13 +61,9 @@ public class PhanAnhServlet extends HttpServlet {
         List<Map<String, Object>> danhSach =
                 phanAnhService.getDanhSachCuaHoDan(nd.getNguoiDungID());
         req.setAttribute("danhSachPhanAnh", danhSach);
-        req.getRequestDispatcher("/Views/HoDan/PhanAnh.jsp")
-           .forward(req, resp);
+        req.getRequestDispatcher("/Views/HoDan/PhanAnh.jsp").forward(req, resp);
     }
 
-    // ------------------------------------------------------------------ //
-    //  POST
-    // ------------------------------------------------------------------ //
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -86,8 +72,7 @@ public class PhanAnhServlet extends HttpServlet {
 
         HttpSession session = req.getSession(false);
         if (!isHoDan(session)) {
-            sendJson(resp, HttpServletResponse.SC_UNAUTHORIZED,
-                    Map.of("success", false, "message", "Chưa đăng nhập."));
+            sendJson(resp, 401, Map.of("success", false, "message", "Chưa đăng nhập."));
             return;
         }
 
@@ -102,12 +87,10 @@ public class PhanAnhServlet extends HttpServlet {
                 int mucDoUuTien = parseInt(req.getParameter("mucDoUuTien"), 2);
 
                 if (phanAnhID == 0) {
-                    sendJson(resp, HttpServletResponse.SC_BAD_REQUEST,
-                            Map.of("success", false, "message", "Thiếu ID phản ánh."));
+                    sendJson(resp, 400, Map.of("success", false, "message", "Thiếu ID phản ánh."));
                     return;
                 }
 
-                // Lấy fileID cần xóa
                 List<Integer> fileIDXoa = new ArrayList<>();
                 String[] xoaArr = req.getParameterValues("fileIDXoa");
                 if (xoaArr != null) {
@@ -116,7 +99,6 @@ public class PhanAnhServlet extends HttpServlet {
                     }
                 }
 
-                // Lấy ảnh mới
                 List<Part> partsAnhMoi = new ArrayList<>();
                 try {
                     for (Part part : req.getParts()) {
@@ -124,16 +106,14 @@ public class PhanAnhServlet extends HttpServlet {
                         if (part.getSize() > 0) partsAnhMoi.add(part);
                     }
                 } catch (Exception e) {
-                    sendJson(resp, HttpServletResponse.SC_BAD_REQUEST,
-                            Map.of("success", false, "message", "Lỗi đọc file đính kèm."));
+                    sendJson(resp, 400, Map.of("success", false, "message", "Lỗi đọc file đính kèm."));
                     return;
                 }
 
-                // Lấy loaiID từ phản ánh hiện tại (không cho đổi)
                 Map<String, Object> hien = phanAnhService.getDanhSachCuaHoDan(nd.getNguoiDungID())
                         .stream().filter(p -> (int) p.get("phanAnhID") == phanAnhID)
                         .findFirst().orElse(null);
-                int loaiID = hien != null ? (int) hien.get("loaiID") : 0;
+                int loaiID    = hien != null ? (int)    hien.get("loaiID")  : 0;
                 String tieuDe = hien != null ? String.valueOf(hien.get("tieuDe")) : "";
 
                 String appPath = req.getServletContext().getRealPath("/");
@@ -148,31 +128,65 @@ public class PhanAnhServlet extends HttpServlet {
                     e.printStackTrace();
                     result = Map.of("success", false, "message", "Lỗi server: " + e.getMessage());
                 }
-                sendJson(resp, HttpServletResponse.SC_OK, result);
+                sendJson(resp, 200, result);
             }
 
             case "huy" -> {
                 int phanAnhID = parseInt(req.getParameter("phanAnhID"), 0);
                 String lyDo   = req.getParameter("lyDo");
                 if (phanAnhID == 0) {
-                    sendJson(resp, HttpServletResponse.SC_BAD_REQUEST,
-                            Map.of("success", false, "message", "Thiếu ID phản ánh."));
+                    sendJson(resp, 400, Map.of("success", false, "message", "Thiếu ID phản ánh."));
                     return;
                 }
                 Map<String, Object> result =
                         phanAnhService.huyPhanAnh(phanAnhID, nd.getNguoiDungID(), lyDo);
-                sendJson(resp, HttpServletResponse.SC_OK, result);
+                sendJson(resp, 200, result);
             }
 
-            default -> sendJson(resp, HttpServletResponse.SC_BAD_REQUEST,
-                    Map.of("success", false, "message", "Action không hợp lệ."));
+            default -> sendJson(resp, 400, Map.of("success", false, "message", "Action không hợp lệ."));
         }
     }
 
-    // ------------------------------------------------------------------ //
-    //  HELPERS
-    // ------------------------------------------------------------------ //
+    // ── Chuẩn hóa Timestamp/Date thành String ──────────────────────────
+    @SuppressWarnings("unchecked")
+    private void normalizeTimestamps(Map<String, Object> map) {
+        map.replaceAll((k, v) -> {
+            if (v instanceof java.sql.Timestamp || v instanceof java.util.Date) {
+                return v.toString();
+            }
+            return v;
+        });
+        // Chuẩn hóa danhSachAnh
+        Object anh = map.get("danhSachAnh");
+        if (anh instanceof List) {
+            for (Object item : (List<?>) anh) {
+                if (item instanceof Map) {
+                    ((Map<String, Object>) item).replaceAll((k, v) -> {
+                        if (v instanceof java.sql.Timestamp || v instanceof java.util.Date) {
+                            return v.toString();
+                        }
+                        return v;
+                    });
+                }
+            }
+        }
+        // Chuẩn hóa lichSuXuLy
+        Object ls = map.get("lichSuXuLy");
+        if (ls instanceof List) {
+            for (Object item : (List<?>) ls) {
+                if (item instanceof Map) {
+                    ((Map<String, Object>) item).replaceAll((k, v) -> {
+                        if (v instanceof java.sql.Timestamp || v instanceof java.util.Date) {
+                            return v.toString();
+                        }
+                        return v;
+                    });
+                }
+            }
+        }
+    }
 
+    // ── Helpers ────────────────────────────────────────────────────────
     private boolean isHoDan(HttpSession session) {
         NguoiDung nd = getNguoiDung(session);
         return nd != null && nd.getVaiTroID() == 4;
@@ -189,10 +203,9 @@ public class PhanAnhServlet extends HttpServlet {
         catch (Exception e) { return defaultVal; }
     }
 
-    private void sendJson(HttpServletResponse resp, int status,
-                           Object data) throws IOException {
+    private void sendJson(HttpServletResponse resp, int status, Object data) throws IOException {
         resp.setStatus(status);
-        resp.setContentType("application/json");
+        resp.setContentType("application/json;charset=UTF-8");
         resp.setCharacterEncoding("UTF-8");
         resp.getWriter().write(gson.toJson(data));
     }

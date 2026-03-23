@@ -4,6 +4,7 @@ import Model.Entity.NguoiDung;
 import Model.Service.PhanAnhService;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
@@ -15,6 +16,7 @@ import java.util.Map;
 public class CanBoPhuongPhanAnhServlet extends HttpServlet {
 
     private final PhanAnhService service = new PhanAnhService();
+    private final Gson gson = new GsonBuilder().serializeNulls().create();
 
     private NguoiDung getCanBo(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
@@ -32,31 +34,78 @@ public class CanBoPhuongPhanAnhServlet extends HttpServlet {
         NguoiDung canBo = getCanBo(req, resp);
         if (canBo == null) return;
 
-        // Tra ve JSON so luong neu la request dem badge tu dashboard
+        String action = req.getParameter("action");
+
+        // ── action=lichSu: trả JSON lịch sử xử lý (dùng cho AJAX modal chi tiết) ──
+        if ("lichSu".equals(action)) {
+            String idParam = req.getParameter("phanAnhID");
+            if (idParam == null || !idParam.matches("\\d+")) {
+                sendJson(resp, 400, List.of());
+                return;
+            }
+            int phanAnhID = Integer.parseInt(idParam);
+            Map<String, Object> chiTiet = service.getChiTiet(phanAnhID);
+            if (chiTiet == null) {
+                sendJson(resp, 404, List.of());
+                return;
+            }
+            // Lấy lichSuXuLy và chuyển Timestamp thành String cho dễ render
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> lichSu =
+                    (List<Map<String, Object>>) chiTiet.get("lichSuXuLy");
+            if (lichSu == null) lichSu = List.of();
+            // Chuẩn hóa thoiGian thành String
+            for (Map<String, Object> ls : lichSu) {
+                if (ls.get("thoiGian") != null) {
+                    ls.put("thoiGian", ls.get("thoiGian").toString());
+                }
+            }
+            sendJson(resp, 200, lichSu);
+            return;
+        }
+
+        // ── action=chiTiet: trả JSON chi tiết phản ánh ──
+        if ("chiTiet".equals(action)) {
+            String idParam = req.getParameter("phanAnhID");
+            if (idParam == null || !idParam.matches("\\d+")) {
+                sendJson(resp, 400, Map.of("success", false, "message", "Thiếu ID."));
+                return;
+            }
+            int phanAnhID = Integer.parseInt(idParam);
+            Map<String, Object> data = service.getChiTiet(phanAnhID);
+            if (data == null) {
+                sendJson(resp, 404, Map.of("success", false, "message", "Không tìm thấy."));
+                return;
+            }
+            // Chuẩn hóa timestamp thành String
+            normalizeTimestamps(data);
+            sendJson(resp, 200, data);
+            return;
+        }
+
+        // ── Tra về JSON đếm badge từ dashboard ──
         String format = req.getParameter("format");
         if ("count".equals(format)) {
             List<Map<String, Object>> all = service.getDanhSachDaChuyenCap();
             long soChuaXuLy = all.stream()
-                    .filter(p -> (int)p.get("trangThaiID") == 3).count();
+                    .filter(p -> (int) p.get("trangThaiID") == 3).count();
             resp.setContentType("application/json;charset=UTF-8");
             resp.getWriter().write("{\"soChuaXuLy\":" + soChuaXuLy + "}");
             return;
         }
 
-        String keyword   = req.getParameter("keyword");
-        String ttParam   = req.getParameter("trangThai");
-        String mucDoP    = req.getParameter("mucDo");
-        String toParam   = req.getParameter("toDanPho");
+        // ── Trang danh sách ──
+        String keyword = req.getParameter("keyword");
+        String ttParam = req.getParameter("trangThai");
+        String mucDoP  = req.getParameter("mucDo");
+        String toParam = req.getParameter("toDanPho");
 
-        // Lay tat ca phan anh da chuyen cap tu moi to
         List<Map<String, Object>> goc      = service.getDanhSachDaChuyenCap();
         List<Map<String, Object>> danhSach = service.getDanhSachDaChuyenCap();
 
-        // Thong ke goc (truoc filter)
-        long soChuaXuLy  = goc.stream().filter(p -> (int)p.get("trangThaiID") == 3).count();
-        long soGiaiQuyet = goc.stream().filter(p -> (int)p.get("trangThaiID") == 4).count();
+        long soChuaXuLy  = goc.stream().filter(p -> (int) p.get("trangThaiID") == 3).count();
+        long soGiaiQuyet = goc.stream().filter(p -> (int) p.get("trangThaiID") == 4).count();
 
-        // Filter o tang Java
         if (ttParam != null && !ttParam.isBlank()) {
             int ttFilter = Integer.parseInt(ttParam);
             danhSach.removeIf(p -> (int) p.get("trangThaiID") != ttFilter);
@@ -79,7 +128,6 @@ public class CanBoPhuongPhanAnhServlet extends HttpServlet {
             });
         }
 
-        // Danh sach to don nhat de hien filter
         List<String> danhSachTo = goc.stream()
                 .map(p -> p.get("tenToDanPho") != null ? p.get("tenToDanPho").toString() : "")
                 .filter(s -> !s.isBlank()).distinct().sorted().toList();
@@ -118,25 +166,52 @@ public class CanBoPhuongPhanAnhServlet extends HttpServlet {
         int phanAnhID = Integer.parseInt(idParam);
 
         Map<String, Object> result = switch (action == null ? "" : action) {
-
-            // Giai quyet: TT=3 -> 4 (chi can bo phuong moi co quyen nay)
             case "giaiQuyet" -> {
                 String ketQua = req.getParameter("ketQua");
                 yield service.giaiquyetPhanAnh(phanAnhID, nguoiID, ketQua);
             }
-
-            // Gui phan hoi den nguoi dan
             case "phanHoi" -> {
                 String noiDung = req.getParameter("noiDungPhanHoi");
                 yield service.guiPhanHoi(phanAnhID, nguoiID, noiDung);
             }
-
             default -> Map.of("success", false, "message", "Hành động không được hỗ trợ.");
         };
 
         boolean ok = Boolean.TRUE.equals(result.get("success"));
         setFlash(req, (String) result.get("message"), !ok);
         redirect(req, resp);
+    }
+
+    // ── Helpers ────────────────────────────────────────────────────────
+    private void sendJson(HttpServletResponse resp, int status, Object data) throws IOException {
+        resp.setStatus(status);
+        resp.setContentType("application/json;charset=UTF-8");
+        resp.getWriter().write(gson.toJson(data));
+    }
+
+    /** Chuyển tất cả Timestamp/Date trong Map thành String để Gson serialize đúng */
+    @SuppressWarnings("unchecked")
+    private void normalizeTimestamps(Map<String, Object> map) {
+        map.replaceAll((k, v) -> {
+            if (v instanceof java.sql.Timestamp || v instanceof java.util.Date) {
+                return v.toString();
+            }
+            return v;
+        });
+        // Chuẩn hóa lichSuXuLy
+        Object ls = map.get("lichSuXuLy");
+        if (ls instanceof List) {
+            for (Object item : (List<?>) ls) {
+                if (item instanceof Map) {
+                    ((Map<String, Object>) item).replaceAll((k, v) -> {
+                        if (v instanceof java.sql.Timestamp || v instanceof java.util.Date) {
+                            return v.toString();
+                        }
+                        return v;
+                    });
+                }
+            }
+        }
     }
 
     private void setFlash(HttpServletRequest req, String msg, boolean isError) {
