@@ -298,7 +298,7 @@
                 <div class="page-header">
                     <div class="breadcrumb">
                         <a href="${pageContext.request.contextPath}/canbophuong/dashboard">Dashboard</a>
-                        / Danh sách hộ dân
+                         Danh sách hộ dân
                     </div>
                     <h1>Danh sách hộ dân toàn phường</h1>
                     <p>Quản lý tất cả hộ khẩu theo từng tổ dân phố</p>

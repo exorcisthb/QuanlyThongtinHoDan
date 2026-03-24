@@ -548,7 +548,7 @@
                             </div>
                         </c:if>
                         <div style="margin-top:16px; display:flex; gap:10px;">
-                            <a href="${pageContext.request.contextPath}/canbophuong/hodann" class="btn btn-primary">→ Xem danh sách hộ dân</a>
+                            <a href="${pageContext.request.contextPath}/canbophuong/hodan" class="btn btn-primary">→ Xem danh sách hộ dân</a>
                             <a href="${pageContext.request.contextPath}/canbophuong/import-hodan" class="btn btn-secondary">↺ Import thêm</a>
                         </div>
                     </div>
