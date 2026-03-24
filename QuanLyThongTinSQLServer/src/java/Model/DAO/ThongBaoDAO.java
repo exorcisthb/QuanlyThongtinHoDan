@@ -299,7 +299,7 @@ public class ThongBaoDAO {
     //  ĐÁNH DẤU ĐÃ ĐỌC 1
     // ------------------------------------------------------------------ //
     public boolean danhDauDaDoc(int thongBaoID, int nguoiDungID) {
-        String sql = "UPDATE NguoiNhanThongBao SET DaDoc = 1, ThoiGianDoc = GETDATE() "
+        String sql = "UPDATE NguoiNhanThongBao SET DaDoc = 1, ThoiGianDoc = NOW() "
                 + "WHERE ThongBaoID = ? AND NguoiDungID = ? AND DaDoc = 0";
         try (Connection conn = DBContext.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, thongBaoID);
@@ -315,7 +315,7 @@ public class ThongBaoDAO {
     //  ĐÁNH DẤU ĐỌC TẤT CẢ
     // ------------------------------------------------------------------ //
     public boolean danhDauDocTatCa(int nguoiDungID) {
-        String sql = "UPDATE NguoiNhanThongBao SET DaDoc = 1, ThoiGianDoc = GETDATE() "
+        String sql = "UPDATE NguoiNhanThongBao SET DaDoc = 1, ThoiGianDoc = NOW() "
                 + "WHERE NguoiDungID = ? AND DaDoc = 0";
         try (Connection conn = DBContext.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, nguoiDungID);

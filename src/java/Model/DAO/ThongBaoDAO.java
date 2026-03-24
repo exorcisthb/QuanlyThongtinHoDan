@@ -232,7 +232,7 @@ public class ThongBaoDAO {
     //  ĐÁNH DẤU ĐÃ ĐỌC 1
     // ------------------------------------------------------------------ //
     public boolean danhDauDaDoc(int thongBaoID, int nguoiDungID) {
-        // PostgreSQL: GETDATE() → NOW(), DaDoc = 1/0 → TRUE/FALSE
+        // PostgreSQL: NOW() → NOW(), DaDoc = 1/0 → TRUE/FALSE
         String sql = "UPDATE NguoiNhanThongBao SET DaDoc = TRUE, ThoiGianDoc = NOW() "
                 + "WHERE ThongBaoID = ? AND NguoiDungID = ? AND DaDoc = FALSE";
         try (Connection conn = DBContext.getInstance().getConnection();

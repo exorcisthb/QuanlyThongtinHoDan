@@ -8,7 +8,7 @@ public class ThanhVienDAO {
     public List<Map<String, Object>> getThanhVienByHoDanID(int hoDanID) {
         List<Map<String, Object>> list = new ArrayList<>();
         // PostgreSQL:
-        //   DATEDIFF(YEAR, ..., GETDATE()) → DATE_PART('year', AGE(nd.NgaySinh))
+        //   DATEDIFF(YEAR, ..., NOW()) → DATE_PART('year', AGE(nd.NgaySinh))
         //   Không cần thay đổi gì khác (JOIN, WHERE, ORDER BY đều chuẩn SQL)
         String sql =
             "SELECT tv.ThanhVienID, tv.NgayVao, " +

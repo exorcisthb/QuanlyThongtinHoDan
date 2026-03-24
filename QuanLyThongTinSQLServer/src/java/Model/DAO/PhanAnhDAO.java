@@ -58,7 +58,7 @@ public class PhanAnhDAO {
         String sql =
             "INSERT INTO LichSuXuLyPhanAnh " +
             "    (PhanAnhID, NguoiThucHienID, HanhDong, TrangThaiCu, TrangThaiMoi, GhiChu, ThoiGian) " +
-            "VALUES (?, ?, ?, ?, ?, ?, GETDATE())";
+            "VALUES (?, ?, ?, ?, ?, ?, NOW())";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, phanAnhID);
             ps.setInt(2, nguoiThucHienID);
@@ -76,7 +76,7 @@ public class PhanAnhDAO {
         if (duongDanAnh == null || duongDanAnh.isEmpty()) return;
         String sql =
             "INSERT INTO FileDinhKemPhanAnh (PhanAnhID, DuongDan, NgayUpload) " +
-            "VALUES (?, ?, GETDATE())";
+            "VALUES (?, ?, NOW())";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             for (String path : duongDanAnh) {
                 ps.setInt(1, phanAnhID);
@@ -102,7 +102,7 @@ public class PhanAnhDAO {
                               String tieuDe, String noiDung) throws SQLException {
         String sqlTB =
             "INSERT INTO ThongBao (TieuDe, NoiDung, NguoiGuiID, NgayGui) " +
-            "VALUES (?, ?, ?, GETDATE())";
+            "VALUES (?, ?, ?, NOW())";
         String sqlNN =
             "INSERT INTO NguoiNhanThongBao (ThongBaoID, NguoiDungID) VALUES (?, ?)";
         try (PreparedStatement psTB = conn.prepareStatement(
@@ -138,7 +138,7 @@ public class PhanAnhDAO {
             "INSERT INTO PhanAnh " +
             "    (TieuDe, NoiDung, LoaiID, MucDoID, NguoiGuiID, ToDanPhoID, " +
             "     TrangThaiID, DaChuyenCap, NgayTao) " +
-            "VALUES (?, ?, ?, ?, ?, ?, 1, 0, GETDATE())";
+            "VALUES (?, ?, ?, ?, ?, ?, 1, 0, NOW())";
         // Tìm tổ trưởng của tổ để gửi thông báo
         String sqlToTruong =
             "SELECT NguoiDungID FROM NguoiDung " +
@@ -232,7 +232,7 @@ public class PhanAnhDAO {
 
         String sqlUpdate =
             "UPDATE PhanAnh " +
-            "   SET TieuDe = ?, NoiDung = ?, LoaiID = ?, MucDoID = ?, NgayCapNhat = GETDATE() " +
+            "   SET TieuDe = ?, NoiDung = ?, LoaiID = ?, MucDoID = ?, NgayCapNhat = NOW() " +
             " WHERE PhanAnhID = ? AND NguoiGuiID = ?";
         String sqlXoaAnh =
             "DELETE FROM FileDinhKemPhanAnh WHERE FileID = ? AND PhanAnhID = ?";
@@ -319,7 +319,7 @@ public class PhanAnhDAO {
 
         String sqlUpdate =
             "UPDATE PhanAnh " +
-            "   SET TrangThaiID = 7, NgayCapNhat = GETDATE(), LyDoTuChoiHuy = ? " +
+            "   SET TrangThaiID = 7, NgayCapNhat = NOW(), LyDoTuChoiHuy = ? " +
             " WHERE PhanAnhID = ? AND NguoiGuiID = ?";
         String sqlToTruong =
             "SELECT NguoiDungID FROM NguoiDung " +
@@ -363,7 +363,7 @@ public class PhanAnhDAO {
     /** Tổ trưởng tiếp nhận phản ánh → TrangThaiID = 2 (Đang xử lý) */
     public boolean tiepNhan(int phanAnhID, int toTruongID, String ghiChu) {
         String sql =
-            "UPDATE PhanAnh SET TrangThaiID = 2, NguoiXuLyID = ?, NgayCapNhat = GETDATE() " +
+            "UPDATE PhanAnh SET TrangThaiID = 2, NguoiXuLyID = ?, NgayCapNhat = NOW() " +
             " WHERE PhanAnhID = ? AND TrangThaiID = 1";
         try (Connection conn = DBContext.getInstance().getConnection()) {
             conn.setAutoCommit(false);
@@ -401,7 +401,7 @@ public class PhanAnhDAO {
 
         String sql =
             "UPDATE PhanAnh " +
-            "   SET TrangThaiID = 5, NgayCapNhat = GETDATE(), LyDoTuChoiHuy = ? " +
+            "   SET TrangThaiID = 5, NgayCapNhat = NOW(), LyDoTuChoiHuy = ? " +
             " WHERE PhanAnhID = ? AND TrangThaiID IN (1, 2)";
 
         try (Connection conn = DBContext.getInstance().getConnection()) {
@@ -444,7 +444,7 @@ public class PhanAnhDAO {
 
         String sql =
             "UPDATE PhanAnh " +
-            "   SET TrangThaiID = 6, IsSpam = 1, NgayCapNhat = GETDATE() " +
+            "   SET TrangThaiID = 6, IsSpam = 1, NgayCapNhat = NOW() " +
             " WHERE PhanAnhID = ? AND TrangThaiID IN (1, 2)";
 
         try (Connection conn = DBContext.getInstance().getConnection()) {
@@ -485,7 +485,7 @@ public class PhanAnhDAO {
 
         String sql =
             "UPDATE PhanAnh " +
-            "   SET TrangThaiID = 3, DaChuyenCap = 1, NgayCapNhat = GETDATE() " +
+            "   SET TrangThaiID = 3, DaChuyenCap = 1, NgayCapNhat = NOW() " +
             " WHERE PhanAnhID = ? AND TrangThaiID = 1";  // ← SỬA: 2 → 1
         String sqlCanBo =
             "SELECT NguoiDungID FROM NguoiDung WHERE VaiTroID = 5 AND IsActivated = 1";
@@ -540,7 +540,7 @@ public class PhanAnhDAO {
 
         String sql =
             "UPDATE PhanAnh " +
-            "   SET TrangThaiID = 4, NguoiXuLyID = ?, NgayCapNhat = GETDATE() " +
+            "   SET TrangThaiID = 4, NguoiXuLyID = ?, NgayCapNhat = NOW() " +
             " WHERE PhanAnhID = ? AND TrangThaiID = 3";
 
         try (Connection conn = DBContext.getInstance().getConnection()) {
@@ -752,7 +752,7 @@ public class PhanAnhDAO {
 
         String sql =
             "UPDATE PhanAnh " +
-            "   SET TrangThaiID = 4, NguoiXuLyID = ?, NgayCapNhat = GETDATE() " +
+            "   SET TrangThaiID = 4, NguoiXuLyID = ?, NgayCapNhat = NOW() " +
             " WHERE PhanAnhID = ? AND TrangThaiID = 2";
 
         try (Connection conn = DBContext.getInstance().getConnection()) {

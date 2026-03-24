@@ -130,7 +130,7 @@ public class AdminInitializer implements ServletContextListener {
     private boolean insertAdmin(Connection conn, int vaiTroID, String hashedPassword) throws SQLException {
         String sql = "INSERT INTO NguoiDung "
                 + "(CCCD, Ho, Ten, NgaySinh, GioiTinh, Email, SoDienThoai, MatKhauHash, VaiTroID, IsActivated, NgayTao) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, GETDATE())";
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW())";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, ADMIN_CCCD);

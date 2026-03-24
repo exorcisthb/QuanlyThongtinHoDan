@@ -358,7 +358,7 @@ public class ThiepMoiDAO {
     // ------------------------------------------------------------------ //
     public boolean inThiepMoi(int thiepMoiID, int nguoiInID) {
         String sqlCheck  = "SELECT DaIn FROM ThiepMoi WHERE ThiepMoiID = ?";
-        // PostgreSQL: GETDATE() → NOW(), DaIn=1 → TRUE
+        // PostgreSQL: NOW() → NOW(), DaIn=1 → TRUE
         String sqlUpdate = "UPDATE ThiepMoi SET DaIn=TRUE, TrangThaiID=3, ThoiGianIn=NOW(), NguoiInID=? WHERE ThiepMoiID=?";
         String sqlLog    = "INSERT INTO LichSuThiepMoi (ThiepMoiID, NguoiThucHienID, HanhDong, GhiChu) VALUES (?, ?, 'IN', 'Thiệp đã in — khóa chỉnh sửa và xóa')";
 

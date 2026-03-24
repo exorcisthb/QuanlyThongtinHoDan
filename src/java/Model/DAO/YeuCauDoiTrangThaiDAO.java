@@ -306,7 +306,7 @@ public class YeuCauDoiTrangThaiDAO {
 
     public boolean duyetYeuCau(int yeuCauID, int nguoiDuyetID, String ghiChu,
             ThongBaoDAO thongBaoDAO) {
-        // PostgreSQL: GETDATE() → NOW()
+        // PostgreSQL: NOW() → NOW()
         String sqlYC
                 = "UPDATE YeuCauDoiTrangThai "
                 + "SET TrangThaiYeuCauID = 2, NguoiDuyetID = ?, NgayDuyet = NOW(), GhiChuDuyet = ? "

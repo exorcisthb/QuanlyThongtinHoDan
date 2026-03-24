@@ -122,7 +122,7 @@ public class NguoiDungDAO {
     }
 
     public boolean taoToTruong(NguoiDung nd) {
-        // PostgreSQL: GETDATE() → NOW(), N'...' literal → dùng tham số thường
+        // PostgreSQL: NOW() → NOW(), N'...' literal → dùng tham số thường
         String sql = "INSERT INTO NguoiDung "
                 + "(CCCD, Ho, Ten, NgaySinh, GioiTinh, Email, SoDienThoai, "
                 + " MatKhauHash, VaiTroID, ToDanPhoID, IsActivated, NgayTao) "
@@ -268,7 +268,7 @@ public class NguoiDungDAO {
     }
 
     public boolean taoCanBoPhuong(NguoiDung nd) {
-        // PostgreSQL: GETDATE() → NOW(), bỏ N'', literal 1 → TRUE
+        // PostgreSQL: NOW() → NOW(), bỏ N'', literal 1 → TRUE
         String sql = "INSERT INTO NguoiDung "
                 + "(Ho, Ten, NgaySinh, GioiTinh, Email, SoDienThoai, "
                 + " MatKhauHash, VaiTroID, ToDanPhoID, IsActivated, NgayTao) "

@@ -347,7 +347,7 @@ public class YeuCauDoiTrangThaiDAO {
             ThongBaoDAO thongBaoDAO) {
         String sqlYC
                 = "UPDATE YeuCauDoiTrangThai "
-                + "SET TrangThaiYeuCauID = 2, NguoiDuyetID = ?, NgayDuyet = GETDATE(), GhiChuDuyet = ? "
+                + "SET TrangThaiYeuCauID = 2, NguoiDuyetID = ?, NgayDuyet = NOW(), GhiChuDuyet = ? "
                 + "WHERE YeuCauID = ? AND TrangThaiYeuCauID = 1";
         String sqlHD
                 = "UPDATE hd SET hd.TrangThaiID = yc.TrangThaiMoiID "
@@ -445,7 +445,7 @@ public class YeuCauDoiTrangThaiDAO {
             ThongBaoDAO thongBaoDAO) {
         String sql
                 = "UPDATE YeuCauDoiTrangThai "
-                + "SET TrangThaiYeuCauID = 3, NguoiDuyetID = ?, NgayDuyet = GETDATE(), GhiChuDuyet = ? "
+                + "SET TrangThaiYeuCauID = 3, NguoiDuyetID = ?, NgayDuyet = NOW(), GhiChuDuyet = ? "
                 + "WHERE YeuCauID = ? AND TrangThaiYeuCauID = 1";
 
         Connection conn = null;

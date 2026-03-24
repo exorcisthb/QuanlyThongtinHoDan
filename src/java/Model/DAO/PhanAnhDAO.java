@@ -50,7 +50,7 @@ public class PhanAnhDAO {
         };
     }
 
-    // PostgreSQL: GETDATE() → NOW()
+    // PostgreSQL: NOW() → NOW()
     private void ghiLog(Connection conn, int phanAnhID, int nguoiThucHienID,
                         String hanhDong, Integer trangThaiCu, Integer trangThaiMoi,
                         String ghiChu) throws SQLException {
@@ -72,7 +72,7 @@ public class PhanAnhDAO {
     private void luuAnh(Connection conn, int phanAnhID,
                         List<String> duongDanAnh) throws SQLException {
         if (duongDanAnh == null || duongDanAnh.isEmpty()) return;
-        // PostgreSQL: GETDATE() → NOW()
+        // PostgreSQL: NOW() → NOW()
         String sql =
             "INSERT INTO FileDinhKemPhanAnh (PhanAnhID, DuongDan, NgayUpload) " +
             "VALUES (?, ?, NOW())";
@@ -95,7 +95,7 @@ public class PhanAnhDAO {
         }
     }
 
-    // PostgreSQL: GETDATE() → NOW(), RETURN_GENERATED_KEYS → RETURNING
+    // PostgreSQL: NOW() → NOW(), RETURN_GENERATED_KEYS → RETURNING
     private void guiThongBao(Connection conn, int nguoiGuiID, int nguoiNhanID,
                               String tieuDe, String noiDung) throws SQLException {
         String sqlTB =
@@ -124,7 +124,7 @@ public class PhanAnhDAO {
     public int guiPhanAnh(int nguoiGuiID, int toDanPhoID, int loaiID,
                            int mucDoUuTien, String tieuDe, String noiDung,
                            List<String> duongDanAnh) {
-        // PostgreSQL: GETDATE() → NOW(), RETURNING thay RETURN_GENERATED_KEYS
+        // PostgreSQL: NOW() → NOW(), RETURNING thay RETURN_GENERATED_KEYS
         String sqlPA =
             "INSERT INTO PhanAnh " +
             "    (TieuDe, NoiDung, LoaiID, MucDoID, NguoiGuiID, ToDanPhoID, " +
@@ -207,7 +207,7 @@ public class PhanAnhDAO {
         boolean daChuyenCap = (boolean) hien.get("daChuyenCap");
         if (ttHienTai == 4 || ttHienTai == 5 || ttHienTai == 6 || ttHienTai == 7) return false;
 
-        // PostgreSQL: GETDATE() → NOW()
+        // PostgreSQL: NOW() → NOW()
         String sqlUpdate =
             "UPDATE PhanAnh " +
             "   SET TieuDe = ?, NoiDung = ?, LoaiID = ?, MucDoID = ?, NgayCapNhat = NOW() " +

@@ -358,7 +358,7 @@ public class ThiepMoiDAO {
     // ------------------------------------------------------------------ //
     public boolean inThiepMoi(int thiepMoiID, int nguoiInID) {
         String sqlCheck  = "SELECT DaIn FROM ThiepMoi WHERE ThiepMoiID = ?";
-        String sqlUpdate = "UPDATE ThiepMoi SET DaIn=1, TrangThaiID=3, ThoiGianIn=GETDATE(), NguoiInID=? WHERE ThiepMoiID=?";
+        String sqlUpdate = "UPDATE ThiepMoi SET DaIn=1, TrangThaiID=3, ThoiGianIn=NOW(), NguoiInID=? WHERE ThiepMoiID=?";
         String sqlLog    = "INSERT INTO LichSuThiepMoi (ThiepMoiID, NguoiThucHienID, HanhDong, GhiChu) VALUES (?, ?, N'IN', N'Thiệp đã in — khóa chỉnh sửa và xóa')";
 
         Connection conn = null;

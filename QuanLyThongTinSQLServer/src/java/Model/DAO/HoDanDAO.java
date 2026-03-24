@@ -17,7 +17,7 @@ public class HoDanDAO {
                 + "       ISNULL(nd.Ho + ' ' + nd.Ten, N'Chưa có') AS TenChuHo, "
                 + "       nd.CCCD, nd.NgaySinh, nd.GioiTinh, nd.SoDienThoai, "
                 + "       nd.Email, nd.IsActivated, "
-                + "       DATEDIFF(YEAR, nd.NgaySinh, GETDATE()) AS TuoiChuHo, "
+                + "       DATEDIFF(YEAR, nd.NgaySinh, NOW()) AS TuoiChuHo, "
                 + "       (SELECT COUNT(*) FROM ThanhVienHo tv WHERE tv.HoDanID = h.HoDanID AND tv.NgayRa IS NULL) AS SoThanhVien "
                 + "FROM HoDan h "
                 + "LEFT JOIN TrangThaiHoKhau tt ON h.TrangThaiID = tt.TrangThaiID "
@@ -64,7 +64,7 @@ public class HoDanDAO {
                 + "       ISNULL(nd.Ho + ' ' + nd.Ten, N'Chưa có') AS TenChuHo, "
                 + "       nd.CCCD, nd.NgaySinh, nd.GioiTinh, nd.SoDienThoai, "
                 + "       nd.Email, nd.IsActivated, "
-                + "       DATEDIFF(YEAR, nd.NgaySinh, GETDATE()) AS TuoiChuHo, "
+                + "       DATEDIFF(YEAR, nd.NgaySinh, NOW()) AS TuoiChuHo, "
                 + "       (SELECT COUNT(*) FROM ThanhVienHo tv WHERE tv.HoDanID = h.HoDanID AND tv.NgayRa IS NULL) AS SoThanhVien "
                 + "FROM HoDan h "
                 + "LEFT JOIN TrangThaiHoKhau tt ON h.TrangThaiID = tt.TrangThaiID "
@@ -196,7 +196,7 @@ public class HoDanDAO {
                 + "       ISNULL(nd.Ho + ' ' + nd.Ten, N'Chưa có') AS TenChuHo, "
                 + "       nd.CCCD, nd.NgaySinh, nd.GioiTinh, nd.SoDienThoai, "
                 + "       nd.Email, nd.IsActivated, "
-                + "       DATEDIFF(YEAR, nd.NgaySinh, GETDATE()) AS TuoiChuHo, "
+                + "       DATEDIFF(YEAR, nd.NgaySinh, NOW()) AS TuoiChuHo, "
                 + "       (SELECT COUNT(*) FROM ThanhVienHo tv2 WHERE tv2.HoDanID = h.HoDanID AND tv2.NgayRa IS NULL) AS SoThanhVien "
                 + "FROM ThanhVienHo tv "
                 + "JOIN HoDan h ON h.HoDanID = tv.HoDanID "
@@ -248,7 +248,7 @@ public class HoDanDAO {
                 + "       ISNULL(nd.Ho + ' ' + nd.Ten, N'Chưa có') AS TenChuHo, "
                 + "       nd.CCCD, nd.NgaySinh, nd.GioiTinh, nd.SoDienThoai, "
                 + "       nd.Email, nd.IsActivated, "
-                + "       DATEDIFF(YEAR, nd.NgaySinh, GETDATE()) AS TuoiChuHo, "
+                + "       DATEDIFF(YEAR, nd.NgaySinh, NOW()) AS TuoiChuHo, "
                 + "       (SELECT COUNT(*) FROM ThanhVienHo tv WHERE tv.HoDanID = h.HoDanID AND tv.NgayRa IS NULL) AS SoThanhVien "
                 + "FROM MaQRHoDan q "
                 + "JOIN HoDan h ON h.HoDanID = q.HoDanID "
@@ -274,7 +274,7 @@ public class HoDanDAO {
                 = "SELECT nd.NguoiDungID, nd.Ho, nd.Ten, nd.NgaySinh, "
                 + "       nd.GioiTinh, nd.SoDienThoai, nd.Email, nd.CCCD, "
                 + "       qh.TenQuanHe, "
-                + "       DATEDIFF(YEAR, nd.NgaySinh, GETDATE()) AS Tuoi "
+                + "       DATEDIFF(YEAR, nd.NgaySinh, NOW()) AS Tuoi "
                 + "FROM ThanhVienHo tv "
                 + "JOIN NguoiDung nd ON nd.NguoiDungID = tv.NguoiDungID "
                 + "JOIN QuanHeHoGia qh ON qh.QuanHeID = tv.QuanHeID "
@@ -327,18 +327,18 @@ public class HoDanDAO {
         String checkCccdSql = "SELECT COUNT(*) FROM NguoiDung WHERE CCCD = ?";
         String insertHoDanSql
                 = "INSERT INTO HoDan (MaHoKhau,DiaChi,ToDanPhoID,TrangThaiID,NgayTao) "
-                + "VALUES (?,?,?,1,GETDATE())";
+                + "VALUES (?,?,?,1,NOW())";
         String insertNguoiDungSql
                 = "INSERT INTO NguoiDung (CCCD,Ho,Ten,NgaySinh,GioiTinh,SoDienThoai,Email,"
                 + "VaiTroID,ToDanPhoID,IsActivated,NgayTao) "
                 + "VALUES (?,?,?,?,?,?,?,"
-                + "(SELECT TOP 1 VaiTroID FROM VaiTro WHERE TenVaiTro=N'HoDan'),?,0,GETDATE())";
+                + "(SELECT TOP 1 VaiTroID FROM VaiTro WHERE TenVaiTro=N'HoDan'),?,0,NOW())";
         String setChuHoSql = "UPDATE HoDan SET ChuHoID=? WHERE HoDanID=?";
         String getQuanHeSql = "SELECT QuanHeID FROM QuanHeHoGia WHERE TenQuanHe = ?";
         String insertQuanHeSql = "INSERT INTO QuanHeHoGia (TenQuanHe) VALUES (?)";
         String insertThanhVienSql
                 = "INSERT INTO ThanhVienHo (HoDanID,NguoiDungID,QuanHeID,NgayVao) "
-                + "VALUES (?,?,?,GETDATE())";
+                + "VALUES (?,?,?,NOW())";
 
         Map<String, List<Map<String, Object>>> grouped = new LinkedHashMap<>();
         for (Map<String, Object> row : danhSach) {
@@ -543,7 +543,7 @@ public class HoDanDAO {
                 + "       ISNULL(nd.Ho + ' ' + nd.Ten, N'Chưa có') AS TenChuHo, "
                 + "       nd.CCCD, nd.NgaySinh, nd.GioiTinh, nd.SoDienThoai, "
                 + "       nd.Email, nd.IsActivated, "
-                + "       DATEDIFF(YEAR, nd.NgaySinh, GETDATE()) AS TuoiChuHo, "
+                + "       DATEDIFF(YEAR, nd.NgaySinh, NOW()) AS TuoiChuHo, "
                 + "       (SELECT COUNT(*) FROM ThanhVienHo tv WHERE tv.HoDanID = h.HoDanID AND tv.NgayRa IS NULL) AS SoThanhVien "
                 + "FROM HoDan h "
                 + "LEFT JOIN TrangThaiHoKhau tt  ON h.TrangThaiID  = tt.TrangThaiID "
@@ -571,7 +571,7 @@ public class HoDanDAO {
                     + "  SELECT 1 FROM ThanhVienHo tv2 "
                     + "  JOIN NguoiDung nd2 ON nd2.NguoiDungID = tv2.NguoiDungID "
                     + "  WHERE tv2.HoDanID = h.HoDanID AND tv2.NgayRa IS NULL "
-                    + "  AND DATEDIFF(YEAR, nd2.NgaySinh, GETDATE()) BETWEEN ? AND ?"
+                    + "  AND DATEDIFF(YEAR, nd2.NgaySinh, NOW()) BETWEEN ? AND ?"
                     + ") ");
             params.add(tuoiMin);
             params.add(tuoiMax);
@@ -581,7 +581,7 @@ public class HoDanDAO {
                     + "  SELECT 1 FROM ThanhVienHo tv2 "
                     + "  JOIN NguoiDung nd2 ON nd2.NguoiDungID = tv2.NguoiDungID "
                     + "  WHERE tv2.HoDanID = h.HoDanID AND tv2.NgayRa IS NULL "
-                    + "  AND DATEDIFF(YEAR, nd2.NgaySinh, GETDATE()) >= ?"
+                    + "  AND DATEDIFF(YEAR, nd2.NgaySinh, NOW()) >= ?"
                     + ") ");
             params.add(tuoiMin);
         } else if (tuoiMax != null) {
@@ -590,7 +590,7 @@ public class HoDanDAO {
                     + "  SELECT 1 FROM ThanhVienHo tv2 "
                     + "  JOIN NguoiDung nd2 ON nd2.NguoiDungID = tv2.NguoiDungID "
                     + "  WHERE tv2.HoDanID = h.HoDanID AND tv2.NgayRa IS NULL "
-                    + "  AND DATEDIFF(YEAR, nd2.NgaySinh, GETDATE()) <= ?"
+                    + "  AND DATEDIFF(YEAR, nd2.NgaySinh, NOW()) <= ?"
                     + ") ");
             params.add(tuoiMax);
         }
@@ -660,7 +660,7 @@ public class HoDanDAO {
         StringBuilder sql = new StringBuilder(
                 "SELECT nd.NguoiDungID, nd.Ho, nd.Ten, nd.CCCD, nd.NgaySinh, "
                 + "       nd.GioiTinh, nd.SoDienThoai, nd.Email, nd.IsActivated, "
-                + "       DATEDIFF(YEAR, nd.NgaySinh, GETDATE()) AS Tuoi, "
+                + "       DATEDIFF(YEAR, nd.NgaySinh, NOW()) AS Tuoi, "
                 + "       qh.TenQuanHe, tv.NgayVao, "
                 + "       h.HoDanID, h.MaHoKhau, h.DiaChi, h.TrangThaiID, "
                 + "       tt.TenTrangThai, "
@@ -689,14 +689,14 @@ public class HoDanDAO {
 
         // tuổi
         if (tuoiMin != null && tuoiMax != null) {
-            sql.append("AND DATEDIFF(YEAR, nd.NgaySinh, GETDATE()) BETWEEN ? AND ? ");
+            sql.append("AND DATEDIFF(YEAR, nd.NgaySinh, NOW()) BETWEEN ? AND ? ");
             params.add(tuoiMin);
             params.add(tuoiMax);
         } else if (tuoiMin != null) {
-            sql.append("AND DATEDIFF(YEAR, nd.NgaySinh, GETDATE()) >= ? ");
+            sql.append("AND DATEDIFF(YEAR, nd.NgaySinh, NOW()) >= ? ");
             params.add(tuoiMin);
         } else if (tuoiMax != null) {
-            sql.append("AND DATEDIFF(YEAR, nd.NgaySinh, GETDATE()) <= ? ");
+            sql.append("AND DATEDIFF(YEAR, nd.NgaySinh, NOW()) <= ? ");
             params.add(tuoiMax);
         }
 
@@ -811,7 +811,7 @@ public class HoDanDAO {
                 + "       ISNULL(nd.Ho + ' ' + nd.Ten, N'Chưa có') AS TenChuHo, "
                 + "       nd.CCCD, nd.NgaySinh, nd.GioiTinh, nd.SoDienThoai, "
                 + "       nd.Email, nd.IsActivated, "
-                + "       DATEDIFF(YEAR, nd.NgaySinh, GETDATE()) AS TuoiChuHo, "
+                + "       DATEDIFF(YEAR, nd.NgaySinh, NOW()) AS TuoiChuHo, "
                 + "       (SELECT COUNT(*) FROM ThanhVienHo tv WHERE tv.HoDanID = h.HoDanID AND tv.NgayRa IS NULL) AS SoThanhVien "
                 + "FROM HoDan h "
                 + "LEFT JOIN TrangThaiHoKhau tt ON h.TrangThaiID = tt.TrangThaiID "
@@ -838,20 +838,20 @@ public class HoDanDAO {
             sql.append("AND EXISTS (SELECT 1 FROM ThanhVienHo tv2 "
                     + "JOIN NguoiDung nd2 ON nd2.NguoiDungID = tv2.NguoiDungID "
                     + "WHERE tv2.HoDanID = h.HoDanID AND tv2.NgayRa IS NULL "
-                    + "AND DATEDIFF(YEAR, nd2.NgaySinh, GETDATE()) BETWEEN ? AND ?) ");
+                    + "AND DATEDIFF(YEAR, nd2.NgaySinh, NOW()) BETWEEN ? AND ?) ");
             params.add(tuoiMin);
             params.add(tuoiMax);
         } else if (tuoiMin != null) {
             sql.append("AND EXISTS (SELECT 1 FROM ThanhVienHo tv2 "
                     + "JOIN NguoiDung nd2 ON nd2.NguoiDungID = tv2.NguoiDungID "
                     + "WHERE tv2.HoDanID = h.HoDanID AND tv2.NgayRa IS NULL "
-                    + "AND DATEDIFF(YEAR, nd2.NgaySinh, GETDATE()) >= ?) ");
+                    + "AND DATEDIFF(YEAR, nd2.NgaySinh, NOW()) >= ?) ");
             params.add(tuoiMin);
         } else if (tuoiMax != null) {
             sql.append("AND EXISTS (SELECT 1 FROM ThanhVienHo tv2 "
                     + "JOIN NguoiDung nd2 ON nd2.NguoiDungID = tv2.NguoiDungID "
                     + "WHERE tv2.HoDanID = h.HoDanID AND tv2.NgayRa IS NULL "
-                    + "AND DATEDIFF(YEAR, nd2.NgaySinh, GETDATE()) <= ?) ");
+                    + "AND DATEDIFF(YEAR, nd2.NgaySinh, NOW()) <= ?) ");
             params.add(tuoiMax);
         }
 
@@ -902,7 +902,7 @@ public class HoDanDAO {
         StringBuilder sql = new StringBuilder(
                 "SELECT nd.NguoiDungID, nd.Ho, nd.Ten, nd.CCCD, nd.NgaySinh, "
                 + "       nd.GioiTinh, nd.SoDienThoai, nd.Email, nd.IsActivated, "
-                + "       DATEDIFF(YEAR, nd.NgaySinh, GETDATE()) AS Tuoi, "
+                + "       DATEDIFF(YEAR, nd.NgaySinh, NOW()) AS Tuoi, "
                 + "       qh.TenQuanHe, tv.NgayVao, "
                 + "       h.HoDanID, h.MaHoKhau, h.DiaChi, h.TrangThaiID, "
                 + "       tt.TenTrangThai, tdp.TenTo, "
@@ -932,14 +932,14 @@ public class HoDanDAO {
 
         // tuổi
         if (tuoiMin != null && tuoiMax != null) {
-            sql.append("AND DATEDIFF(YEAR, nd.NgaySinh, GETDATE()) BETWEEN ? AND ? ");
+            sql.append("AND DATEDIFF(YEAR, nd.NgaySinh, NOW()) BETWEEN ? AND ? ");
             params.add(tuoiMin);
             params.add(tuoiMax);
         } else if (tuoiMin != null) {
-            sql.append("AND DATEDIFF(YEAR, nd.NgaySinh, GETDATE()) >= ? ");
+            sql.append("AND DATEDIFF(YEAR, nd.NgaySinh, NOW()) >= ? ");
             params.add(tuoiMin);
         } else if (tuoiMax != null) {
-            sql.append("AND DATEDIFF(YEAR, nd.NgaySinh, GETDATE()) <= ? ");
+            sql.append("AND DATEDIFF(YEAR, nd.NgaySinh, NOW()) <= ? ");
             params.add(tuoiMax);
         }
 

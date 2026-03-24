@@ -174,7 +174,7 @@ public class QuenMatKhauDAO {
     }
 
     public boolean kiemTraTokenHopLe(String token) {
-        // PostgreSQL: GETDATE() → NOW()
+        // PostgreSQL: NOW() → NOW()
         String sql =
             "SELECT 1 FROM TokenResetMatKhau " +
             "WHERE Token = ? AND NgayHetHan > NOW()";
@@ -224,7 +224,7 @@ public class QuenMatKhauDAO {
     }
 
     public void xoaTokenHetHan() {
-        // PostgreSQL: GETDATE() → NOW()
+        // PostgreSQL: NOW() → NOW()
         String sql = "DELETE FROM TokenResetMatKhau WHERE NgayHetHan <= NOW()";
 
         try (Connection conn = DBContext.getInstance().getConnection();

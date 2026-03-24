@@ -11,7 +11,7 @@ public class ThanhVienDAO {
             "SELECT tv.ThanhVienID, tv.NgayVao, " +
             "       nd.NguoiDungID, nd.Ho, nd.Ten, nd.CCCD, " +
             "       nd.NgaySinh, nd.GioiTinh, nd.SoDienThoai, nd.Email, " +
-            "       DATEDIFF(YEAR, nd.NgaySinh, GETDATE()) AS Tuoi, " +
+            "       DATEDIFF(YEAR, nd.NgaySinh, NOW()) AS Tuoi, " +
             "       qh.TenQuanHe " +
             "FROM ThanhVienHo tv " +
             "JOIN NguoiDung nd ON tv.NguoiDungID = nd.NguoiDungID " +

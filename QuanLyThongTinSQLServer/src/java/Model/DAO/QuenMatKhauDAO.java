@@ -176,7 +176,7 @@ public class QuenMatKhauDAO {
     public boolean kiemTraTokenHopLe(String token) {
         String sql =
             "SELECT 1 FROM TokenResetMatKhau " +
-            "WHERE Token = ? AND NgayHetHan > GETDATE()";
+            "WHERE Token = ? AND NgayHetHan > NOW()";
 
         try (Connection conn = DBContext.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -223,7 +223,7 @@ public class QuenMatKhauDAO {
     }
 
     public void xoaTokenHetHan() {
-        String sql = "DELETE FROM TokenResetMatKhau WHERE NgayHetHan <= GETDATE()";
+        String sql = "DELETE FROM TokenResetMatKhau WHERE NgayHetHan <= NOW()";
 
         try (Connection conn = DBContext.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {

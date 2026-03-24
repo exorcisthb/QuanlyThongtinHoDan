@@ -120,7 +120,7 @@ public class NguoiDungDAO {
                 + " MatKhauHash, VaiTroID, ToDanPhoID, IsActivated, NgayTao) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, "
                 + "(SELECT VaiTroID FROM VaiTro WHERE TenVaiTro = N'" + VaiTroConst.TO_TRUONG + "'), "
-                + "?, 1, GETDATE())";
+                + "?, 1, NOW())";
         try (Connection conn = DBContext.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, nd.getCccd());
             ps.setNString(2, nd.getHo());
@@ -255,7 +255,7 @@ public class NguoiDungDAO {
                 + " MatKhauHash, VaiTroID, ToDanPhoID, IsActivated, NgayTao) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, "
                 + "(SELECT VaiTroID FROM VaiTro WHERE TenVaiTro = N'" + VaiTroConst.CAN_BO_PHUONG + "'), "
-                + "NULL, 1, GETDATE())";
+                + "NULL, 1, NOW())";
         try (Connection conn = DBContext.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setNString(1, nd.getHo());
             ps.setNString(2, nd.getTen());
