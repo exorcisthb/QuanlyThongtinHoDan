@@ -54,7 +54,6 @@ public class YeuCauDoiTrangThaiServlet extends HttpServlet {
                          false, "Không có quyền.");
                 return;
             }
-            // Thêm field ttYC (string) để JS dễ filter
             for (Map<String, Object> row : danhSach) {
                 Object ttObj = row.get("trangThaiYeuCauID");
                 int ttID = ttObj instanceof Integer ? (Integer) ttObj : 0;
@@ -67,7 +66,6 @@ public class YeuCauDoiTrangThaiServlet extends HttpServlet {
             sendJsonObject(resp, HttpServletResponse.SC_OK, danhSach);
             return;
         }
-        // ────────────────────────────────────────────────────────────────
 
         // --- Chi tiết 1 yêu cầu (forward JSP) ---
         if ("chitiet".equals(action)) {
@@ -171,19 +169,43 @@ public class YeuCauDoiTrangThaiServlet extends HttpServlet {
             return;
         }
 
-        int    hoDanID        = parseInt(req.getParameter("hoDanID"),        0);
-        int    trangThaiCuID  = parseInt(req.getParameter("trangThaiCuID"),  0);
-        int    trangThaiMoiID = parseInt(req.getParameter("trangThaiMoiID"), 0);
-        String lyDo           = req.getParameter("lyDo");
+        // ✅ Phân biệt: yêu cầu theo hộ hay theo từng nhân khẩu
+        String nhanKhauIDStr = req.getParameter("nhanKhauID");
+        String hoDanIDStr    = req.getParameter("hoDanID");
 
-        if (hoDanID == 0 || trangThaiCuID == 0 || trangThaiMoiID == 0) {
+        int trangThaiCuID  = parseInt(req.getParameter("trangThaiCuID"),  0);
+        int trangThaiMoiID = parseInt(req.getParameter("trangThaiMoiID"), 0);
+        String lyDo        = req.getParameter("lyDo");
+
+        if (trangThaiCuID == 0 || trangThaiMoiID == 0) {
             sendJson(resp, HttpServletResponse.SC_BAD_REQUEST,
                      false, "Dữ liệu đầu vào không hợp lệ.");
             return;
         }
 
-        Map<String, Object> result = service.taoYeuCau(
-                hoDanID, trangThaiCuID, trangThaiMoiID, nguoiDungID, lyDo);
+        Map<String, Object> result;
+
+        if (nhanKhauIDStr != null && !nhanKhauIDStr.trim().isEmpty()) {
+            // ✅ Sửa trạng thái TỪNG NHÂN KHẨU
+            int nhanKhauID = parseInt(nhanKhauIDStr, 0);
+            if (nhanKhauID == 0) {
+                sendJson(resp, HttpServletResponse.SC_BAD_REQUEST,
+                         false, "Mã nhân khẩu không hợp lệ.");
+                return;
+            }
+            result = service.taoYeuCauNhanKhau(
+                    nhanKhauID, trangThaiCuID, trangThaiMoiID, nguoiDungID, lyDo);
+        } else {
+            // Sửa trạng thái cả hộ (logic cũ giữ nguyên)
+            int hoDanID = parseInt(hoDanIDStr, 0);
+            if (hoDanID == 0) {
+                sendJson(resp, HttpServletResponse.SC_BAD_REQUEST,
+                         false, "Dữ liệu đầu vào không hợp lệ.");
+                return;
+            }
+            result = service.taoYeuCau(
+                    hoDanID, trangThaiCuID, trangThaiMoiID, nguoiDungID, lyDo);
+        }
 
         int status = (boolean) result.get("success")
                 ? HttpServletResponse.SC_OK

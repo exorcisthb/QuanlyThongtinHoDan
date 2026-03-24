@@ -24,8 +24,6 @@
             }
             *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
             body { font-family: 'Be Vietnam Pro', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-
-            /* ── TOPBAR ── */
             .topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 200; height: 64px; background: rgba(15,17,23,.88); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 32px; gap: 16px; }
             .topbar-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); }
             .logo-icon { width: 34px; height: 34px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 16px; }
@@ -37,8 +35,6 @@
             .back-btn { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); text-decoration: none; font-size: 13px; font-weight: 600; transition: all .18s; }
             .back-btn:hover { border-color: var(--accent); color: var(--accent); }
             .avatar-sm { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; text-transform: uppercase; }
-
-            /* ── LAYOUT ── */
             .main { padding-top: 64px; }
             .content { max-width: 1200px; margin: 0 auto; padding: 36px 32px; }
             .page-header { margin-bottom: 28px; }
@@ -46,8 +42,6 @@
             .breadcrumb a { color: var(--accent); text-decoration: none; }
             .page-header h1 { font-size: 24px; font-weight: 800; letter-spacing: -.4px; }
             .page-header p { font-size: 14px; color: var(--muted); margin-top: 4px; }
-
-            /* ── SEARCH + FILTER ROW ── */
             .search-filter-row { display: flex; gap: 12px; align-items: stretch; margin-bottom: 24px; }
             .search-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 20px; display: flex; gap: 12px; align-items: center; flex: 1; }
             .search-wrap input[type=text] { flex: 1; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 14px; font-family: inherit; transition: border-color .18s; }
@@ -57,14 +51,10 @@
             .btn-primary:hover { background: #3a7de8; }
             .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
             .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
-
-            /* ── SUMMARY ── */
             .summary-row { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
             .sum-chip { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 20px; display: flex; align-items: center; gap: 10px; }
             .sum-chip .sc-num { font-size: 22px; font-weight: 800; color: var(--accent); }
             .sum-chip .sc-label { font-size: 12px; color: var(--muted); }
-
-            /* ── ACCORDION ── */
             .accordion { display: flex; flex-direction: column; gap: 12px; }
             .acc-group { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
             .acc-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; cursor: pointer; transition: background .18s; user-select: none; }
@@ -81,16 +71,12 @@
             .acc-body { display: none; }
             .acc-body.open { display: block; animation: fadeIn .2s ease; }
             @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
-
-            /* ── MAIN TABLE ── */
             .table-wrap { overflow-x: auto; }
             .ho-table { width: 100%; border-collapse: collapse; font-size: 13px; }
             .ho-table thead tr { background: rgba(255,255,255,.02); }
             .ho-table th { padding: 11px 16px; text-align: left; color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid var(--border); white-space: nowrap; }
             .ho-table td { padding: 12px 16px; border-bottom: 1px solid rgba(42,48,72,.5); vertical-align: middle; white-space: nowrap; }
             .ho-table tbody tr.main-row:hover { background: var(--surface2); }
-
-            /* ── EXPAND ROW THÀNH VIÊN ── */
             .tv-expand-row td { padding: 0 !important; border-bottom: 1px solid var(--border) !important; }
             .tv-expand-inner { display: none; background: rgba(10,12,20,.5); padding: 14px 20px 16px 56px; }
             .tv-expand-inner.open { display: block; animation: fadeIn .18s ease; }
@@ -99,38 +85,24 @@
             .tv-inner-table td { padding: 9px 12px; color: var(--text); border-bottom: 1px solid rgba(42,48,72,.35); white-space: nowrap; }
             .tv-inner-table tbody tr:last-child td { border-bottom: none; }
             .tv-inner-table tbody tr:hover { background: rgba(255,255,255,.02); }
-
             .qh-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; background: rgba(79,142,247,.12); color: var(--accent); }
             .qh-badge.chu { background: rgba(56,217,169,.12); color: var(--accent2); }
-
-            /* ── NÚT SỐ THÀNH VIÊN ── */
             .tv-num { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; padding: 0 8px; border-radius: 20px; background: var(--surface2); border: 1px solid var(--border); font-size: 12px; font-weight: 700; color: var(--accent2); cursor: pointer; transition: all .15s; white-space: nowrap; gap: 4px; }
             .tv-num:hover { background: rgba(56,217,169,.15); border-color: var(--accent2); }
             .tv-num.active { background: rgba(56,217,169,.2); border-color: var(--accent2); }
-
-            /* ── NÚT XEM THÀNH VIÊN ── */
             .btn-tv-view { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 6px; background: rgba(56,217,169,.1); color: var(--accent2); border: 1px solid rgba(56,217,169,.25); font-size: 11px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all .18s; white-space: nowrap; }
             .btn-tv-view:hover { background: rgba(56,217,169,.22); border-color: var(--accent2); }
-
-            /* ── PILLS ── */
             .pill { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
             .pill.thuongtru { background: rgba(56,217,169,.15); color: var(--accent2); }
             .pill.tamtru    { background: rgba(251,191,36,.15);  color: var(--warn); }
             .pill.tamvang   { background: rgba(247,92,92,.15);   color: var(--danger); }
             .pill-active   { background: rgba(56,217,169,.15); color: var(--accent2); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
             .pill-inactive { background: rgba(247,92,92,.15);  color: var(--danger);  font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
-
             .ho-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; margin-right: 8px; text-transform: uppercase; vertical-align: middle; flex-shrink: 0; }
-
-            /* ── NÚT XEM HỘ ── */
             .btn-view { display: inline-flex; align-items: center; gap: 5px; padding: 5px 13px; border-radius: 7px; background: rgba(79,142,247,.12); color: var(--accent); border: 1px solid rgba(79,142,247,.3); font-size: 12px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all .18s; white-space: nowrap; }
             .btn-view:hover { background: rgba(79,142,247,.25); border-color: var(--accent); }
-
-            /* ── NÚT SỬA TRẠNG THÁI (MỚI) ── */
-            .btn-edit-tt { display: inline-flex; align-items: center; gap: 4px; padding: 5px 13px; border-radius: 7px; background: rgba(251,191,36,.1); color: var(--warn); border: 1px solid rgba(251,191,36,.25); font-size: 12px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all .18s; white-space: nowrap; }
+            .btn-edit-tt { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 6px; background: rgba(251,191,36,.1); color: var(--warn); border: 1px solid rgba(251,191,36,.25); font-size: 11px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all .18s; white-space: nowrap; }
             .btn-edit-tt:hover { background: rgba(251,191,36,.22); border-color: var(--warn); }
-
-            /* ── MODAL ── */
             .modal-overlay { display: none; position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,.65); backdrop-filter: blur(6px); align-items: center; justify-content: center; }
             .modal-overlay.show { display: flex; animation: overlayIn .2s ease; }
             @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
@@ -153,8 +125,6 @@
             .detail-value { font-size: 14px; font-weight: 600; color: var(--text); }
             .detail-value.mono { font-family: monospace; color: var(--accent); }
             .detail-value.muted { color: var(--muted); font-weight: 400; }
-
-            /* ── FILTER ── */
             .filter-wrap { position: relative; display: flex; align-items: stretch; }
             .btn-filter { background: var(--surface); color: var(--text); border: 1px solid var(--border); display: inline-flex; align-items: center; gap: 8px; padding: 14px 20px; border-radius: var(--radius); font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; white-space: nowrap; transition: all .18s; height: 100%; }
             .btn-filter:hover, .btn-filter.active { border-color: var(--accent); color: var(--accent); }
@@ -172,25 +142,18 @@
             .filter-select:focus { outline: none; border-color: var(--accent); }
             .filter-actions { display: flex; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
             .btn-sm { padding: 8px 16px; font-size: 13px; }
-
-            /* ── FORM (modal sửa trạng thái) ── */
             .form-group { margin-bottom: 16px; }
             .form-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; display: block; }
             .form-select { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 14px; font-family: inherit; appearance: none; cursor: pointer; transition: border-color .18s; }
             .form-select:focus { outline: none; border-color: var(--accent); }
             .form-textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 14px; font-family: inherit; resize: vertical; min-height: 90px; transition: border-color .18s; }
             .form-textarea:focus { outline: none; border-color: var(--accent); }
-
-            /* ── CHẾ ĐỘ CÁ NHÂN: badge mode ── */
             .mode-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(251,191,36,.12); color: var(--warn); border: 1px solid rgba(251,191,36,.3); font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 20px; margin-bottom: 16px; }
-
-            /* ── TOAST ── */
             .toast { position: fixed; bottom: 28px; right: 28px; z-index: 9999; padding: 14px 22px; border-radius: 10px; font-size: 14px; font-weight: 600; display: none; align-items: center; gap: 10px; box-shadow: 0 8px 32px rgba(0,0,0,.4); }
-            .toast.show { display: flex; animation: slideUp .25s ease; }
+            .toast.show { display: flex; animation: slideUp .25px ease; }
             .toast.success { background: rgba(56,217,169,.15); border: 1px solid rgba(56,217,169,.4); color: var(--accent2); }
             .toast.error   { background: rgba(247,92,92,.15);  border: 1px solid rgba(247,92,92,.4);  color: var(--danger); }
             @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-
             .empty-state { text-align: center; padding: 48px; color: var(--muted); }
             .empty-state .es-icon { font-size: 40px; margin-bottom: 12px; }
         </style>
@@ -449,9 +412,9 @@
                                                                 <th>Quan hệ</th>
                                                                 <th style="text-align:center;">Thành viên</th>
                                                                 <th>Kích hoạt</th>
-                                                                <th>Trạng thái</th>
+                                                                <th>Trạng thái hộ</th>
                                                                 <th style="text-align:center;">Chi tiết</th>
-                                                                <th style="text-align:center;">Sửa TT</th><%-- ── MỚI --%>
+                                                                <%-- ✅ XÓA cột Sửa TT ở hàng hộ, chuyển xuống từng thành viên --%>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -510,20 +473,10 @@
                                                                             ngayTao:     '${ho.ngayTao}'
                                                                         })">👁 Xem</button>
                                                                     </td>
-                                                                    <%-- ── MỚI: nút sửa trạng thái --%>
-                                                                    <td style="text-align:center;">
-                                                                        <button class="btn-edit-tt" onclick="openSuaTrangThai({
-                                                                            hoDanID:     '${ho.hoDanID}',
-                                                                            maHoKhau:    '${ho.maHoKhau}',
-                                                                            tenChuHo:    '${ho.tenChuHo}',
-                                                                            trangThaiID: '${ho.trangThaiID}',
-                                                                            trangThai:   '${ho.tenTrangThai}'
-                                                                        })">✏ Sửa</button>
-                                                                    </td>
                                                                 </tr>
 
                                                                 <tr class="tv-expand-row">
-                                                                    <td colspan="9">
+                                                                    <td colspan="8">
                                                                         <div class="tv-expand-inner" id="tvrow-${ho.hoDanID}">
                                                                             <table class="tv-inner-table">
                                                                                 <thead>
@@ -537,10 +490,12 @@
                                                                                         <th>SĐT</th>
                                                                                         <th>CCCD</th>
                                                                                         <th style="text-align:center;">Chi tiết</th>
+                                                                                        <%-- ✅ THÊM cột Sửa TT ở đây --%>
+                                                                                        <th style="text-align:center;">Sửa TT</th>
                                                                                     </tr>
                                                                                 </thead>
                                                                                 <tbody id="tvbody-${ho.hoDanID}">
-                                                                                    <tr><td colspan="9" style="color:var(--muted);padding:16px;text-align:center;">Đang tải...</td></tr>
+                                                                                    <tr><td colspan="10" style="color:var(--muted);padding:16px;text-align:center;">Đang tải...</td></tr>
                                                                                 </tbody>
                                                                             </table>
                                                                         </div>
@@ -641,7 +596,7 @@
             </div>
         </div>
 
-        <!-- ── MODAL SỬA TRẠNG THÁI (MỚI) ── -->
+        <!-- ── MODAL SỬA TRẠNG THÁI TỪNG NHÂN KHẨU ── -->
         <div class="modal-overlay" id="suaTTOverlay" onclick="closeSuaTTOutside(event)">
             <div class="modal" style="width:520px;">
                 <div class="modal-header">
@@ -655,7 +610,8 @@
                     <button class="modal-close" onclick="closeSuaTT()">✕</button>
                 </div>
                 <div class="modal-body">
-                    <input type="hidden" id="stt_hoDanID">
+                    <%-- ✅ Lưu nhanKhauID thay vì hoDanID --%>
+                    <input type="hidden" id="stt_nhanKhauID">
                     <input type="hidden" id="stt_trangThaiCuID">
 
                     <div class="form-group">
@@ -762,19 +718,19 @@
             function loadThanhVien(hoDanID) {
                 const tbody = document.getElementById('tvbody-' + hoDanID);
                 if (tbody.dataset.loaded === 'true') return;
-                tbody.innerHTML = '<tr><td colspan="9" style="color:var(--muted);padding:20px;text-align:center;">Đang tải thành viên...</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" style="color:var(--muted);padding:20px;text-align:center;">Đang tải thành viên...</td></tr>';
                 fetch(ctxPath + '/totruong/thanh-vien-ho?hoDanID=' + hoDanID, { cache: 'no-cache', credentials: 'include' })
                     .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
                     .then(data => {
                         tbody.dataset.loaded = 'true';
                         if (!data || !Array.isArray(data) || data.length === 0) {
-                            tbody.innerHTML = '<tr><td colspan="9" style="color:var(--muted);padding:20px;text-align:center;font-style:italic;">Chưa có thành viên nào.</td></tr>';
+                            tbody.innerHTML = '<tr><td colspan="10" style="color:var(--muted);padding:20px;text-align:center;font-style:italic;">Chưa có thành viên nào.</td></tr>';
                             return;
                         }
                         tbody.innerHTML = data.map((m, i) => renderTVRow(m, i)).join('');
                     })
                     .catch(err => {
-                        tbody.innerHTML = '<tr><td colspan="9" style="color:var(--danger);padding:20px;text-align:center;">Lỗi: ' + err.message + '</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="10" style="color:var(--danger);padding:20px;text-align:center;">Lỗi: ' + err.message + '</td></tr>';
                     });
             }
 
@@ -788,15 +744,21 @@
             }
 
             function renderTVRow(m, i) {
-                const hoTen = esc(f(m,'hoTen')), quanHe = esc(f(m,'quanHe'));
+                const hoTen    = esc(f(m,'hoTen')), quanHe = esc(f(m,'quanHe'));
                 const ngaySinh = esc(f(m,'ngaySinh'));
-                const tuoi = (m.tuoi && m.tuoi != 0) ? m.tuoi + ' t' : '—';
-                const gt = f(m,'gioiTinh'), sdt = esc(f(m,'soDienThoai'));
-                const cccd = esc(f(m,'cccd')), email = esc(f(m,'email')), ngayVao = esc(f(m,'ngayVao'));
-                const isChu = quanHe === 'Chủ hộ';
-                const gtHtml = gt === 'Nam' ? '<span style="color:#60a5fa">♂ Nam</span>'
-                    : (gt === 'Nữ' || gt === 'Nu') ? '<span style="color:#f472b6">♀ Nữ</span>' : '—';
+                const tuoi     = (m.tuoi && m.tuoi != 0) ? m.tuoi + ' t' : '—';
+                const gt       = f(m,'gioiTinh'), sdt = esc(f(m,'soDienThoai'));
+                const cccd     = esc(f(m,'cccd')), email = esc(f(m,'email')), ngayVao = esc(f(m,'ngayVao'));
+                const isChu    = quanHe === 'Chủ hộ';
+                const gtHtml   = gt === 'Nam' ? '<span style="color:#60a5fa">♂ Nam</span>'
+                               : (gt === 'Nữ' || gt === 'Nu') ? '<span style="color:#f472b6">♀ Nữ</span>' : '—';
                 const dataJson = JSON.stringify({ hoTen, quanHe, ngaySinh, tuoi: m.tuoi, gioiTinh: gt, sdt, cccd, email, ngayVao }).replace(/'/g,'&#39;');
+
+                // ✅ Lấy nhanKhauID và trangThaiID từng người
+                const nkID   = m.nhanKhauID || 0;
+                const ttID   = m.trangThaiID || 1;
+                const hoTenEsc = hoTen.replace(/'/g, "\\'");
+
                 return '<tr>'
                     + '<td style="color:var(--muted)">' + (i+1) + '</td>'
                     + '<td><strong>' + hoTen + '</strong></td>'
@@ -807,6 +769,8 @@
                     + '<td style="color:var(--muted)">' + sdt + '</td>'
                     + '<td style="color:var(--muted);font-family:monospace">' + cccd + '</td>'
                     + '<td style="text-align:center;"><button class="btn-tv-view" onclick=\'openTVModal(' + dataJson + ')\'>👁 Xem</button></td>'
+                    // ✅ Nút Sửa TT cho TỪNG NHÂN KHẨU
+                    + '<td style="text-align:center;"><button class="btn-edit-tt" onclick="openSuaTrangThai(' + nkID + ',\'' + hoTenEsc + '\',' + ttID + ')">✏ Sửa</button></td>'
                     + '</tr>';
             }
 
@@ -867,19 +831,20 @@
             function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); document.body.style.overflow = ''; }
             function closeModalOutside(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
 
-            /* ── Modal sửa trạng thái (MỚI) ── */
+            /* ── Modal sửa trạng thái TỪNG NHÂN KHẨU ── */
             const PILL_MAP = {
                 '1': '<span class="pill thuongtru">Thường trú</span>',
                 '2': '<span class="pill tamtru">Tạm trú</span>',
                 '3': '<span class="pill tamvang">Tạm vắng</span>'
             };
 
-            function openSuaTrangThai(data) {
-                document.getElementById('stt_hoDanID').value       = data.hoDanID;
-                document.getElementById('stt_trangThaiCuID').value = data.trangThaiID;
-                document.getElementById('stt_title').textContent   = 'Sửa trạng thái — ' + (data.tenChuHo || data.maHoKhau);
-                document.getElementById('stt_sub').textContent     = 'Mã hộ: ' + data.maHoKhau;
-                document.getElementById('stt_ttHienTai').innerHTML = PILL_MAP[data.trangThaiID] || data.trangThai;
+            // ✅ Nhận nhanKhauID, tên người đó, trangThaiID hiện tại của người đó
+            function openSuaTrangThai(nhanKhauID, hoTen, trangThaiID) {
+                document.getElementById('stt_nhanKhauID').value    = nhanKhauID;
+                document.getElementById('stt_trangThaiCuID').value = trangThaiID;
+                document.getElementById('stt_title').textContent   = 'Sửa trạng thái — ' + hoTen;
+                document.getElementById('stt_sub').textContent     = 'Nhân khẩu cá nhân';
+                document.getElementById('stt_ttHienTai').innerHTML = PILL_MAP[String(trangThaiID)] || '—';
                 document.getElementById('stt_ttMoi').value         = '';
                 document.getElementById('stt_lyDo').value          = '';
                 document.getElementById('suaTTOverlay').classList.add('show');
@@ -894,18 +859,19 @@
             }
 
             function submitSuaTrangThai() {
-                const hoDanID        = document.getElementById('stt_hoDanID').value;
+                const nhanKhauID     = document.getElementById('stt_nhanKhauID').value;
                 const trangThaiCuID  = document.getElementById('stt_trangThaiCuID').value;
                 const trangThaiMoiID = document.getElementById('stt_ttMoi').value;
                 const lyDo           = document.getElementById('stt_lyDo').value.trim();
 
                 if (!trangThaiMoiID) { showToast('error', '⚠ Vui lòng chọn trạng thái mới.'); return; }
-                if (trangThaiMoiID === trangThaiCuID) { showToast('error', '⚠ Trạng thái mới phải khác trạng thái hiện tại.'); return; }
+                if (trangThaiMoiID === String(trangThaiCuID)) { showToast('error', '⚠ Trạng thái mới phải khác trạng thái hiện tại.'); return; }
                 if (!lyDo) { showToast('error', '⚠ Vui lòng nhập lý do yêu cầu.'); return; }
 
                 const params = new URLSearchParams();
                 params.append('action',          'tao');
-                params.append('hoDanID',         hoDanID);
+                // ✅ Gửi nhanKhauID thay vì hoDanID
+                params.append('nhanKhauID',      nhanKhauID);
                 params.append('trangThaiCuID',   trangThaiCuID);
                 params.append('trangThaiMoiID',  trangThaiMoiID);
                 params.append('lyDo',            lyDo);

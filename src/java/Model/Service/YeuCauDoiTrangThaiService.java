@@ -235,4 +235,39 @@ public class YeuCauDoiTrangThaiService {
     public List<Map<String, Object>> layDanhSachCapNhatCuaNguoiDung(int nguoiDungID) {
         return yeuCauDAO.layDanhSachCapNhatCuaNguoiDung(nguoiDungID);
     }
+    // ------------------------------------------------------------------ //
+//  THÊM MỚI: TẠO YÊU CẦU ĐỔI TRẠNG THÁI TỪNG NHÂN KHẨU (loại 3)
+// ------------------------------------------------------------------ //
+public Map<String, Object> taoYeuCauNhanKhau(int nhanKhauID, int trangThaiCuID,
+        int trangThaiMoiID, int nguoiYeuCauID, String lyDo) {
+    Map<String, Object> result = new HashMap<>();
+
+    if (lyDo == null || lyDo.trim().isEmpty()) {
+        result.put("success", false);
+        result.put("message", "Vui lòng nhập lý do yêu cầu.");
+        return result;
+    }
+    if (trangThaiCuID == trangThaiMoiID) {
+        result.put("success", false);
+        result.put("message", "Trạng thái mới phải khác trạng thái hiện tại.");
+        return result;
+    }
+
+    boolean ok = yeuCauDAO.taoYeuCauNhanKhau(nhanKhauID, trangThaiCuID,
+            trangThaiMoiID, nguoiYeuCauID, lyDo.trim());
+    if (ok) {
+        thongBaoDAO.guiThongBaoTheoVaiTro(
+                "Yêu cầu đổi trạng thái nhân khẩu mới",
+                "Tổ trưởng vừa gửi yêu cầu đổi trạng thái cho nhân khẩu. Vui lòng kiểm tra và xử lý.",
+                nguoiYeuCauID,
+                VaiTroConst.CAN_BO_PHUONG
+        );
+        result.put("success", true);
+        result.put("message", "Gửi yêu cầu thành công, đang chờ cán bộ phường xét duyệt.");
+    } else {
+        result.put("success", false);
+        result.put("message", "Gửi yêu cầu thất bại, vui lòng thử lại.");
+    }
+    return result;
+}
 }

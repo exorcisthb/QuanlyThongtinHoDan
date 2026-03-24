@@ -493,4 +493,23 @@ public class YeuCauDoiTrangThaiDAO {
         }
         return list;
     }
+    public boolean taoYeuCauNhanKhau(int nhanKhauID, int trangThaiCuID, int trangThaiMoiID,
+        int nguoiYeuCauID, String lyDo) {
+    String sql
+            = "INSERT INTO YeuCauDoiTrangThai "
+            + "    (LoaiYeuCau, NhanKhauID, TrangThaiCuID, TrangThaiMoiID, NguoiYeuCauID, LyDoYeuCau, TrangThaiYeuCauID) "
+            + "VALUES (3, ?, ?, ?, ?, ?, 1)";
+    try (Connection conn = DBContext.getInstance().getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setInt(1, nhanKhauID);
+        ps.setInt(2, trangThaiCuID);
+        ps.setInt(3, trangThaiMoiID);
+        ps.setInt(4, nguoiYeuCauID);
+        ps.setString(5, lyDo);
+        return ps.executeUpdate() > 0;
+    } catch (Exception e) {
+        e.printStackTrace();
+        return false;
+    }
+}
 }

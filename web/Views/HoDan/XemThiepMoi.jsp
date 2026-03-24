@@ -102,13 +102,13 @@
 <body>
 
 <header class="topbar">
-    <a href="${pageContext.request.contextPath}/dashboard" class="topbar-logo">
+    <a href="${pageContext.request.contextPath}/hodan/dashboard" class="topbar-logo">
         <div class="logo-icon">🏘</div>
         <div class="logo-text">Cổng <span>Dịch Vụ</span></div>
     </a>
     <div class="topbar-divider"></div>
     <div class="breadcrumb">
-        <a href="${pageContext.request.contextPath}/dashboard">Trang chủ</a>
+        <a href="${pageContext.request.contextPath}/hodan/dashboard">Trang chủ</a>
         <span style="color:var(--muted)">›</span>
         <span style="color:var(--warn);font-weight:600">Thiệp mời họp</span>
     </div>
