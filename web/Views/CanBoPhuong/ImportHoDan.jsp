@@ -590,7 +590,7 @@
 
                     <div style="font-size:13px; color:var(--muted); margin-bottom:12px;">Biểu mẫu File Import</div>
                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                        <a href="${pageContext.request.contextPath}/Víews/CanBoPhuong/mau-import-hodan.xlsx"
+                        <a href="${pageContext.request.contextPath}/Views/CanBoPhuong/mau-import-hodan.xlsx"
                            class="btn btn-primary">📄 File mẫu</a>
                         <a href="${pageContext.request.contextPath}/canbophuong/hodan"
                            class="btn btn-green">🏠 Danh sách hộ dân</a>
