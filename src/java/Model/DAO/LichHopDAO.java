@@ -21,7 +21,6 @@ public class LichHopDAO {
         return 3;
     }
 
-    // Helper dùng chung cho mapRow danh sách (không có tenTo, toDanPhoID, nguoiTaoID)
     private Map<String, Object> mapRowDanhSach(ResultSet rs) throws SQLException {
         Timestamp batDau    = rs.getTimestamp("ThoiGianBatDau");
         Timestamp ketThuc   = rs.getTimestamp("ThoiGianKetThuc");
@@ -44,12 +43,13 @@ public class LichHopDAO {
     // ==================== LỊCH HỌP ====================
 
     public int taoLichHop(LichHop lh) {
+        // PostgreSQL: dùng RETURNING thay cho Statement.RETURN_GENERATED_KEYS
         String sql =
             "INSERT INTO LichHop (TieuDe, NoiDung, DiaDiem, ThoiGianBatDau, " +
             "ThoiGianKetThuc, ToDanPhoID, NguoiTaoID, TrangThai, MucDo, DoiTuong) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)";
+            "VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?) RETURNING LichHopID";
         try (Connection conn = DBContext.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, lh.getTieuDe());
             ps.setString(2, lh.getNoiDung());
             ps.setString(3, lh.getDiaDiem());
@@ -60,8 +60,8 @@ public class LichHopDAO {
             ps.setInt(7, lh.getNguoiTaoID());
             ps.setInt(8, lh.getMucDo());
             ps.setString(9, lh.getDoiTuong());
-            ps.executeUpdate();
-            ResultSet rs = ps.getGeneratedKeys();
+            // PostgreSQL RETURNING được đọc qua executeQuery()
+            ResultSet rs = ps.executeQuery();
             if (rs.next()) return rs.getInt(1);
         } catch (Exception e) {
             e.printStackTrace();
@@ -96,11 +96,12 @@ public class LichHopDAO {
 
     public List<Map<String, Object>> getLichHopByToDanPho(int toDanPhoID) {
         List<Map<String, Object>> list = new ArrayList<>();
+        // PostgreSQL: dùng || thay cho + để nối chuỗi
         String sql =
             "SELECT lh.LichHopID, lh.TieuDe, lh.NoiDung, lh.DiaDiem, " +
             "       lh.ThoiGianBatDau, lh.ThoiGianKetThuc, lh.TrangThai, lh.NgayTao, " +
             "       lh.MucDo, lh.DoiTuong, " +
-            "       nd.Ho + ' ' + nd.Ten AS NguoiTao " +
+            "       nd.Ho || ' ' || nd.Ten AS NguoiTao " +
             "FROM LichHop lh " +
             "JOIN NguoiDung nd ON lh.NguoiTaoID = nd.NguoiDungID " +
             "WHERE lh.ToDanPhoID = ? " +
@@ -121,7 +122,7 @@ public class LichHopDAO {
             "SELECT lh.LichHopID, lh.TieuDe, lh.NoiDung, lh.DiaDiem, " +
             "       lh.ThoiGianBatDau, lh.ThoiGianKetThuc, lh.TrangThai, lh.NgayTao, " +
             "       lh.ToDanPhoID, lh.NguoiTaoID, lh.MucDo, lh.DoiTuong, " +
-            "       nd.Ho + ' ' + nd.Ten AS NguoiTao, " +
+            "       nd.Ho || ' ' || nd.Ten AS NguoiTao, " +
             "       td.TenTo " +
             "FROM LichHop lh " +
             "JOIN NguoiDung nd ON lh.NguoiTaoID = nd.NguoiDungID " +
@@ -158,16 +159,8 @@ public class LichHopDAO {
         return null;
     }
 
-    // ==================== [MỚI] DÀNH CHO NGƯỜI DÂN ====================
+    // ==================== DÀNH CHO NGƯỜI DÂN ====================
 
-    /**
-     * Lấy danh sách lịch họp theo tổ với bộ lọc linh hoạt — dành cho người dân.
-     *
-     * @param toDanPhoID  tổ của người dân (lấy từ session)
-     * @param trangThai   null = tất cả | 1 = Sắp diễn ra | 2 = Đang họp | 3 = Kết thúc | 4 = Hủy
-     * @param tuNgay      null = không lọc từ ngày
-     * @param denNgay     null = không lọc đến ngày
-     */
     public List<Map<String, Object>> getLichHopNguoiDan(int toDanPhoID,
                                                          Integer trangThai,
                                                          Timestamp tuNgay,
@@ -178,7 +171,7 @@ public class LichHopDAO {
             "SELECT lh.LichHopID, lh.TieuDe, lh.NoiDung, lh.DiaDiem, " +
             "       lh.ThoiGianBatDau, lh.ThoiGianKetThuc, lh.TrangThai, lh.NgayTao, " +
             "       lh.MucDo, lh.DoiTuong, " +
-            "       nd.Ho + ' ' + nd.Ten AS NguoiTao " +
+            "       nd.Ho || ' ' || nd.Ten AS NguoiTao " +
             "FROM LichHop lh " +
             "JOIN NguoiDung nd ON lh.NguoiTaoID = nd.NguoiDungID " +
             "WHERE lh.ToDanPhoID = ? "
@@ -207,16 +200,12 @@ public class LichHopDAO {
         return list;
     }
 
-    /**
-     * Lấy chi tiết lịch họp — bảo mật bằng cách JOIN thêm điều kiện toDanPhoID.
-     * Trả về null nếu lichHopID không thuộc tổ của người dân.
-     */
     public Map<String, Object> getLichHopChiTietNguoiDan(int lichHopID, int toDanPhoID) {
         String sql =
             "SELECT lh.LichHopID, lh.TieuDe, lh.NoiDung, lh.DiaDiem, " +
             "       lh.ThoiGianBatDau, lh.ThoiGianKetThuc, lh.TrangThai, lh.NgayTao, " +
             "       lh.ToDanPhoID, lh.MucDo, lh.DoiTuong, " +
-            "       nd.Ho + ' ' + nd.Ten AS NguoiTao, " +
+            "       nd.Ho || ' ' || nd.Ten AS NguoiTao, " +
             "       td.TenTo " +
             "FROM LichHop lh " +
             "JOIN NguoiDung nd ON lh.NguoiTaoID = nd.NguoiDungID " +
@@ -278,7 +267,7 @@ public class LichHopDAO {
         List<Map<String, Object>> list = new ArrayList<>();
         String sql =
             "SELECT ls.SuaID, ls.ThoiGianSua, ls.NoiDungThayDoi, ls.LyDoSua, " +
-            "       nd.Ho + ' ' + nd.Ten AS NguoiSua " +
+            "       nd.Ho || ' ' || nd.Ten AS NguoiSua " +
             "FROM LichSuSuaLichHop ls " +
             "JOIN NguoiDung nd ON ls.NguoiSuaID = nd.NguoiDungID " +
             "WHERE ls.LichHopID = ? " +
@@ -307,9 +296,10 @@ public class LichHopDAO {
     public boolean guiThongBaoDenChuHo(int lichHopID, int toDanPhoID,
                                         int nguoiGuiID, String tieuDe,
                                         String noiDung) {
+        // PostgreSQL: dùng RETURNING để lấy ID vừa insert
         String sqlThongBao =
             "INSERT INTO ThongBao (TieuDe, NoiDung, NguoiGuiID, ToDanPhoID, LichHopID) " +
-            "VALUES (?, ?, ?, ?, ?)";
+            "VALUES (?, ?, ?, ?, ?) RETURNING ThongBaoID";
         String sqlNguoiNhan =
             "INSERT INTO NguoiNhanThongBao (ThongBaoID, NguoiDungID) " +
             "SELECT ?, hd.ChuHoID " +
@@ -318,15 +308,14 @@ public class LichHopDAO {
         try (Connection conn = DBContext.getInstance().getConnection()) {
             conn.setAutoCommit(false);
             int thongBaoID = -1;
-            try (PreparedStatement ps = conn.prepareStatement(
-                    sqlThongBao, Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement ps = conn.prepareStatement(sqlThongBao)) {
                 ps.setString(1, tieuDe);
                 ps.setString(2, noiDung);
                 ps.setInt(3, nguoiGuiID);
                 ps.setInt(4, toDanPhoID);
                 ps.setInt(5, lichHopID);
-                ps.executeUpdate();
-                ResultSet rs = ps.getGeneratedKeys();
+                // PostgreSQL RETURNING đọc qua executeQuery()
+                ResultSet rs = ps.executeQuery();
                 if (rs.next()) thongBaoID = rs.getInt(1);
             }
             if (thongBaoID == -1) { conn.rollback(); return false; }
@@ -346,7 +335,7 @@ public class LichHopDAO {
     public List<Map<String, Object>> getTrangThaiDocThongBao(int lichHopID) {
         List<Map<String, Object>> list = new ArrayList<>();
         String sql =
-            "SELECT nd.Ho + ' ' + nd.Ten AS ChuHo, nd.SoDienThoai, " +
+            "SELECT nd.Ho || ' ' || nd.Ten AS ChuHo, nd.SoDienThoai, " +
             "       nnt.DaDoc, nnt.ThoiGianDoc " +
             "FROM ThongBao tb " +
             "JOIN NguoiNhanThongBao nnt ON tb.ThongBaoID = nnt.ThongBaoID " +

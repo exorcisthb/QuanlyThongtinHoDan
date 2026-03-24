@@ -34,7 +34,6 @@ public class PhanAnhDAO {
 
     private Map<String, Object> mapRowChiTiet(ResultSet rs) throws SQLException {
         Map<String, Object> row = mapRowDanhSach(rs);
-        // Thêm các field chỉ cần khi xem chi tiết
         int nguoiXuLyID = rs.getInt("NguoiXuLyID");
         row.put("nguoiXuLyID",   rs.wasNull() ? null : nguoiXuLyID);
         row.put("tenNguoiXuLy",  rs.getString("TenNguoiXuLy"));
@@ -51,14 +50,14 @@ public class PhanAnhDAO {
         };
     }
 
-    /** Ghi log lịch sử xử lý — dùng chung Connection để đảm bảo transaction */
+    // PostgreSQL: GETDATE() → NOW()
     private void ghiLog(Connection conn, int phanAnhID, int nguoiThucHienID,
                         String hanhDong, Integer trangThaiCu, Integer trangThaiMoi,
                         String ghiChu) throws SQLException {
         String sql =
             "INSERT INTO LichSuXuLyPhanAnh " +
             "    (PhanAnhID, NguoiThucHienID, HanhDong, TrangThaiCu, TrangThaiMoi, GhiChu, ThoiGian) " +
-            "VALUES (?, ?, ?, ?, ?, ?, GETDATE())";
+            "VALUES (?, ?, ?, ?, ?, ?, NOW())";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, phanAnhID);
             ps.setInt(2, nguoiThucHienID);
@@ -70,13 +69,13 @@ public class PhanAnhDAO {
         }
     }
 
-    /** Lưu ảnh đính kèm — dùng chung Connection */
     private void luuAnh(Connection conn, int phanAnhID,
                         List<String> duongDanAnh) throws SQLException {
         if (duongDanAnh == null || duongDanAnh.isEmpty()) return;
+        // PostgreSQL: GETDATE() → NOW()
         String sql =
             "INSERT INTO FileDinhKemPhanAnh (PhanAnhID, DuongDan, NgayUpload) " +
-            "VALUES (?, ?, GETDATE())";
+            "VALUES (?, ?, NOW())";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             for (String path : duongDanAnh) {
                 ps.setInt(1, phanAnhID);
@@ -87,7 +86,6 @@ public class PhanAnhDAO {
         }
     }
 
-    /** Đếm số ảnh hiện tại của 1 phản ánh */
     private int demAnh(Connection conn, int phanAnhID) throws SQLException {
         String sql = "SELECT COUNT(*) FROM FileDinhKemPhanAnh WHERE PhanAnhID = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -97,21 +95,19 @@ public class PhanAnhDAO {
         }
     }
 
-    /** Gửi thông báo đến 1 người dùng cụ thể */
+    // PostgreSQL: GETDATE() → NOW(), RETURN_GENERATED_KEYS → RETURNING
     private void guiThongBao(Connection conn, int nguoiGuiID, int nguoiNhanID,
                               String tieuDe, String noiDung) throws SQLException {
         String sqlTB =
             "INSERT INTO ThongBao (TieuDe, NoiDung, NguoiGuiID, NgayGui) " +
-            "VALUES (?, ?, ?, GETDATE())";
+            "VALUES (?, ?, ?, NOW()) RETURNING ThongBaoID";
         String sqlNN =
             "INSERT INTO NguoiNhanThongBao (ThongBaoID, NguoiDungID) VALUES (?, ?)";
-        try (PreparedStatement psTB = conn.prepareStatement(
-                sqlTB, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement psTB = conn.prepareStatement(sqlTB)) {
             psTB.setString(1, tieuDe);
             psTB.setString(2, noiDung);
             psTB.setInt(3, nguoiGuiID);
-            psTB.executeUpdate();
-            ResultSet keys = psTB.getGeneratedKeys();
+            ResultSet keys = psTB.executeQuery();
             if (keys.next()) {
                 int tbID = keys.getInt(1);
                 try (PreparedStatement psNN = conn.prepareStatement(sqlNN)) {
@@ -125,43 +121,34 @@ public class PhanAnhDAO {
 
     // ==================== HỘ DÂN — GỬI PHẢN ÁNH ====================
 
-    /**
-     * Hộ dân gửi phản ánh mới.
-     * Tối đa 3 ảnh. Tự ghi log TIEP_NHAN.
-     * Gửi thông báo đến tổ trưởng của tổ.
-     * @return PhanAnhID vừa tạo, -1 nếu thất bại.
-     */
     public int guiPhanAnh(int nguoiGuiID, int toDanPhoID, int loaiID,
                            int mucDoUuTien, String tieuDe, String noiDung,
                            List<String> duongDanAnh) {
+        // PostgreSQL: GETDATE() → NOW(), RETURNING thay RETURN_GENERATED_KEYS
         String sqlPA =
             "INSERT INTO PhanAnh " +
             "    (TieuDe, NoiDung, LoaiID, MucDoID, NguoiGuiID, ToDanPhoID, " +
             "     TrangThaiID, DaChuyenCap, NgayTao) " +
-            "VALUES (?, ?, ?, ?, ?, ?, 1, 0, GETDATE())";
-        // Tìm tổ trưởng của tổ để gửi thông báo
+            "VALUES (?, ?, ?, ?, ?, ?, 1, FALSE, NOW()) RETURNING PhanAnhID";
+        // PostgreSQL: IsActivated = 1 → TRUE
         String sqlToTruong =
             "SELECT NguoiDungID FROM NguoiDung " +
-            "WHERE ToDanPhoID = ? AND VaiTroID = 3 AND IsActivated = 1";
+            "WHERE ToDanPhoID = ? AND VaiTroID = 3 AND IsActivated = TRUE";
         try (Connection conn = DBContext.getInstance().getConnection()) {
             conn.setAutoCommit(false);
             int phanAnhID = -1;
             try {
-                // 1. INSERT phản ánh chính
-                try (PreparedStatement ps = conn.prepareStatement(
-                        sqlPA, Statement.RETURN_GENERATED_KEYS)) {
+                try (PreparedStatement ps = conn.prepareStatement(sqlPA)) {
                     ps.setString(1, tieuDe);
                     ps.setString(2, noiDung);
                     ps.setInt(3, loaiID);
                     ps.setInt(4, mucDoUuTien);
                     ps.setInt(5, nguoiGuiID);
                     ps.setInt(6, toDanPhoID);
-                    ps.executeUpdate();
-                    ResultSet keys = ps.getGeneratedKeys();
+                    ResultSet keys = ps.executeQuery();
                     if (!keys.next()) throw new SQLException("Không lấy được PhanAnhID.");
                     phanAnhID = keys.getInt(1);
                 }
-                // 2. Lưu ảnh — bỏ qua nếu lỗi, không ảnh hưởng commit chính
                 if (duongDanAnh != null && !duongDanAnh.isEmpty()) {
                     try {
                         luuAnh(conn, phanAnhID,
@@ -177,7 +164,6 @@ public class PhanAnhDAO {
                 return -1;
             }
 
-            // 3. Ghi log & thông báo (connection riêng — không block kết quả chính)
             try (Connection conn2 = DBContext.getInstance().getConnection()) {
                 conn2.setAutoCommit(false);
                 try {
@@ -211,42 +197,31 @@ public class PhanAnhDAO {
 
     // ==================== HỘ DÂN — SỬA PHẢN ÁNH ====================
 
-    /**
-     * Hộ dân sửa phản ánh.
-     * Không được sửa khi: Đã giải quyết (4), Từ chối (5), Spam (6), Đã hủy (7).
-     * Nếu đã chuyển cấp (3) → thông báo thẳng cán bộ.
-     * Ngược lại → thông báo tổ trưởng.
-     * @return true nếu thành công.
-     */
     public boolean suaPhanAnh(int phanAnhID, int nguoiGuiID, int loaiID,
                                int mucDoUuTien, String tieuDe, String noiDung,
                                List<String> duongDanAnhMoi, List<Integer> fileIDXoa) {
-        // Kiểm tra trạng thái hiện tại
         Map<String, Object> hien = getPhanAnhByID(phanAnhID);
         if (hien == null) return false;
         int ttHienTai    = (int) hien.get("trangThaiID");
         int toDanPhoID   = (int) hien.get("toDanPhoID");
         boolean daChuyenCap = (boolean) hien.get("daChuyenCap");
-        // Không cho sửa khi đã kết thúc
         if (ttHienTai == 4 || ttHienTai == 5 || ttHienTai == 6 || ttHienTai == 7) return false;
 
+        // PostgreSQL: GETDATE() → NOW()
         String sqlUpdate =
             "UPDATE PhanAnh " +
-            "   SET TieuDe = ?, NoiDung = ?, LoaiID = ?, MucDoID = ?, NgayCapNhat = GETDATE() " +
+            "   SET TieuDe = ?, NoiDung = ?, LoaiID = ?, MucDoID = ?, NgayCapNhat = NOW() " +
             " WHERE PhanAnhID = ? AND NguoiGuiID = ?";
         String sqlXoaAnh =
             "DELETE FROM FileDinhKemPhanAnh WHERE FileID = ? AND PhanAnhID = ?";
-        // Tìm người nhận thông báo
+        // PostgreSQL: IsActivated = 1 → TRUE
         String sqlNguoiNhan = daChuyenCap
-            // Đã chuyển cấp → tìm cán bộ phường (VaiTroID = 5)
-            ? "SELECT NguoiDungID FROM NguoiDung WHERE VaiTroID = 5 AND IsActivated = 1"
-            // Chưa chuyển cấp → tổ trưởng của tổ
-            : "SELECT NguoiDungID FROM NguoiDung WHERE ToDanPhoID = ? AND VaiTroID = 3 AND IsActivated = 1";
+            ? "SELECT NguoiDungID FROM NguoiDung WHERE VaiTroID = 5 AND IsActivated = TRUE"
+            : "SELECT NguoiDungID FROM NguoiDung WHERE ToDanPhoID = ? AND VaiTroID = 3 AND IsActivated = TRUE";
 
         try (Connection conn = DBContext.getInstance().getConnection()) {
             conn.setAutoCommit(false);
             try {
-                // 1. Cập nhật thông tin
                 try (PreparedStatement ps = conn.prepareStatement(sqlUpdate)) {
                     ps.setString(1, tieuDe);
                     ps.setString(2, noiDung);
@@ -256,7 +231,6 @@ public class PhanAnhDAO {
                     ps.setInt(6, nguoiGuiID);
                     ps.executeUpdate();
                 }
-                // 2. Xóa ảnh được chọn xóa
                 if (fileIDXoa != null && !fileIDXoa.isEmpty()) {
                     try (PreparedStatement ps = conn.prepareStatement(sqlXoaAnh)) {
                         for (int fid : fileIDXoa) {
@@ -267,7 +241,6 @@ public class PhanAnhDAO {
                         ps.executeBatch();
                     }
                 }
-                // 3. Thêm ảnh mới (không vượt tổng 3 ảnh)
                 if (duongDanAnhMoi != null && !duongDanAnhMoi.isEmpty()) {
                     int conLai = 3 - demAnh(conn, phanAnhID);
                     if (conLai > 0) {
@@ -275,10 +248,8 @@ public class PhanAnhDAO {
                                 duongDanAnhMoi.subList(0, Math.min(conLai, duongDanAnhMoi.size())));
                     }
                 }
-                // 4. Ghi log
                 ghiLog(conn, phanAnhID, nguoiGuiID,
                         "CHINH_SUA", ttHienTai, ttHienTai, "Hộ dân chỉnh sửa phản ánh.");
-                // 5. Thông báo đến người xử lý
                 try (PreparedStatement ps = conn.prepareStatement(sqlNguoiNhan)) {
                     if (!daChuyenCap) ps.setInt(1, toDanPhoID);
                     ResultSet rs = ps.executeQuery();
@@ -303,11 +274,6 @@ public class PhanAnhDAO {
 
     // ==================== HỘ DÂN — HỦY PHẢN ÁNH ====================
 
-    /**
-     * Hộ dân hủy phản ánh.
-     * KHÔNG được hủy khi đã chuyển cấp (3) hoặc đã kết thúc (4,5,6,7).
-     * Thông báo đến tổ trưởng khi hủy.
-     */
     public boolean huyPhanAnh(int phanAnhID, int nguoiGuiID, String lyDo) {
         Map<String, Object> hien = getPhanAnhByID(phanAnhID);
         if (hien == null) return false;
@@ -319,11 +285,11 @@ public class PhanAnhDAO {
 
         String sqlUpdate =
             "UPDATE PhanAnh " +
-            "   SET TrangThaiID = 7, NgayCapNhat = GETDATE(), LyDoTuChoiHuy = ? " +
+            "   SET TrangThaiID = 7, NgayCapNhat = NOW(), LyDoTuChoiHuy = ? " +
             " WHERE PhanAnhID = ? AND NguoiGuiID = ?";
         String sqlToTruong =
             "SELECT NguoiDungID FROM NguoiDung " +
-            "WHERE ToDanPhoID = ? AND VaiTroID = 3 AND IsActivated = 1";
+            "WHERE ToDanPhoID = ? AND VaiTroID = 3 AND IsActivated = TRUE";
 
         try (Connection conn = DBContext.getInstance().getConnection()) {
             conn.setAutoCommit(false);
@@ -335,7 +301,6 @@ public class PhanAnhDAO {
                     if (ps.executeUpdate() == 0) { conn.rollback(); return false; }
                 }
                 ghiLog(conn, phanAnhID, nguoiGuiID, "HUY", ttHienTai, 7, lyDo);
-                // Thông báo tổ trưởng
                 try (PreparedStatement ps = conn.prepareStatement(sqlToTruong)) {
                     ps.setInt(1, toDanPhoID);
                     ResultSet rs = ps.executeQuery();
@@ -360,10 +325,9 @@ public class PhanAnhDAO {
 
     // ==================== TỔ TRƯỞNG — TIẾP NHẬN ====================
 
-    /** Tổ trưởng tiếp nhận phản ánh → TrangThaiID = 2 (Đang xử lý) */
     public boolean tiepNhan(int phanAnhID, int toTruongID, String ghiChu) {
         String sql =
-            "UPDATE PhanAnh SET TrangThaiID = 2, NguoiXuLyID = ?, NgayCapNhat = GETDATE() " +
+            "UPDATE PhanAnh SET TrangThaiID = 2, NguoiXuLyID = ?, NgayCapNhat = NOW() " +
             " WHERE PhanAnhID = ? AND TrangThaiID = 1";
         try (Connection conn = DBContext.getInstance().getConnection()) {
             conn.setAutoCommit(false);
@@ -391,7 +355,6 @@ public class PhanAnhDAO {
 
     // ==================== TỔ TRƯỞNG — TỪ CHỐI ====================
 
-    /** Tổ trưởng từ chối phản ánh → TrangThaiID = 5 */
     public boolean tuChoi(int phanAnhID, int toTruongID, String lyDo) {
         Map<String, Object> hien = getPhanAnhByID(phanAnhID);
         if (hien == null) return false;
@@ -401,7 +364,7 @@ public class PhanAnhDAO {
 
         String sql =
             "UPDATE PhanAnh " +
-            "   SET TrangThaiID = 5, NgayCapNhat = GETDATE(), LyDoTuChoiHuy = ? " +
+            "   SET TrangThaiID = 5, NgayCapNhat = NOW(), LyDoTuChoiHuy = ? " +
             " WHERE PhanAnhID = ? AND TrangThaiID IN (1, 2)";
 
         try (Connection conn = DBContext.getInstance().getConnection()) {
@@ -415,7 +378,6 @@ public class PhanAnhDAO {
                 }
                 if (rows == 0) { conn.rollback(); return false; }
                 ghiLog(conn, phanAnhID, toTruongID, "TU_CHOI", ttHienTai, 5, lyDo);
-                // Thông báo lại hộ dân
                 guiThongBao(conn, toTruongID, nguoiGuiID,
                         "[Từ chối phản ánh] " + tieuDe,
                         "Phản ánh của bạn đã bị từ chối. Lý do: " + lyDo);
@@ -434,7 +396,6 @@ public class PhanAnhDAO {
 
     // ==================== TỔ TRƯỞNG — ĐÁNH DẤU SPAM ====================
 
-    /** Tổ trưởng đánh dấu spam → TrangThaiID = 6, IsSpam = 1 */
     public boolean danhDauSpam(int phanAnhID, int toTruongID, String ghiChu) {
         Map<String, Object> hien = getPhanAnhByID(phanAnhID);
         if (hien == null) return false;
@@ -442,9 +403,10 @@ public class PhanAnhDAO {
         int nguoiGuiID = (int) hien.get("nguoiGuiID");
         String tieuDe  = (String) hien.get("tieuDe");
 
+        // PostgreSQL: IsSpam = 1 → TRUE
         String sql =
             "UPDATE PhanAnh " +
-            "   SET TrangThaiID = 6, IsSpam = 1, NgayCapNhat = GETDATE() " +
+            "   SET TrangThaiID = 6, IsSpam = TRUE, NgayCapNhat = NOW() " +
             " WHERE PhanAnhID = ? AND TrangThaiID IN (1, 2)";
 
         try (Connection conn = DBContext.getInstance().getConnection()) {
@@ -457,7 +419,6 @@ public class PhanAnhDAO {
                 }
                 if (rows == 0) { conn.rollback(); return false; }
                 ghiLog(conn, phanAnhID, toTruongID, "SPAM", ttHienTai, 6, ghiChu);
-                // Thông báo hộ dân
                 guiThongBao(conn, toTruongID, nguoiGuiID,
                         "[Spam] " + tieuDe,
                         "Phản ánh của bạn đã bị đánh dấu spam. Lý do: " + ghiChu);
@@ -476,19 +437,19 @@ public class PhanAnhDAO {
 
     // ==================== TỔ TRƯỞNG — CHUYỂN CẤP ====================
 
-    /** Tổ trưởng chuyển phản ánh lên cán bộ phường → TrangThaiID = 3, DaChuyenCap = 1 */
     public boolean chuyenCapCanBo(int phanAnhID, int toTruongID, String ghiChu) {
         Map<String, Object> hien = getPhanAnhByID(phanAnhID);
         if (hien == null) return false;
         int nguoiGuiID = (int) hien.get("nguoiGuiID");
         String tieuDe  = (String) hien.get("tieuDe");
 
+        // PostgreSQL: DaChuyenCap = 1 → TRUE
         String sql =
             "UPDATE PhanAnh " +
-            "   SET TrangThaiID = 3, DaChuyenCap = 1, NgayCapNhat = GETDATE() " +
-            " WHERE PhanAnhID = ? AND TrangThaiID = 1";  // ← SỬA: 2 → 1
+            "   SET TrangThaiID = 3, DaChuyenCap = TRUE, NgayCapNhat = NOW() " +
+            " WHERE PhanAnhID = ? AND TrangThaiID = 1";
         String sqlCanBo =
-            "SELECT NguoiDungID FROM NguoiDung WHERE VaiTroID = 5 AND IsActivated = 1";
+            "SELECT NguoiDungID FROM NguoiDung WHERE VaiTroID = 5 AND IsActivated = TRUE";
 
         try (Connection conn = DBContext.getInstance().getConnection()) {
             conn.setAutoCommit(false);
@@ -499,12 +460,10 @@ public class PhanAnhDAO {
                     rows = ps.executeUpdate();
                 }
                 if (rows == 0) { conn.rollback(); return false; }
-                ghiLog(conn, phanAnhID, toTruongID, "CHUYEN_CAP", 1, 3, ghiChu);  // ← SỬA: 2 → 1
-                // Thông báo hộ dân
+                ghiLog(conn, phanAnhID, toTruongID, "CHUYEN_CAP", 1, 3, ghiChu);
                 guiThongBao(conn, toTruongID, nguoiGuiID,
                         "[Chuyển cấp] " + tieuDe,
                         "Phản ánh của bạn đã được chuyển lên cán bộ phường xử lý.");
-                // Thông báo cán bộ phường
                 try (PreparedStatement ps = conn.prepareStatement(sqlCanBo)) {
                     ResultSet rs = ps.executeQuery();
                     while (rs.next()) {
@@ -528,10 +487,6 @@ public class PhanAnhDAO {
 
     // ==================== CÁN BỘ PHƯỜNG — GIẢI QUYẾT ====================
 
-    /**
-     * Cán bộ phường giải quyết phản ánh → TrangThaiID = 4.
-     * Ghi chú kết quả và thông báo lại hộ dân.
-     */
     public boolean giaiquyetPhanAnh(int phanAnhID, int canBoID, String ketQua) {
         Map<String, Object> hien = getPhanAnhByID(phanAnhID);
         if (hien == null) return false;
@@ -540,7 +495,7 @@ public class PhanAnhDAO {
 
         String sql =
             "UPDATE PhanAnh " +
-            "   SET TrangThaiID = 4, NguoiXuLyID = ?, NgayCapNhat = GETDATE() " +
+            "   SET TrangThaiID = 4, NguoiXuLyID = ?, NgayCapNhat = NOW() " +
             " WHERE PhanAnhID = ? AND TrangThaiID = 3";
 
         try (Connection conn = DBContext.getInstance().getConnection()) {
@@ -554,7 +509,6 @@ public class PhanAnhDAO {
                 }
                 if (rows == 0) { conn.rollback(); return false; }
                 ghiLog(conn, phanAnhID, canBoID, "GIAI_QUYET", 3, 4, ketQua);
-                // Thông báo hộ dân kết quả xử lý
                 guiThongBao(conn, canBoID, nguoiGuiID,
                         "[Đã giải quyết] " + tieuDe,
                         "Phản ánh của bạn đã được giải quyết. Kết quả: " + ketQua);
@@ -573,14 +527,14 @@ public class PhanAnhDAO {
 
     // ==================== QUERY ====================
 
-    /** Lấy chi tiết 1 phản ánh theo ID */
     public Map<String, Object> getPhanAnhByID(int phanAnhID) {
+        // PostgreSQL: || thay +
         String sql =
             "SELECT pa.*, " +
             "       lp.TenLoai, " +
             "       tt.TenTrangThai, " +
-            "       ng.Ho + ' ' + ng.Ten  AS TenNguoiGui, " +
-            "       nx.Ho + ' ' + nx.Ten  AS TenNguoiXuLy, " +
+            "       ng.Ho || ' ' || ng.Ten  AS TenNguoiGui, " +
+            "       nx.Ho || ' ' || nx.Ten  AS TenNguoiXuLy, " +
             "       tdp.TenTo             AS TenToDanPho " +
             "  FROM PhanAnh pa " +
             "  JOIN LoaiPhanAnh       lp  ON pa.LoaiID      = lp.LoaiID " +
@@ -598,12 +552,11 @@ public class PhanAnhDAO {
         return null;
     }
 
-    /** Lấy danh sách phản ánh của hộ dân */
     public List<Map<String, Object>> getPhanAnhCuaHoDan(int nguoiGuiID) {
         String sql =
             "SELECT pa.*, lp.TenLoai, tt.TenTrangThai, " +
-            "       ng.Ho + ' ' + ng.Ten AS TenNguoiGui, " +
-            "       nx.Ho + ' ' + nx.Ten AS TenNguoiXuLy, " +
+            "       ng.Ho || ' ' || ng.Ten AS TenNguoiGui, " +
+            "       nx.Ho || ' ' || nx.Ten AS TenNguoiXuLy, " +
             "       tdp.TenTo            AS TenToDanPho " +
             "  FROM PhanAnh pa " +
             "  JOIN LoaiPhanAnh       lp  ON pa.LoaiID      = lp.LoaiID " +
@@ -616,12 +569,11 @@ public class PhanAnhDAO {
         return queryList(sql, nguoiGuiID);
     }
 
-    /** Lấy danh sách phản ánh theo tổ — dành cho tổ trưởng */
     public List<Map<String, Object>> getPhanAnhTheoTo(int toDanPhoID) {
         String sql =
             "SELECT pa.*, lp.TenLoai, tt.TenTrangThai, " +
-            "       ng.Ho + ' ' + ng.Ten AS TenNguoiGui, " +
-            "       nx.Ho + ' ' + nx.Ten AS TenNguoiXuLy, " +
+            "       ng.Ho || ' ' || ng.Ten AS TenNguoiGui, " +
+            "       nx.Ho || ' ' || nx.Ten AS TenNguoiXuLy, " +
             "       tdp.TenTo            AS TenToDanPho " +
             "  FROM PhanAnh pa " +
             "  JOIN LoaiPhanAnh       lp  ON pa.LoaiID      = lp.LoaiID " +
@@ -634,12 +586,12 @@ public class PhanAnhDAO {
         return queryList(sql, toDanPhoID);
     }
 
-    /** Lấy danh sách phản ánh đã chuyển cấp — dành cho cán bộ phường */
     public List<Map<String, Object>> getPhanAnhDaChuyenCap() {
+        // PostgreSQL: DaChuyenCap = 1 → TRUE
         String sql =
             "SELECT pa.*, lp.TenLoai, tt.TenTrangThai, " +
-            "       ng.Ho + ' ' + ng.Ten AS TenNguoiGui, " +
-            "       nx.Ho + ' ' + nx.Ten AS TenNguoiXuLy, " +
+            "       ng.Ho || ' ' || ng.Ten AS TenNguoiGui, " +
+            "       nx.Ho || ' ' || nx.Ten AS TenNguoiXuLy, " +
             "       tdp.TenTo            AS TenToDanPho " +
             "  FROM PhanAnh pa " +
             "  JOIN LoaiPhanAnh       lp  ON pa.LoaiID      = lp.LoaiID " +
@@ -647,7 +599,7 @@ public class PhanAnhDAO {
             "  JOIN NguoiDung         ng  ON pa.NguoiGuiID  = ng.NguoiDungID " +
             " LEFT JOIN NguoiDung     nx  ON pa.NguoiXuLyID = nx.NguoiDungID " +
             "  JOIN ToDanPho          tdp ON pa.ToDanPhoID  = tdp.ToDanPhoID " +
-            " WHERE pa.DaChuyenCap = 1 AND pa.TrangThaiID IN (3, 4) " +
+            " WHERE pa.DaChuyenCap = TRUE AND pa.TrangThaiID IN (3, 4) " +
             " ORDER BY pa.MucDoID DESC, pa.NgayTao DESC";
         List<Map<String, Object>> list = new ArrayList<>();
         try (Connection conn = DBContext.getInstance().getConnection();
@@ -658,7 +610,6 @@ public class PhanAnhDAO {
         return list;
     }
 
-    /** Lấy ảnh đính kèm của 1 phản ánh */
     public List<Map<String, Object>> getAnhDinhKem(int phanAnhID) {
         String sql =
             "SELECT FileID, DuongDan, NgayUpload " +
@@ -681,11 +632,10 @@ public class PhanAnhDAO {
         return list;
     }
 
-    /** Lấy lịch sử xử lý của 1 phản ánh */
     public List<Map<String, Object>> getLichSuXuLy(int phanAnhID) {
         String sql =
             "SELECT ls.LogID, ls.HanhDong, ls.GhiChu, ls.ThoiGian, " +
-            "       nd.Ho + ' ' + nd.Ten  AS TenNguoiThucHien, " +
+            "       nd.Ho || ' ' || nd.Ten  AS TenNguoiThucHien, " +
             "       tcu.TenTrangThai      AS TenTrangThaiCu, " +
             "       tmoi.TenTrangThai     AS TenTrangThaiMoi " +
             "  FROM LichSuXuLyPhanAnh ls " +
@@ -714,7 +664,6 @@ public class PhanAnhDAO {
         return list;
     }
 
-    /** Lấy danh sách loại phản ánh */
     public List<LoaiPhanAnh> getDanhSachLoai() {
         String sql = "SELECT LoaiID, TenLoai FROM LoaiPhanAnh ORDER BY LoaiID";
         List<LoaiPhanAnh> list = new ArrayList<>();
@@ -730,8 +679,6 @@ public class PhanAnhDAO {
         } catch (SQLException e) { e.printStackTrace(); }
         return list;
     }
-
-    // ==================== PRIVATE HELPER ====================
 
     private List<Map<String, Object>> queryList(String sql, int param) {
         List<Map<String, Object>> list = new ArrayList<>();
@@ -752,7 +699,7 @@ public class PhanAnhDAO {
 
         String sql =
             "UPDATE PhanAnh " +
-            "   SET TrangThaiID = 4, NguoiXuLyID = ?, NgayCapNhat = GETDATE() " +
+            "   SET TrangThaiID = 4, NguoiXuLyID = ?, NgayCapNhat = NOW() " +
             " WHERE PhanAnhID = ? AND TrangThaiID = 2";
 
         try (Connection conn = DBContext.getInstance().getConnection()) {

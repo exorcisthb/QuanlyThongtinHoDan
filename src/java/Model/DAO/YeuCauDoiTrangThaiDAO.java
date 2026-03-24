@@ -6,6 +6,7 @@ import java.util.*;
 
 public class YeuCauDoiTrangThaiDAO {
 
+    // PostgreSQL: || thay +
     private static final String BASE_SELECT
             = "SELECT "
             + "    yc.YeuCauID, yc.LoaiYeuCau, "
@@ -13,12 +14,12 @@ public class YeuCauDoiTrangThaiDAO {
             + "    yc.NguoiYeuCauID, yc.LyDoYeuCau, yc.TrangThaiYeuCauID, "
             + "    yc.NguoiDuyetID, yc.NgayDuyet, yc.GhiChuDuyet, yc.NgayTao, "
             + "    hd.MaHoKhau, hd.DiaChi AS DiaChiHo, "
-            + "    (nd_chu.Ho + ' ' + nd_chu.Ten) AS TenChuHo, "
+            + "    (nd_chu.Ho || ' ' || nd_chu.Ten) AS TenChuHo, "
             + "    tt_cu.TenTrangThai              AS TenTrangThaiCu, "
             + "    tt_moi.TenTrangThai             AS TenTrangThaiMoi, "
             + "    tdp.TenTo, "
-            + "    (nd_yc.Ho + ' ' + nd_yc.Ten)   AS TenNguoiYeuCau, "
-            + "    (nd_dt.Ho  + ' ' + nd_dt.Ten)   AS TenNguoiDuyet, "
+            + "    (nd_yc.Ho || ' ' || nd_yc.Ten)   AS TenNguoiYeuCau, "
+            + "    (nd_dt.Ho  || ' ' || nd_dt.Ten)   AS TenNguoiDuyet, "
             + "    ttyc.TenTrangThai               AS TenTrangThaiYeuCau, "
             + "    yc.NguoiDungCapNhatID, "
             + "    yc.Ho_Cu,  yc.Ten_Cu,  yc.NgaySinh_Cu,  yc.GioiTinh_Cu, "
@@ -80,9 +81,6 @@ public class YeuCauDoiTrangThaiDAO {
         return row;
     }
 
-    // ------------------------------------------------------------------ //
-    //  GIỮ NGUYÊN: TẠO YÊU CẦU ĐỔI TRẠNG THÁI (loại 1)
-    // ------------------------------------------------------------------ //
     public boolean taoYeuCau(int hoDanID, int trangThaiCuID, int trangThaiMoiID,
             int nguoiYeuCauID, String lyDo) {
         String sql
@@ -103,9 +101,6 @@ public class YeuCauDoiTrangThaiDAO {
         }
     }
 
-    // ------------------------------------------------------------------ //
-    //  THÊM MỚI: HUỶ YÊU CẦU CŨ CÙNG TRƯỜNG (tránh trùng lặp)
-    // ------------------------------------------------------------------ //
     private void huyYeuCauCungTruong(int nguoiDungID, YeuCauDoiTrangThai yc,
             Connection conn) throws SQLException {
         String sqlLayDS
@@ -141,9 +136,6 @@ public class YeuCauDoiTrangThaiDAO {
         }
     }
 
-    // ------------------------------------------------------------------ //
-    //  THÊM MỚI: TẠO YÊU CẦU CẬP NHẬT THÔNG TIN (loại 2)
-    // ------------------------------------------------------------------ //
     public boolean taoYeuCauCapNhat(int nguoiDungID, YeuCauDoiTrangThai yc,
             ThongBaoDAO thongBaoDAO) {
         String sql
@@ -182,10 +174,7 @@ public class YeuCauDoiTrangThaiDAO {
                 ps.setString(18, yc.getCCCD_Moi());
                 ps.setString(19, yc.getAvatar_Moi());
 
-                if (ps.executeUpdate() == 0) {
-                    conn.rollback();
-                    return false;
-                }
+                if (ps.executeUpdate() == 0) { conn.rollback(); return false; }
             }
 
             thongBaoDAO.guiThongBaoTheoVaiTro(
@@ -207,9 +196,6 @@ public class YeuCauDoiTrangThaiDAO {
         }
     }
 
-    // ------------------------------------------------------------------ //
-    //  GIỮ NGUYÊN: KIỂM TRA hộ đang có yêu cầu đổi trạng thái chờ duyệt
-    // ------------------------------------------------------------------ //
     public boolean dangCoYeuCauChoDuyet(int hoDanID) {
         String sql
                 = "SELECT COUNT(1) FROM YeuCauDoiTrangThai "
@@ -225,9 +211,6 @@ public class YeuCauDoiTrangThaiDAO {
         }
     }
 
-    // ------------------------------------------------------------------ //
-    //  GIỮ NGUYÊN: KIỂM TRA người dùng đang có yêu cầu cập nhật chờ duyệt
-    // ------------------------------------------------------------------ //
     public boolean dangCoYeuCauCapNhatChoDuyet(int nguoiDungID) {
         String sql
                 = "SELECT COUNT(1) FROM YeuCauDoiTrangThai "
@@ -243,9 +226,6 @@ public class YeuCauDoiTrangThaiDAO {
         }
     }
 
-    // ------------------------------------------------------------------ //
-    //  LẤY THEO ID - dùng connection riêng (public, gọi từ bên ngoài)
-    // ------------------------------------------------------------------ //
     public Map<String, Object> layTheoID(int yeuCauID) {
         String sql = BASE_SELECT + "WHERE yc.YeuCauID = ?";
         try (Connection conn = DBContext.getInstance().getConnection();
@@ -259,9 +239,6 @@ public class YeuCauDoiTrangThaiDAO {
         return null;
     }
 
-    // ------------------------------------------------------------------ //
-    //  LẤY THEO ID - dùng connection có sẵn (dùng trong transaction)
-    // ------------------------------------------------------------------ //
     private Map<String, Object> layTheoID(int yeuCauID, Connection conn) throws SQLException {
         String sql = BASE_SELECT + "WHERE yc.YeuCauID = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -272,9 +249,6 @@ public class YeuCauDoiTrangThaiDAO {
         return null;
     }
 
-    // ------------------------------------------------------------------ //
-    //  GIỮ NGUYÊN: LẤY DANH SÁCH THEO TỔ
-    // ------------------------------------------------------------------ //
     public List<Map<String, Object>> layDanhSachTheoTo(int toDanPhoID) {
         String sql = BASE_SELECT + "WHERE hd.ToDanPhoID = ? ORDER BY yc.NgayTao DESC";
         List<Map<String, Object>> list = new ArrayList<>();
@@ -289,9 +263,6 @@ public class YeuCauDoiTrangThaiDAO {
         return list;
     }
 
-    // ------------------------------------------------------------------ //
-    //  GIỮ NGUYÊN: LẤY DANH SÁCH CHỜ DUYỆT (tất cả loại)
-    // ------------------------------------------------------------------ //
     public List<Map<String, Object>> layDanhSachChoDuyet() {
         String sql = BASE_SELECT + "WHERE yc.TrangThaiYeuCauID = 1 ORDER BY yc.NgayTao ASC";
         List<Map<String, Object>> list = new ArrayList<>();
@@ -305,9 +276,6 @@ public class YeuCauDoiTrangThaiDAO {
         return list;
     }
 
-    // ------------------------------------------------------------------ //
-    //  THÊM MỚI: LẤY DANH SÁCH YÊU CẦU CẬP NHẬT CHỜ DUYỆT (loại 2)
-    // ------------------------------------------------------------------ //
     public List<Map<String, Object>> layDanhSachCapNhatChoDuyet() {
         String sql = BASE_SELECT
                 + "WHERE yc.LoaiYeuCau = 2 AND yc.TrangThaiYeuCauID = 1 "
@@ -323,9 +291,6 @@ public class YeuCauDoiTrangThaiDAO {
         return list;
     }
 
-    // ------------------------------------------------------------------ //
-    //  GIỮ NGUYÊN: LẤY TẤT CẢ
-    // ------------------------------------------------------------------ //
     public List<Map<String, Object>> layTatCa() {
         String sql = BASE_SELECT + "ORDER BY yc.NgayTao DESC";
         List<Map<String, Object>> list = new ArrayList<>();
@@ -339,41 +304,37 @@ public class YeuCauDoiTrangThaiDAO {
         return list;
     }
 
-    // ------------------------------------------------------------------ //
-    //  DUYỆT yêu cầu (cả 2 loại)
-    //  FIX: dùng layTheoID(id, conn) cùng transaction thay vì connection riêng
-    // ------------------------------------------------------------------ //
     public boolean duyetYeuCau(int yeuCauID, int nguoiDuyetID, String ghiChu,
             ThongBaoDAO thongBaoDAO) {
+        // PostgreSQL: GETDATE() → NOW()
         String sqlYC
                 = "UPDATE YeuCauDoiTrangThai "
-                + "SET TrangThaiYeuCauID = 2, NguoiDuyetID = ?, NgayDuyet = GETDATE(), GhiChuDuyet = ? "
+                + "SET TrangThaiYeuCauID = 2, NguoiDuyetID = ?, NgayDuyet = NOW(), GhiChuDuyet = ? "
                 + "WHERE YeuCauID = ? AND TrangThaiYeuCauID = 1";
+        // PostgreSQL: FROM ... JOIN update syntax → dùng UPDATE ... FROM
         String sqlHD
-                = "UPDATE hd SET hd.TrangThaiID = yc.TrangThaiMoiID "
-                + "FROM HoDan hd "
-                + "JOIN YeuCauDoiTrangThai yc ON yc.HoDanID = hd.HoDanID "
-                + "WHERE yc.YeuCauID = ? AND yc.LoaiYeuCau = 1";
+                = "UPDATE HoDan hd SET TrangThaiID = yc.TrangThaiMoiID "
+                + "FROM YeuCauDoiTrangThai yc "
+                + "WHERE yc.HoDanID = hd.HoDanID AND yc.YeuCauID = ? AND yc.LoaiYeuCau = 1";
+        // PostgreSQL: UPDATE ... FROM syntax
         String sqlND
-                = "UPDATE nd "
-                + "SET nd.Ho           = COALESCE(yc.Ho_Moi,       nd.Ho), "
-                + "    nd.Ten          = COALESCE(yc.Ten_Moi,      nd.Ten), "
-                + "    nd.NgaySinh     = COALESCE(yc.NgaySinh_Moi, nd.NgaySinh), "
-                + "    nd.GioiTinh     = COALESCE(yc.GioiTinh_Moi, nd.GioiTinh), "
-                + "    nd.Email        = COALESCE(yc.Email_Moi,     nd.Email), "
-                + "    nd.SoDienThoai  = COALESCE(yc.SDT_Moi,      nd.SoDienThoai), "
-                + "    nd.CCCD         = COALESCE(yc.CCCD_Moi,     nd.CCCD), "
-                + "    nd.AvatarPath   = COALESCE(yc.Avatar_Moi,   nd.AvatarPath) "
-                + "FROM NguoiDung nd "
-                + "JOIN YeuCauDoiTrangThai yc ON yc.NguoiDungCapNhatID = nd.NguoiDungID "
-                + "WHERE yc.YeuCauID = ? AND yc.LoaiYeuCau = 2";
+                = "UPDATE NguoiDung nd "
+                + "SET Ho           = COALESCE(yc.Ho_Moi,       nd.Ho), "
+                + "    Ten          = COALESCE(yc.Ten_Moi,      nd.Ten), "
+                + "    NgaySinh     = COALESCE(yc.NgaySinh_Moi, nd.NgaySinh), "
+                + "    GioiTinh     = COALESCE(yc.GioiTinh_Moi, nd.GioiTinh), "
+                + "    Email        = COALESCE(yc.Email_Moi,     nd.Email), "
+                + "    SoDienThoai  = COALESCE(yc.SDT_Moi,      nd.SoDienThoai), "
+                + "    CCCD         = COALESCE(yc.CCCD_Moi,     nd.CCCD), "
+                + "    AvatarPath   = COALESCE(yc.Avatar_Moi,   nd.AvatarPath) "
+                + "FROM YeuCauDoiTrangThai yc "
+                + "WHERE yc.NguoiDungCapNhatID = nd.NguoiDungID AND yc.YeuCauID = ? AND yc.LoaiYeuCau = 2";
 
         Connection conn = null;
         try {
             conn = DBContext.getInstance().getConnection();
             conn.setAutoCommit(false);
 
-            // ✅ FIX: dùng overload cùng connection để nằm trong transaction
             Map<String, Object> yc = layTheoID(yeuCauID, conn);
             if (yc == null) {
                 System.err.println("[duyetYeuCau] Không tìm thấy yeuCauID=" + yeuCauID);
@@ -383,7 +344,6 @@ public class YeuCauDoiTrangThaiDAO {
             int loai          = (int) yc.get("loaiYeuCau");
             int nguoiYeuCauID = (int) yc.get("nguoiYeuCauID");
 
-            // Cập nhật trạng thái yêu cầu → 2 (đã duyệt)
             try (PreparedStatement ps = conn.prepareStatement(sqlYC)) {
                 ps.setInt(1, nguoiDuyetID);
                 ps.setString(2, ghiChu);
@@ -394,15 +354,12 @@ public class YeuCauDoiTrangThaiDAO {
             }
 
             if (loai == 1) {
-                // Cập nhật trạng thái hộ dân
                 try (PreparedStatement ps = conn.prepareStatement(sqlHD)) {
                     ps.setInt(1, yeuCauID);
                     int rows = ps.executeUpdate();
                     System.out.println("[duyetYeuCau] UPDATE HoDan rows=" + rows);
                 }
             } else if (loai == 2) {
-                // ✅ FIX: câu UPDATE sqlND chạy SAU khi sqlYC đã commit TrangThaiYeuCauID=2
-                // nên JOIN vẫn tìm được bản ghi (YeuCauID match, LoaiYeuCau=2 vẫn đúng)
                 try (PreparedStatement ps = conn.prepareStatement(sqlND)) {
                     ps.setInt(1, yeuCauID);
                     int rows = ps.executeUpdate();
@@ -437,15 +394,11 @@ public class YeuCauDoiTrangThaiDAO {
         }
     }
 
-    // ------------------------------------------------------------------ //
-    //  TỪ CHỐI yêu cầu
-    //  FIX: dùng layTheoID(id, conn) cùng transaction thay vì connection riêng
-    // ------------------------------------------------------------------ //
     public boolean tuChoiYeuCau(int yeuCauID, int nguoiDuyetID, String lyDoTuChoi,
             ThongBaoDAO thongBaoDAO) {
         String sql
                 = "UPDATE YeuCauDoiTrangThai "
-                + "SET TrangThaiYeuCauID = 3, NguoiDuyetID = ?, NgayDuyet = GETDATE(), GhiChuDuyet = ? "
+                + "SET TrangThaiYeuCauID = 3, NguoiDuyetID = ?, NgayDuyet = NOW(), GhiChuDuyet = ? "
                 + "WHERE YeuCauID = ? AND TrangThaiYeuCauID = 1";
 
         Connection conn = null;
@@ -453,7 +406,6 @@ public class YeuCauDoiTrangThaiDAO {
             conn = DBContext.getInstance().getConnection();
             conn.setAutoCommit(false);
 
-            // ✅ FIX: dùng overload cùng connection
             Map<String, Object> yc = layTheoID(yeuCauID, conn);
             if (yc == null) {
                 System.err.println("[tuChoiYeuCau] Không tìm thấy yeuCauID=" + yeuCauID);
@@ -492,9 +444,6 @@ public class YeuCauDoiTrangThaiDAO {
         }
     }
 
-    // ------------------------------------------------------------------ //
-    //  HUỶ yêu cầu
-    // ------------------------------------------------------------------ //
     public boolean huyYeuCau(int yeuCauID, int nguoiYeuCauID) {
         String sql
                 = "UPDATE YeuCauDoiTrangThai "
@@ -511,14 +460,13 @@ public class YeuCauDoiTrangThaiDAO {
         }
     }
 
-    // ------------------------------------------------------------------ //
-    //  LẤY CHI TIẾT THEO THÔNG BÁO
-    // ------------------------------------------------------------------ //
     public Map<String, Object> layChiTietTheoThongBao(int thongBaoID) {
+        // PostgreSQL: TOP 1 ... ORDER BY → dùng LIMIT 1, subquery cần alias
         String sql = BASE_SELECT
                 + "WHERE yc.TrangThaiYeuCauID = 1 "
-                + "AND yc.NgayTao <= (SELECT TOP 1 NgayGui FROM ThongBao WHERE ThongBaoID = ?) "
-                + "ORDER BY yc.NgayTao DESC";
+                + "AND yc.NgayTao <= (SELECT NgayGui FROM ThongBao WHERE ThongBaoID = ? LIMIT 1) "
+                + "ORDER BY yc.NgayTao DESC "
+                + "LIMIT 1";
         try (Connection conn = DBContext.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, thongBaoID);
@@ -530,9 +478,6 @@ public class YeuCauDoiTrangThaiDAO {
         return null;
     }
 
-    // ------------------------------------------------------------------ //
-    //  LẤY DANH SÁCH YÊU CẦU CẬP NHẬT CỦA 1 NGƯỜI DÙNG
-    // ------------------------------------------------------------------ //
     public List<Map<String, Object>> layDanhSachCapNhatCuaNguoiDung(int nguoiDungID) {
         String sql = BASE_SELECT
                 + "WHERE yc.LoaiYeuCau = 2 AND yc.NguoiDungCapNhatID = ? "

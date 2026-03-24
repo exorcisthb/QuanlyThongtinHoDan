@@ -8,14 +8,14 @@ public class QuenMatKhauDAO {
 
     // ==================== NGUOI DUNG ====================
 
-    // ── MỚI: Tìm theo Email (bước 1) ──
     public NguoiDung timNguoiDungTheoEmail(String email) {
+        // PostgreSQL: IsActivated = 1 → TRUE
         String sql =
             "SELECT NguoiDungID, CCCD, Ho, Ten, NgaySinh, GioiTinh, " +
             "       Email, SoDienThoai, MatKhauHash, VaiTroID, ToDanPhoID, " +
             "       IsActivated, NgayTao " +
             "FROM NguoiDung " +
-            "WHERE Email = ? AND IsActivated = 1";
+            "WHERE Email = ? AND IsActivated = TRUE";
 
         try (Connection conn = DBContext.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -54,7 +54,7 @@ public class QuenMatKhauDAO {
             "       Email, SoDienThoai, MatKhauHash, VaiTroID, ToDanPhoID, " +
             "       IsActivated, NgayTao " +
             "FROM NguoiDung " +
-            "WHERE CCCD = ? AND SoDienThoai = ? AND IsActivated = 1";
+            "WHERE CCCD = ? AND SoDienThoai = ? AND IsActivated = TRUE";
 
         try (Connection conn = DBContext.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -106,7 +106,7 @@ public class QuenMatKhauDAO {
     }
 
     public boolean kiemTraCCCDTonTai(String cccd) {
-        String sql = "SELECT 1 FROM NguoiDung WHERE CCCD = ? AND IsActivated = 1";
+        String sql = "SELECT 1 FROM NguoiDung WHERE CCCD = ? AND IsActivated = TRUE";
 
         try (Connection conn = DBContext.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -174,9 +174,10 @@ public class QuenMatKhauDAO {
     }
 
     public boolean kiemTraTokenHopLe(String token) {
+        // PostgreSQL: GETDATE() → NOW()
         String sql =
             "SELECT 1 FROM TokenResetMatKhau " +
-            "WHERE Token = ? AND NgayHetHan > GETDATE()";
+            "WHERE Token = ? AND NgayHetHan > NOW()";
 
         try (Connection conn = DBContext.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -223,7 +224,8 @@ public class QuenMatKhauDAO {
     }
 
     public void xoaTokenHetHan() {
-        String sql = "DELETE FROM TokenResetMatKhau WHERE NgayHetHan <= GETDATE()";
+        // PostgreSQL: GETDATE() → NOW()
+        String sql = "DELETE FROM TokenResetMatKhau WHERE NgayHetHan <= NOW()";
 
         try (Connection conn = DBContext.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {

@@ -7,18 +7,20 @@ public class ThanhVienDAO {
 
     public List<Map<String, Object>> getThanhVienByHoDanID(int hoDanID) {
         List<Map<String, Object>> list = new ArrayList<>();
+        // PostgreSQL:
+        //   DATEDIFF(YEAR, ..., GETDATE()) → DATE_PART('year', AGE(nd.NgaySinh))
+        //   Không cần thay đổi gì khác (JOIN, WHERE, ORDER BY đều chuẩn SQL)
         String sql =
             "SELECT tv.ThanhVienID, tv.NgayVao, " +
             "       nd.NguoiDungID, nd.Ho, nd.Ten, nd.CCCD, " +
             "       nd.NgaySinh, nd.GioiTinh, nd.SoDienThoai, nd.Email, " +
-            "       DATEDIFF(YEAR, nd.NgaySinh, GETDATE()) AS Tuoi, " +
+            "       DATE_PART('year', AGE(nd.NgaySinh))::int AS Tuoi, " +
             "       qh.TenQuanHe " +
             "FROM ThanhVienHo tv " +
             "JOIN NguoiDung nd ON tv.NguoiDungID = nd.NguoiDungID " +
             "LEFT JOIN QuanHeHoGia qh ON tv.QuanHeID = qh.QuanHeID " +
             "WHERE tv.HoDanID = ? AND tv.NgayRa IS NULL " +
             "ORDER BY tv.NgayVao";
-
         try (Connection conn = DBContext.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, hoDanID);
