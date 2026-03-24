@@ -277,12 +277,6 @@
 
         <div class="section-title">Chức năng chính</div>
         <div class="cards-grid">
-            <a href="<%= ctx %>/hodan/lich-su-thong-bao" class="dash-card warn">
-                <div class="dc-icon warn">📋</div>
-                <div class="dc-title">Lịch sử thông báo</div>
-                <div class="dc-desc">Xem lại toàn bộ thông báo đã nhận từ tổ dân phố và cán bộ phường.</div>
-                <span class="dc-btn warn">Xem lịch sử →</span>
-            </a>
             <a href="<%= ctx %>/nguoidan/lich-hop" class="dash-card green">
                 <div class="dc-icon green">📅</div>
                 <div class="dc-title">Lịch họp tổ dân phố</div>
