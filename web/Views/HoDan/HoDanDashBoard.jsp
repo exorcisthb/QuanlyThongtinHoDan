@@ -152,7 +152,7 @@
 %>
 
 <header class="topbar">
-    <a href="<%= ctx %>/hodan/dashboard" class="topbar-logo">
+    <a href="<%= ctx %>/hodan/hodan/dashboard" class="topbar-logo">
         <div class="logo-icon">🏘</div>
         <div class="logo-text">Cổng <span>Dịch Vụ</span></div>
     </a>

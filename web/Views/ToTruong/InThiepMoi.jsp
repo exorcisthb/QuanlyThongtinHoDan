@@ -164,7 +164,7 @@
 <body>
 
 <header class="topbar">
-    <a href="${pageContext.request.contextPath}/dashboard" class="logo">
+    <a href="${pageContext.request.contextPath}/totruong/dashboard" class="logo">
         <div class="logo-icon">🏘</div>
         <div class="logo-text">Quản lý <span>Hộ dân</span></div>
     </a>

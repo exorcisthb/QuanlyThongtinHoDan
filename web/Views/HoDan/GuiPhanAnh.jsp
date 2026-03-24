@@ -229,13 +229,13 @@
 %>
 
 <header class="topbar">
-    <a href="<%= ctx %>/hodan/dashboard" class="topbar-logo">
+    <a href="<%= ctx %>/hodan/hodan/dashboard" class="topbar-logo">
         <div class="logo-icon">🏘</div>
         <div class="logo-text">Cổng <span>Dịch Vụ</span></div>
     </a>
     <div class="topbar-divider"></div>
     <div class="breadcrumb">
-        <a href="<%= ctx %>/hodan/dashboard">Trang chủ</a>
+        <a href="<%= ctx %>/hodan/hodan/dashboard">Trang chủ</a>
         <span>›</span>
         <a href="<%= ctx %>/hodan/phan-anh">Phản ánh / Kiến nghị</a>
         <span>›</span>

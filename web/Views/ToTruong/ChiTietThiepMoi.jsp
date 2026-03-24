@@ -127,13 +127,13 @@
 <body>
 
 <header class="topbar">
-    <a href="${pageContext.request.contextPath}/dashboard" class="topbar-logo">
+    <a href="${pageContext.request.contextPath}/totruong/dashboard" class="topbar-logo">
         <div class="logo-icon">🏘</div>
         <div class="logo-text">Quản lý <span>Hộ dân</span></div>
     </a>
     <div class="topbar-div"></div>
     <div class="breadcrumb">
-        <a href="${pageContext.request.contextPath}/dashboard">Trang chủ</a> ›
+        <a href="${pageContext.request.contextPath}/totruong/dashboard">Trang chủ</a> ›
         <a href="${pageContext.request.contextPath}/thiepmoi/danh-sach">Thiệp mời</a> ›
         <span class="cur">Chi tiết</span>
     </div>
