@@ -56,56 +56,59 @@ public class HoDanService {
         return map.values().stream().mapToInt(List::size).sum();
     }
 
-    // ── Import tổng hợp ─────────────────────────────────────────────────
-    public ImportResult importFromExcel(InputStream inputStream, int toDanPhoID) {
-        List<Map<String, Object>> danhSach = new ArrayList<>();
-        List<String> parseErrors = new ArrayList<>();
-        int totalRows = 0;
+// ── Import tổng hợp ─────────────────────────────────────────────────
+public ImportResult importFromExcel(InputStream inputStream, int toDanPhoID) {
+    List<Map<String, Object>> danhSach = new ArrayList<>();
+    List<String> parseErrors = new ArrayList<>();
+    int totalRows = 0;
 
-        try (Workbook workbook = new XSSFWorkbook(inputStream)) {
-            Sheet sheet = workbook.getSheetAt(0);
+    try (Workbook workbook = new XSSFWorkbook(inputStream)) {
+        Sheet sheet = workbook.getSheetAt(0);
 
-            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
-                Row row = sheet.getRow(i);
-                if (row == null) {
-                    continue;
-                }
-                Cell firstCell = row.getCell(0);
-                if (firstCell == null || firstCell.getCellType() == CellType.BLANK) {
-                    continue;
-                }
+        for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+            Row row = sheet.getRow(i);
+            if (row == null) continue;
 
-                totalRows++;
-                Map<String, Object> data = new HashMap<>();
-                data.put("rowNum", i + 1);
-                data.put("tenHoDan", getCellString(row.getCell(0)));
-                data.put("cccd", getCellString(row.getCell(1)));
-                data.put("ho", getCellString(row.getCell(2)));
-                data.put("ten", getCellString(row.getCell(3)));
-                data.put("ngaySinh", getCellSqlDate(row.getCell(4)));
-                data.put("gioiTinh", getCellString(row.getCell(5)));
-                data.put("soDienThoai", getCellString(row.getCell(6)));
-                data.put("email", getCellString(row.getCell(7)));
-                data.put("quanHe", getCellString(row.getCell(8)));
-                data.put("diaChi", getCellString(row.getCell(9)));
-                danhSach.add(data);
-            }
+            Cell firstCell = row.getCell(0);
+            if (firstCell == null || firstCell.getCellType() == CellType.BLANK) continue;
 
-            Map<String, List<Map<String, Object>>> grouped = new LinkedHashMap<>();
-            for (Map<String, Object> row : danhSach) {
-                String key = (String) row.get("tenHoDan");
-                grouped.computeIfAbsent(key, k -> new ArrayList<>()).add(row);
-            }
+            String tenHoDan = getCellString(row.getCell(0));
+            // ✅ Skip dòng header (★) và dòng trống
+            if (tenHoDan == null || tenHoDan.trim().isEmpty() || tenHoDan.startsWith("★")) continue;
 
-            parseErrors.addAll(hoDanDAO.importHoDanVaNguoiDung(
-                    flattenGrouped(grouped), toDanPhoID));
+            totalRows++;
+            Map<String, Object> data = new HashMap<>();
+            String diaChi = getCellString(row.getCell(9));
 
-        } catch (Exception e) {
-            parseErrors.add("Không thể đọc file Excel: " + e.getMessage());
+            data.put("rowNum",      i + 1);
+            data.put("tenHoDan",    tenHoDan.trim().toUpperCase());
+            data.put("cccd",        getCellString(row.getCell(1)));
+            data.put("ho",          getCellString(row.getCell(2)));
+            data.put("ten",         getCellString(row.getCell(3)));
+            data.put("ngaySinh",    getCellSqlDate(row.getCell(4)));
+            data.put("gioiTinh",    getCellString(row.getCell(5)));
+            data.put("soDienThoai", getCellString(row.getCell(6)));
+            data.put("email",       getCellString(row.getCell(7)));
+            data.put("quanHe",      getCellString(row.getCell(8)));
+            data.put("diaChi",      diaChi != null ? diaChi.trim() : "");
+            danhSach.add(data);
         }
 
-        return new ImportResult(totalRows, totalRows - parseErrors.size(), parseErrors);
+        Map<String, List<Map<String, Object>>> grouped = new LinkedHashMap<>();
+        for (Map<String, Object> row : danhSach) {
+            String key = ((String) row.get("tenHoDan")).trim().toUpperCase();
+            grouped.computeIfAbsent(key, k -> new ArrayList<>()).add(row);
+        }
+
+        parseErrors.addAll(hoDanDAO.importHoDanVaNguoiDung(
+                flattenGrouped(grouped), toDanPhoID));
+
+    } catch (Exception e) {
+        parseErrors.add("Không thể đọc file Excel: " + e.getMessage());
     }
+
+    return new ImportResult(totalRows, totalRows - parseErrors.size(), parseErrors);
+}
 
     private List<Map<String, Object>> flattenGrouped(
             Map<String, List<Map<String, Object>>> grouped) {

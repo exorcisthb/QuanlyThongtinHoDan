@@ -112,30 +112,59 @@ public class HoDanDAO {
         return h;
     }
 
-    private int getOrCreateToDanPhoID(Connection conn, String diaChi) throws Exception {
-        if (diaChi == null || diaChi.isEmpty()) return 0;
-        String tenTo = null;
-        String upper = diaChi.toUpperCase();
-        int idx = upper.indexOf("TỔ DÂN PHỐ ");
-        if (idx >= 0) tenTo = diaChi.substring(idx + 11).trim();
-        if (tenTo == null) { idx = upper.indexOf("TO DAN PHO "); if (idx >= 0) tenTo = diaChi.substring(idx + 11).trim(); }
-        if (tenTo == null) { idx = upper.indexOf("TDP "); if (idx >= 0) tenTo = diaChi.substring(idx + 4).trim(); }
-        if (tenTo != null && tenTo.contains(",")) tenTo = tenTo.substring(0, tenTo.indexOf(",")).trim();
-        if (tenTo == null || tenTo.isEmpty()) return 0;
+  private int getOrCreateToDanPhoID(Connection conn, String diaChi) throws Exception {
+    if (diaChi == null || diaChi.isEmpty()) return 0;
 
-        try (PreparedStatement ps = conn.prepareStatement("SELECT ToDanPhoID FROM ToDanPho WHERE TenTo = ?")) {
-            ps.setString(1, tenTo);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) return rs.getInt(1);
-        }
-        try (PreparedStatement ps = conn.prepareStatement(
-                "INSERT INTO ToDanPho (TenTo) VALUES (?) RETURNING ToDanPhoID")) {
-            ps.setString(1, tenTo);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) return rs.getInt(1);
-        }
-        return 0;
+    String tenTo = null;
+    String upper = diaChi.toUpperCase();
+
+    int idx = upper.indexOf("TỔ DÂN PHỐ ");
+    if (idx >= 0) tenTo = diaChi.substring(idx + 11).trim();
+
+    if (tenTo == null) { idx = upper.indexOf("TO DAN PHO "); if (idx >= 0) tenTo = diaChi.substring(idx + 11).trim(); }
+    if (tenTo == null) { idx = upper.indexOf("TDP ");        if (idx >= 0) tenTo = diaChi.substring(idx + 4).trim(); }
+
+    if (tenTo != null && tenTo.contains(",")) tenTo = tenTo.substring(0, tenTo.indexOf(",")).trim();
+    if (tenTo == null || tenTo.isEmpty()) return 0;
+
+    // ✅ Proper case thay vì UPPERCASE
+    tenTo = toProperCase(tenTo);
+
+    try (PreparedStatement ps = conn.prepareStatement(
+            "SELECT ToDanPhoID FROM ToDanPho WHERE LOWER(TenTo) = LOWER(?)")) {
+        ps.setString(1, tenTo);
+        ResultSet rs = ps.executeQuery();
+        if (rs.next()) return rs.getInt(1);
     }
+
+    try (PreparedStatement ps = conn.prepareStatement(
+            "INSERT INTO ToDanPho (TenTo) VALUES (?) RETURNING ToDanPhoID")) {
+        ps.setString(1, tenTo);
+        ResultSet rs = ps.executeQuery();
+        if (rs.next()) return rs.getInt(1);
+    }
+
+    return 0;
+}
+
+// ✅ Thêm hàm helper này vào cùng class
+private String toProperCase(String str) {
+    if (str == null || str.isEmpty()) return str;
+    StringBuilder result = new StringBuilder();
+    boolean nextUpper = true;
+    for (char c : str.toCharArray()) {
+        if (Character.isWhitespace(c)) {
+            result.append(c);
+            nextUpper = true;
+        } else if (nextUpper) {
+            result.append(Character.toUpperCase(c));
+            nextUpper = false;
+        } else {
+            result.append(Character.toLowerCase(c));
+        }
+    }
+    return result.toString();
+}
 
     public HoDan getHoDanByNguoiDungID(int nguoiDungID) throws Exception {
         String sql = "SELECT h.HoDanID, h.MaHoKhau, h.DiaChi, h.ToDanPhoID, "
