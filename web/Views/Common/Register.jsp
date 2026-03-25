@@ -309,7 +309,7 @@
                     <div class="form-group">
                         <label for="ho">Họ <span class="req">*</span></label>
                         <input type="text" id="ho" name="ho"
-                               placeholder="Nguyễn"
+                               placeholder="Nguyễn Văn"
                                value="${not empty oldHo ? oldHo : ''}"
                                class="${not empty errHo ? 'is-error' : ''}" required>
                         <c:if test="${not empty errHo}">
@@ -320,7 +320,7 @@
                     <div class="form-group">
                         <label for="ten">Tên <span class="req">*</span></label>
                         <input type="text" id="ten" name="ten"
-                               placeholder="Văn A"
+                               placeholder="A"
                                value="${not empty oldTen ? oldTen : ''}"
                                class="${not empty errTen ? 'is-error' : ''}" required>
                         <c:if test="${not empty errTen}">
