@@ -57,66 +57,135 @@ public class HoDanService {
     }
 
 // ── Import tổng hợp ─────────────────────────────────────────────────
-public ImportResult importFromExcel(InputStream inputStream, int toDanPhoID) {
-    List<Map<String, Object>> danhSach = new ArrayList<>();
-    List<String> parseErrors = new ArrayList<>();
-    int totalRows = 0;
+    public ImportResult importFromExcel(InputStream inputStream, int toDanPhoID) {
+        List<Map<String, Object>> danhSach = new ArrayList<>();
+        List<String> parseErrors = new ArrayList<>();
+        int totalRows = 0;
 
-    try (Workbook workbook = new XSSFWorkbook(inputStream)) {
-        Sheet sheet = workbook.getSheetAt(0);
+        try (Workbook workbook = new XSSFWorkbook(inputStream)) {
+            Sheet sheet = workbook.getSheetAt(0);
 
-        for (int i = 1; i <= sheet.getLastRowNum(); i++) {
-            Row row = sheet.getRow(i);
-            if (row == null) continue;
+            for (int i = 0; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) {
+                    continue;
+                }
+                Cell firstCell = row.getCell(0);
+                if (firstCell == null || firstCell.getCellType() == CellType.BLANK) {
+                    continue;
+                }
 
-            Cell firstCell = row.getCell(0);
-            if (firstCell == null || firstCell.getCellType() == CellType.BLANK) continue;
+                String tenHoDan = getCellString(row.getCell(0));
+                if (tenHoDan == null || tenHoDan.trim().isEmpty()
+                        || tenHoDan.startsWith("★")
+                        || tenHoDan.contains("(VD:")) {
+                    continue;
+                }
 
-            String tenHoDan = getCellString(row.getCell(0));
-            // ✅ Skip dòng header (★) và dòng trống
-            if (tenHoDan == null || tenHoDan.trim().isEmpty() || tenHoDan.startsWith("★")) continue;
+                totalRows++;
 
-            totalRows++;
-            Map<String, Object> data = new HashMap<>();
-            String diaChi = getCellString(row.getCell(9));
+                String cccd = getCellString(row.getCell(1));
+                String ho = getCellString(row.getCell(2));
+                String ten = getCellString(row.getCell(3));
+                java.sql.Date ngaySinh = getCellSqlDate(row.getCell(4));
+                String gioiTinh = getCellString(row.getCell(5));
+                String soDienThoai = getCellString(row.getCell(6));
+                String email = getCellString(row.getCell(7));
+                String quanHe = getCellString(row.getCell(8));
+                String diaChi = getCellString(row.getCell(9));
 
-            data.put("rowNum",      i + 1);
-            data.put("tenHoDan",    tenHoDan.trim().toUpperCase());
-            data.put("cccd",        getCellString(row.getCell(1)));
-            data.put("ho",          getCellString(row.getCell(2)));
-            data.put("ten",         getCellString(row.getCell(3)));
-            data.put("ngaySinh",    getCellSqlDate(row.getCell(4)));
-            data.put("gioiTinh",    getCellString(row.getCell(5)));
-            data.put("soDienThoai", getCellString(row.getCell(6)));
-            data.put("email",       getCellString(row.getCell(7)));
-            data.put("quanHe",      getCellString(row.getCell(8)));
-            data.put("diaChi",      diaChi != null ? diaChi.trim() : "");
-            danhSach.add(data);
+                // ✅ VALIDATE TRƯỚC KHI THÊM VÀO DANH SÁCH
+                List<String> rowErrors = new ArrayList<>();
+
+                if (cccd == null || cccd.trim().isEmpty()) {
+                    rowErrors.add("Dòng " + (i + 1) + ": CCCD không được trống");
+                } else if (!cccd.trim().matches("\\d{12}")) {
+                    rowErrors.add("Dòng " + (i + 1) + ": CCCD không hợp lệ (phải đủ 12 chữ số)");
+                }
+
+                if (ho == null || ho.trim().isEmpty()) {
+                    rowErrors.add("Dòng " + (i + 1) + ": Họ không được trống");
+                }
+
+                if (ten == null || ten.trim().isEmpty()) {
+                    rowErrors.add("Dòng " + (i + 1) + ": Tên không được trống");
+                }
+
+                if (ngaySinh == null) {
+                    rowErrors.add("Dòng " + (i + 1) + ": Ngày sinh không được trống hoặc sai định dạng (dd/MM/yyyy)");
+                }
+
+                if (gioiTinh == null || gioiTinh.trim().isEmpty()) {
+                    rowErrors.add("Dòng " + (i + 1) + ": Giới tính không được trống");
+                } else if (!gioiTinh.trim().matches("Nam|Nữ|Khác")) {
+                    rowErrors.add("Dòng " + (i + 1) + ": Giới tính phải là Nam / Nữ / Khác");
+                }
+
+                if (quanHe == null || quanHe.trim().isEmpty()) {
+                    rowErrors.add("Dòng " + (i + 1) + ": Quan hệ hộ gia đình không được trống");
+                }
+
+                if (!rowErrors.isEmpty()) {
+                    parseErrors.addAll(rowErrors);
+                    continue; // không thêm dòng lỗi vào danh sách
+                }
+                // ✅ Check trùng CCCD với DB
+                if (cccd != null && !cccd.trim().isEmpty() && cccd.trim().matches("\\d{12}")) {
+                    if (hoDanDAO.isCCCDExists(cccd.trim())) {
+                        rowErrors.add("Dòng " + (i + 1) + ": CCCD '" + cccd.trim() + "' đã tồn tại trong hệ thống");
+                    }
+                }
+// ✅ Check trùng SĐT với DB
+                if (soDienThoai != null && !soDienThoai.trim().isEmpty()) {
+                    if (hoDanDAO.isSDTExists(soDienThoai.trim())) {
+                        rowErrors.add("Dòng " + (i + 1) + ": Số điện thoại '" + soDienThoai.trim() + "' đã tồn tại trong hệ thống");
+                    }
+                }
+
+// ✅ FIX: merge lỗi vào parseErrors và KHÔNG thêm vào danhSach
+                if (!rowErrors.isEmpty()) {
+                    parseErrors.addAll(rowErrors);
+                    continue;  // ← bỏ qua dòng này
+                }
+
+                // ✅ Chỉ thêm vào danh sách nếu không có lỗi
+                Map<String, Object> data = new HashMap<>();
+                data.put("rowNum", i + 1);
+                data.put("tenHoDan", tenHoDan.trim().toUpperCase());
+                data.put("cccd", cccd);
+                data.put("ho", ho);
+                data.put("ten", ten);
+                data.put("ngaySinh", ngaySinh);
+                data.put("gioiTinh", gioiTinh);
+                data.put("soDienThoai", soDienThoai);
+                data.put("email", email);
+                data.put("quanHe", quanHe);
+                data.put("diaChi", diaChi != null ? diaChi.trim() : "");
+                danhSach.add(data);
+            }
+
+            // ✅ NẾU CÓ BẤT KỲ LỖI NÀO → KHÔNG INSERT GÌ CẢ
+            if (!parseErrors.isEmpty()) {
+                return new ImportResult(totalRows, 0, parseErrors);
+            }
+
+            // ✅ Toàn bộ hợp lệ → mới insert
+            Map<String, List<Map<String, Object>>> grouped = new LinkedHashMap<>();
+            for (Map<String, Object> row : danhSach) {
+                String key = ((String) row.get("tenHoDan")).trim().toUpperCase();
+                grouped.computeIfAbsent(key, k -> new ArrayList<>()).add(row);
+            }
+
+            List<String> insertErrors = hoDanDAO.importHoDanVaNguoiDung(
+                    flattenGrouped(grouped), toDanPhoID);
+
+            int success = danhSach.size() - insertErrors.size();
+            return new ImportResult(totalRows, success, insertErrors);
+
+        } catch (Exception e) {
+            parseErrors.add("Không thể đọc file Excel: " + e.getMessage());
+            return new ImportResult(totalRows, 0, parseErrors);
         }
-
-        Map<String, List<Map<String, Object>>> grouped = new LinkedHashMap<>();
-        for (Map<String, Object> row : danhSach) {
-            String key = ((String) row.get("tenHoDan")).trim().toUpperCase();
-            grouped.computeIfAbsent(key, k -> new ArrayList<>()).add(row);
-        }
-
-        parseErrors.addAll(hoDanDAO.importHoDanVaNguoiDung(
-                flattenGrouped(grouped), toDanPhoID));
-
-    } catch (Exception e) {
-        parseErrors.add("Không thể đọc file Excel: " + e.getMessage());
-    }
-
-    return new ImportResult(totalRows, totalRows - parseErrors.size(), parseErrors);
-}
-
-    private List<Map<String, Object>> flattenGrouped(
-            Map<String, List<Map<String, Object>>> grouped) {
-        List<Map<String, Object>> result = new ArrayList<>();
-        for (List<Map<String, Object>> group : grouped.values()) {
-            result.addAll(group);
-        }
-        return result;
     }
 
     // ════════════════════════════════════════════════════════════════════
@@ -130,6 +199,15 @@ public ImportResult importFromExcel(InputStream inputStream, int toDanPhoID) {
             e.printStackTrace();
             return null;
         }
+    }
+
+    private List<Map<String, Object>> flattenGrouped(
+            Map<String, List<Map<String, Object>>> grouped) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (List<Map<String, Object>> group : grouped.values()) {
+            result.addAll(group);
+        }
+        return result;
     }
 
     // Tạo ảnh QR base64 cho hộ dân — gọi từ HoDanQRServlet
@@ -206,8 +284,16 @@ public ImportResult importFromExcel(InputStream inputStream, int toDanPhoID) {
             return null;
         }
         try {
-            if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
-                return new java.sql.Date(cell.getDateCellValue().getTime());
+            if (cell.getCellType() == CellType.NUMERIC) {
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    return new java.sql.Date(cell.getDateCellValue().getTime());
+                } else {
+                    double serial = cell.getNumericCellValue();
+                    if (serial > 1000) {
+                        return new java.sql.Date(
+                                DateUtil.getJavaDate(serial).getTime());
+                    }
+                }
             }
             if (cell.getCellType() == CellType.STRING) {
                 String val = cell.getStringCellValue().trim();

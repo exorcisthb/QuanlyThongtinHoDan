@@ -710,4 +710,29 @@ private String toProperCase(String str) {
             ps.executeUpdate();
         }
     }
+    public boolean isCCCDExists(String cccd) {
+    String sql = "SELECT COUNT(*) FROM nguoidung WHERE cccd = ?";
+    try (Connection conn = DBContext.getInstance().getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, cccd);
+        ResultSet rs = ps.executeQuery();
+        if (rs.next()) return rs.getInt(1) > 0;
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return false;
+}
+
+public boolean isSDTExists(String sdt) {
+    String sql = "SELECT COUNT(*) FROM nguoidung WHERE sodienthoai = ?";
+    try (Connection conn = DBContext.getInstance().getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setString(1, sdt);
+        ResultSet rs = ps.executeQuery();
+        if (rs.next()) return rs.getInt(1) > 0;
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return false;
+}
 }

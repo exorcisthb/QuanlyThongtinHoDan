@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -20,12 +19,24 @@ public class ToTruongListServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
         HttpSession session = request.getSession(false);
-
         if (!isAdmin(session)) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
+        }
+
+        // ✅ Chuyển flash message từ session sang request rồi xóa
+        if (session.getAttribute("flashMessage") != null) {
+            request.setAttribute("message", session.getAttribute("flashMessage"));
+            session.removeAttribute("flashMessage");
+        }
+        if (session.getAttribute("message") != null) {
+            request.setAttribute("message", session.getAttribute("message"));
+            session.removeAttribute("message");
+        }
+        if (session.getAttribute("error") != null) {
+            request.setAttribute("error", session.getAttribute("error"));
+            session.removeAttribute("error");
         }
 
         String keyword   = request.getParameter("keyword");
@@ -51,14 +62,12 @@ public class ToTruongListServlet extends HttpServlet {
             danhSach = temp;
         }
 
-        NguoiDung nd = (NguoiDung) session.getAttribute("nguoiDung");
-
         request.setAttribute("danhSachToTruong", danhSach);
         request.setAttribute("keyword",          keyword);
         request.setAttribute("trangThai",        trangThai);
         request.setAttribute("toSo",             toSo);
         request.setAttribute("showDanhSach",     true);
-        request.setAttribute("currentAdmin",     nd);
+        request.setAttribute("currentAdmin",     session.getAttribute("nguoiDung"));
 
         request.getRequestDispatcher("/Views/Admin/AdminDashboard.jsp")
                .forward(request, response);
@@ -67,9 +76,7 @@ public class ToTruongListServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
         request.setCharacterEncoding("UTF-8");
-
         if (!isAdmin(request.getSession(false))) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
@@ -84,11 +91,10 @@ public class ToTruongListServlet extends HttpServlet {
             nguoiDungService.toggleKhoaTaiKhoan(id, mo);
         }
 
-        // ✅ THÊM: xử lý đổi trạng thái nhân sự
         if ("toggleTrangThai".equals(action) && idStr != null) {
             try {
-                int id            = Integer.parseInt(idStr);
-                int trangThaiMoi  = Integer.parseInt(request.getParameter("trangThaiNhanSu"));
+                int id           = Integer.parseInt(idStr);
+                int trangThaiMoi = Integer.parseInt(request.getParameter("trangThaiNhanSu"));
                 boolean ok = nguoiDungService.updateTrangThaiNhanSu(id, trangThaiMoi);
                 if (ok) {
                     request.getSession().setAttribute("message",
@@ -108,7 +114,6 @@ public class ToTruongListServlet extends HttpServlet {
 
         StringBuilder redirect = new StringBuilder(
                 request.getContextPath() + "/admin/ds_totruong?");
-
         if (keyword != null && !keyword.isEmpty())
             redirect.append("keyword=")
                     .append(java.net.URLEncoder.encode(keyword, "UTF-8")).append("&");

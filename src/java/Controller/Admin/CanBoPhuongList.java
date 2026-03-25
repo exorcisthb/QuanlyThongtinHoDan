@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -20,7 +19,6 @@ public class CanBoPhuongList extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
         HttpSession session = request.getSession(false);
         if (!isAdmin(session)) {
             response.sendRedirect(request.getContextPath() + "/login");
@@ -28,6 +26,10 @@ public class CanBoPhuongList extends HttpServlet {
         }
 
         // ✅ Chuyển flash message từ session sang request rồi xóa
+        if (session.getAttribute("flashMessage") != null) {
+            request.setAttribute("message", session.getAttribute("flashMessage"));
+            session.removeAttribute("flashMessage");
+        }
         if (session.getAttribute("message") != null) {
             request.setAttribute("message", session.getAttribute("message"));
             session.removeAttribute("message");
@@ -52,9 +54,7 @@ public class CanBoPhuongList extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
         request.setCharacterEncoding("UTF-8");
-
         HttpSession session = request.getSession(false);
         if (!isAdmin(session)) {
             response.sendRedirect(request.getContextPath() + "/login");
@@ -64,19 +64,18 @@ public class CanBoPhuongList extends HttpServlet {
         String action = request.getParameter("action");
         String idStr  = request.getParameter("nguoiDungID");
 
-        // ✅ Xử lý đổi trạng thái nhân sự
         if ("toggleTrangThai".equals(action) && idStr != null) {
             try {
                 int id           = Integer.parseInt(idStr);
                 int trangThaiMoi = Integer.parseInt(request.getParameter("trangThaiNhanSu"));
                 boolean ok = nguoiDungService.updateTrangThaiNhanSu(id, trangThaiMoi);
                 if (ok) {
-                    request.getSession().setAttribute("message", "Đã cập nhật trạng thái nhân sự thành công.");
+                    session.setAttribute("message", "Đã cập nhật trạng thái nhân sự thành công.");
                 } else {
-                    request.getSession().setAttribute("error", "Cập nhật trạng thái thất bại, vui lòng thử lại.");
+                    session.setAttribute("error", "Cập nhật trạng thái thất bại, vui lòng thử lại.");
                 }
             } catch (NumberFormatException e) {
-                request.getSession().setAttribute("error", "Dữ liệu không hợp lệ.");
+                session.setAttribute("error", "Dữ liệu không hợp lệ.");
             }
         }
 

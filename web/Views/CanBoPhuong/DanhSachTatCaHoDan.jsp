@@ -400,7 +400,6 @@
 
                             <c:forEach var="toEntry" items="${nhomCaNhan}" varStatus="toSt">
                                 <div class="to-section">
-                                    <%-- ── TẤT CẢ collapsed mặc định ── --%>
                                     <div class="to-header collapsed"
                                          onclick="toggleTo('to-cn-${toSt.index}', this)">
                                         <div class="to-header-left">
@@ -447,7 +446,6 @@
                                                                 <td style="color:var(--muted)">${s.index + 1}</td>
                                                                 <td>
                                                                     <div style="display:flex;align-items:center;">
-                                                                        <%-- Avatar hiển thị số thứ tự --%>
                                                                         <span class="ho-avatar">${s.index + 1}</span>
                                                                         <strong>${p.hoTen}</strong>
                                                                     </div>
@@ -464,6 +462,7 @@
                                                                     <c:choose>
                                                                         <c:when test="${p.gioiTinh == 'Nam'}"><span style="color:#60a5fa">♂ Nam</span></c:when>
                                                                         <c:when test="${p.gioiTinh == 'Nữ'}"><span style="color:#f472b6">♀ Nữ</span></c:when>
+                                                                        <c:when test="${p.gioiTinh == 'Khác'}"><span style="color:#a78bfa">⚧ Khác</span></c:when>
                                                                         <c:otherwise>—</c:otherwise>
                                                                     </c:choose>
                                                                 </td>
@@ -521,7 +520,6 @@
                         <c:when test="${not empty nhomTheoTo}">
                             <c:forEach var="toEntry" items="${nhomTheoTo}" varStatus="toSt">
                                 <div class="to-section">
-                                    <%-- ── TẤT CẢ collapsed mặc định ── --%>
                                     <div class="to-header collapsed"
                                          onclick="toggleTo('to-${toSt.index}', this)">
                                         <div class="to-header-left">
@@ -565,7 +563,6 @@
                                                                 <td style="color:var(--muted)">${st.index + 1}</td>
                                                                 <td>
                                                                     <div style="display:flex;align-items:center;gap:10px;">
-                                                                        <%-- Avatar hiển thị số thứ tự, không dùng fn:substring tránh lỗi Unicode --%>
                                                                         <span class="ho-avatar"
                                                                               style="border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2))">
                                                                             ${st.index + 1}
@@ -843,6 +840,14 @@
                 return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
             }
 
+            /* ── Helper giới tính dùng chung ── */
+            function renderGioiTinh(gt) {
+                if (gt === 'Nam') return '<span style="color:#60a5fa">♂ Nam</span>';
+                if (gt === 'Nữ' || gt === 'Nu') return '<span style="color:#f472b6">♀ Nữ</span>';
+                if (gt === 'Khác' || gt === 'Khac') return '<span style="color:#a78bfa">⚧ Khác</span>';
+                return '<span style="color:var(--muted)">—</span>';
+            }
+
             function renderTVRow(m, i) {
                 const hoTen    = esc(fv(m,'hoTen'));
                 const quanHe   = esc(fv(m,'quanHe','TenQuanHe'));
@@ -852,16 +857,13 @@
                 const sdt      = esc(fv(m,'soDienThoai'));
                 const cccd     = esc(fv(m,'cccd'));
                 const isChu    = quanHe === 'Chủ hộ';
-                const gtHtml   = gt === 'Nam'
-                    ? '<span style="color:#60a5fa">♂ Nam</span>'
-                    : (gt === 'Nữ' || gt === 'Nu') ? '<span style="color:#f472b6">♀ Nữ</span>' : '—';
                 return '<tr>'
                     + '<td style="color:var(--muted)">' + (i+1) + '</td>'
                     + '<td><strong>' + hoTen + '</strong></td>'
                     + '<td><span class="qh-badge ' + (isChu?'chu':'') + '">' + quanHe + '</span></td>'
                     + '<td style="color:var(--muted)">' + ngaySinh + '</td>'
                     + '<td style="color:var(--accent2);font-weight:700">' + tuoi + '</td>'
-                    + '<td>' + gtHtml + '</td>'
+                    + '<td>' + renderGioiTinh(gt) + '</td>'
                     + '<td style="color:var(--muted)">' + sdt + '</td>'
                     + '<td style="color:var(--muted);font-family:monospace">' + cccd + '</td>'
                     + '</tr>';
@@ -882,11 +884,7 @@
                 document.getElementById('tvm_email').textContent    = or(m.email);
                 document.getElementById('tvm_ngayvao').textContent  = or(m.ngayVao);
                 document.getElementById('tvm_quanhe2').textContent  = or(m.quanHe);
-                const gt = m.gioiTinh;
-                document.getElementById('tvm_gioitinh').innerHTML =
-                    gt === 'Nam' ? '<span style="color:#60a5fa">♂ Nam</span>'
-                    : (gt === 'Nữ' || gt === 'Nu') ? '<span style="color:#f472b6">♀ Nữ</span>'
-                    : '<span style="color:var(--muted)">—</span>';
+                document.getElementById('tvm_gioitinh').innerHTML   = renderGioiTinh(m.gioiTinh);
                 document.getElementById('tvModalOverlay').classList.add('show');
                 document.body.style.overflow = 'hidden';
             }
@@ -911,11 +909,7 @@
                 document.getElementById('d_tuoi').textContent        = (data.tuoi && data.tuoi !== '0') ? data.tuoi + ' tuổi' : '—';
                 document.getElementById('d_sdt').textContent         = or(data.sdt);
                 document.getElementById('d_email').textContent       = or(data.email);
-                const gt = data.gioiTinh;
-                document.getElementById('d_gioiTinh').innerHTML =
-                    gt === 'Nam' ? '<span style="color:#60a5fa">♂ Nam</span>'
-                    : (gt === 'Nữ' || gt === 'Nu') ? '<span style="color:#f472b6">♀ Nữ</span>'
-                    : '<span style="color:var(--muted)">—</span>';
+                document.getElementById('d_gioiTinh').innerHTML      = renderGioiTinh(data.gioiTinh);
                 const kh = data.daKichHoat === 'true';
                 document.getElementById('d_kichHoat').innerHTML = kh
                     ? '<span class="pill-active">✓ Đã kích hoạt</span>'
