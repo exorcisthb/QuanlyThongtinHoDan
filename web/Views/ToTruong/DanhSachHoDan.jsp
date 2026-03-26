@@ -414,7 +414,6 @@
                                                                 <th>Kích hoạt</th>
                                                                 <th>Trạng thái hộ</th>
                                                                 <th style="text-align:center;">Chi tiết</th>
-                                                                <%-- ✅ XÓA cột Sửa TT ở hàng hộ, chuyển xuống từng thành viên --%>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -489,13 +488,14 @@
                                                                                         <th>Giới tính</th>
                                                                                         <th>SĐT</th>
                                                                                         <th>CCCD</th>
+                                                                                        <th>Trạng thái</th>
+                                                                                        <th>Kích hoạt</th>
                                                                                         <th style="text-align:center;">Chi tiết</th>
-                                                                                        <%-- ✅ THÊM cột Sửa TT ở đây --%>
                                                                                         <th style="text-align:center;">Sửa TT</th>
                                                                                     </tr>
                                                                                 </thead>
                                                                                 <tbody id="tvbody-${ho.hoDanID}">
-                                                                                    <tr><td colspan="10" style="color:var(--muted);padding:16px;text-align:center;">Đang tải...</td></tr>
+                                                                                    <tr><td colspan="12" style="color:var(--muted);padding:16px;text-align:center;">Đang tải...</td></tr>
                                                                                 </tbody>
                                                                             </table>
                                                                         </div>
@@ -590,6 +590,8 @@
                             <div class="detail-item"><div class="detail-label">Số điện thoại</div><div class="detail-value" id="tvm_sdt">—</div></div>
                             <div class="detail-item"><div class="detail-label">Email</div><div class="detail-value muted" id="tvm_email">—</div></div>
                             <div class="detail-item"><div class="detail-label">Ngày vào hộ</div><div class="detail-value muted" id="tvm_ngayvao">—</div></div>
+                            <div class="detail-item"><div class="detail-label">Trạng thái cư trú</div><div class="detail-value" id="tvm_trangthai">—</div></div>
+                            <div class="detail-item"><div class="detail-label">Kích hoạt tài khoản</div><div class="detail-value" id="tvm_kichhoat">—</div></div>
                         </div>
                     </div>
                 </div>
@@ -610,7 +612,6 @@
                     <button class="modal-close" onclick="closeSuaTT()">✕</button>
                 </div>
                 <div class="modal-body">
-                    <%-- ✅ Lưu nhanKhauID thay vì hoDanID --%>
                     <input type="hidden" id="stt_nhanKhauID">
                     <input type="hidden" id="stt_trangThaiCuID">
 
@@ -645,6 +646,11 @@
 
         <script>
             const ctxPath = '${pageContext.request.contextPath}';
+
+            /* ── Helper: chuẩn hoá giá trị daKichHoat từ JSON (boolean, string, số) ── */
+            function isKichHoat(val) {
+                return val === true || val === 'true' || val === 1 || val === '1';
+            }
 
             /* ── Avatar topbar ── */
             const ten = '${currentUser.ten}' || 'TT';
@@ -718,19 +724,19 @@
             function loadThanhVien(hoDanID) {
                 const tbody = document.getElementById('tvbody-' + hoDanID);
                 if (tbody.dataset.loaded === 'true') return;
-                tbody.innerHTML = '<tr><td colspan="10" style="color:var(--muted);padding:20px;text-align:center;">Đang tải thành viên...</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="12" style="color:var(--muted);padding:20px;text-align:center;">Đang tải thành viên...</td></tr>';
                 fetch(ctxPath + '/totruong/thanh-vien-ho?hoDanID=' + hoDanID, { cache: 'no-cache', credentials: 'include' })
                     .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
                     .then(data => {
                         tbody.dataset.loaded = 'true';
                         if (!data || !Array.isArray(data) || data.length === 0) {
-                            tbody.innerHTML = '<tr><td colspan="10" style="color:var(--muted);padding:20px;text-align:center;font-style:italic;">Chưa có thành viên nào.</td></tr>';
+                            tbody.innerHTML = '<tr><td colspan="12" style="color:var(--muted);padding:20px;text-align:center;font-style:italic;">Chưa có thành viên nào.</td></tr>';
                             return;
                         }
                         tbody.innerHTML = data.map((m, i) => renderTVRow(m, i)).join('');
                     })
                     .catch(err => {
-                        tbody.innerHTML = '<tr><td colspan="10" style="color:var(--danger);padding:20px;text-align:center;">Lỗi: ' + err.message + '</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="12" style="color:var(--danger);padding:20px;text-align:center;">Lỗi: ' + err.message + '</td></tr>';
                     });
             }
 
@@ -752,12 +758,29 @@
                 const isChu    = quanHe === 'Chủ hộ';
                 const gtHtml   = gt === 'Nam' ? '<span style="color:#60a5fa">♂ Nam</span>'
                                : (gt === 'Nữ' || gt === 'Nu') ? '<span style="color:#f472b6">♀ Nữ</span>' : '—';
-                const dataJson = JSON.stringify({ hoTen, quanHe, ngaySinh, tuoi: m.tuoi, gioiTinh: gt, sdt, cccd, email, ngayVao }).replace(/'/g,'&#39;');
 
-                // ✅ Lấy nhanKhauID và trangThaiID từng người
-                const nkID   = m.nhanKhauID || 0;
-                const ttID   = m.trangThaiID || 1;
-                const hoTenEsc = hoTen.replace(/'/g, "\\'");
+                /* ── FIX: normalize daKichHoat về boolean trước khi stringify ── */
+                const dataJson = JSON.stringify({
+                                     hoTen, quanHe, ngaySinh, tuoi: m.tuoi, gioiTinh: gt, sdt, cccd, email, ngayVao,
+                                     trangThaiID: m.trangThaiID, tenTrangThai: m.tenTrangThai,
+                                     daKichHoat: isKichHoat(m.daKichHoat)
+                                 }).replace(/'/g,'&#39;');
+
+                const nkID       = m.nhanKhauID || 0;
+                const ttID       = m.trangThaiID || 1;
+                const hoTenEsc   = hoTen.replace(/'/g, "\\'");
+
+                const ttMap = {
+                    1: '<span class="pill thuongtru">Thường trú</span>',
+                    2: '<span class="pill tamtru">Tạm trú</span>',
+                    3: '<span class="pill tamvang">Tạm vắng</span>'
+                };
+                const ttHtml = ttMap[ttID] || (m.tenTrangThai ? '<span class="pill thuongtru">' + esc(m.tenTrangThai) + '</span>' : '—');
+
+                /* ── FIX: dùng isKichHoat() thay vì check falsy trực tiếp ── */
+                const khHtml = isKichHoat(m.daKichHoat)
+                    ? '<span class="pill-active">✓ Đã KH</span>'
+                    : '<span class="pill-inactive">✗ Chưa KH</span>';
 
                 return '<tr>'
                     + '<td style="color:var(--muted)">' + (i+1) + '</td>'
@@ -768,8 +791,9 @@
                     + '<td>' + gtHtml + '</td>'
                     + '<td style="color:var(--muted)">' + sdt + '</td>'
                     + '<td style="color:var(--muted);font-family:monospace">' + cccd + '</td>'
+                    + '<td>' + ttHtml + '</td>'
+                    + '<td>' + khHtml + '</td>'
                     + '<td style="text-align:center;"><button class="btn-tv-view" onclick=\'openTVModal(' + dataJson + ')\'>👁 Xem</button></td>'
-                    // ✅ Nút Sửa TT cho TỪNG NHÂN KHẨU
                     + '<td style="text-align:center;"><button class="btn-edit-tt" onclick="openSuaTrangThai(' + nkID + ',\'' + hoTenEsc + '\',' + ttID + ')">✏ Sửa</button></td>'
                     + '</tr>';
             }
@@ -789,10 +813,26 @@
                 document.getElementById('tvm_email').textContent    = or(m.email);
                 document.getElementById('tvm_ngayvao').textContent  = or(m.ngayVao);
                 document.getElementById('tvm_quanhe2').textContent  = or(m.quanHe);
+
                 const gt = m.gioiTinh;
                 if (gt === 'Nam') document.getElementById('tvm_gioitinh').innerHTML = '<span style="color:#60a5fa">♂ Nam</span>';
                 else if (gt === 'Nữ' || gt === 'Nu') document.getElementById('tvm_gioitinh').innerHTML = '<span style="color:#f472b6">♀ Nữ</span>';
                 else document.getElementById('tvm_gioitinh').innerHTML = '<span style="color:var(--muted)">—</span>';
+
+                const ttMap = {
+                    1: '<span class="pill thuongtru">Thường trú</span>',
+                    2: '<span class="pill tamtru">Tạm trú</span>',
+                    3: '<span class="pill tamvang">Tạm vắng</span>'
+                };
+                const ttID = m.trangThaiID;
+                document.getElementById('tvm_trangthai').innerHTML = ttMap[ttID]
+                    || (m.tenTrangThai ? '<span class="pill thuongtru">' + m.tenTrangThai + '</span>' : '—');
+
+                /* ── FIX: dùng isKichHoat() thay vì check falsy trực tiếp ── */
+                document.getElementById('tvm_kichhoat').innerHTML = isKichHoat(m.daKichHoat)
+                    ? '<span class="pill-active">✓ Đã kích hoạt</span>'
+                    : '<span class="pill-inactive">✗ Chưa kích hoạt</span>';
+
                 document.getElementById('tvModalOverlay').classList.add('show');
                 document.body.style.overflow = 'hidden';
             }
@@ -820,8 +860,10 @@
                 if (gt === 'Nam') document.getElementById('d_gioiTinh').innerHTML = '<span style="color:#60a5fa">♂ Nam</span>';
                 else if (gt === 'Nữ' || gt === 'Nu') document.getElementById('d_gioiTinh').innerHTML = '<span style="color:#f472b6">♀ Nữ</span>';
                 else document.getElementById('d_gioiTinh').innerHTML = '<span style="color:var(--muted)">—</span>';
-                const kh = data.daKichHoat === 'true';
-                document.getElementById('d_kichHoat').innerHTML = kh ? '<span class="pill-active">✓ Đã kích hoạt</span>' : '<span class="pill-inactive">✗ Chưa kích hoạt</span>';
+                /* ── FIX: dùng isKichHoat() thay vì so sánh string 'true' cứng ── */
+                document.getElementById('d_kichHoat').innerHTML = isKichHoat(data.daKichHoat)
+                    ? '<span class="pill-active">✓ Đã kích hoạt</span>'
+                    : '<span class="pill-inactive">✗ Chưa kích hoạt</span>';
                 const ttID = data.trangThaiID;
                 const ttClass = ttID === '1' ? 'thuongtru' : ttID === '2' ? 'tamtru' : 'tamvang';
                 document.getElementById('d_trangThai').innerHTML = '<span class="pill ' + ttClass + '">' + or(data.trangThai) + '</span>';
@@ -838,7 +880,6 @@
                 '3': '<span class="pill tamvang">Tạm vắng</span>'
             };
 
-            // ✅ Nhận nhanKhauID, tên người đó, trangThaiID hiện tại của người đó
             function openSuaTrangThai(nhanKhauID, hoTen, trangThaiID) {
                 document.getElementById('stt_nhanKhauID').value    = nhanKhauID;
                 document.getElementById('stt_trangThaiCuID').value = trangThaiID;
@@ -870,7 +911,6 @@
 
                 const params = new URLSearchParams();
                 params.append('action',          'tao');
-                // ✅ Gửi nhanKhauID thay vì hoDanID
                 params.append('nhanKhauID',      nhanKhauID);
                 params.append('trangThaiCuID',   trangThaiCuID);
                 params.append('trangThaiMoiID',  trangThaiMoiID);

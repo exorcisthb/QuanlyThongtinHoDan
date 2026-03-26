@@ -185,8 +185,9 @@
         .field-check:hover { border-color: var(--accent); }
         .field-check input[type=checkbox] { accent-color: var(--accent); width: 15px; height: 15px; }
         .field-check.checked { border-color: var(--accent); background: rgba(79,142,247,.08); color: var(--accent); }
+        .field-check.full-col { grid-column: 1 / -1; }
 
-        /* ── TOAST ── */
+        /* ── TOAST (dùng chung cho cả avatar lẫn HoDan) ── */
         .toast {
             position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
             z-index: 9999; padding: 13px 22px; border-radius: 10px;
@@ -200,6 +201,7 @@
 
         @media (max-width: 600px) {
             .info-grid, .form-grid, .fields-check { grid-template-columns: 1fr; }
+            .field-check.full-col { grid-column: 1; }
             .card-top { flex-direction: column; align-items: center; text-align: center; padding-top: 28px; }
             .fab-edit { bottom: 20px; right: 20px; padding: 12px 18px; font-size: 13px; }
         }
@@ -264,8 +266,10 @@
                         <c:otherwise>${profile.ten.substring(0,1)}</c:otherwise>
                     </c:choose>
                 </div>
+                <%-- Form upload avatar — thêm hidden input avatarUpdated để server nhận biết --%>
                 <form action="${pageContext.request.contextPath}/profile"
                       method="post" enctype="multipart/form-data" id="avatarForm">
+                    <input type="hidden" name="avatarUpdated" value="true">
                     <input type="file" name="avatar" id="avatarInput" class="upload-btn"
                            accept="image/*" onchange="document.getElementById('avatarForm').submit()">
                     <div class="avatar-edit" onclick="document.getElementById('avatarInput').click()" title="Đổi ảnh">✎</div>
@@ -351,6 +355,9 @@
     </div>
 </div>
 
+<%-- ── TOAST dùng chung (đặt ngoài block HoDan để mọi vai trò đều dùng được) ── --%>
+<div class="toast" id="toast"></div>
+
 <%-- ── NÚT SỬA - CHỈ HIỆN VỚI HỘ DÂN ── --%>
 <c:if test="${profile.tenVaiTro == 'HoDan'}">
     <button class="fab-edit" onclick="openModal()">✏️ Yêu cầu cập nhật thông tin</button>
@@ -370,17 +377,10 @@
             </div>
 
             <div class="modal-body">
-                <%-- BƯỚC 1: Chọn trường muốn sửa --%>
                 <div class="section-title" id="step1Title">Bước 1 — Chọn thông tin muốn cập nhật</div>
                 <div class="fields-check" id="fieldsCheck">
-                    <label class="field-check" id="lbl_ho">
-                        <input type="checkbox" value="ho" onchange="toggleField(this)"> 👤 Họ và chữ đệm
-                    </label>
-                    <label class="field-check" id="lbl_ten">
-                        <input type="checkbox" value="ten" onchange="toggleField(this)"> 👤 Tên
-                    </label>
-                    <label class="field-check" id="lbl_ngaySinh">
-                        <input type="checkbox" value="ngaySinh" onchange="toggleField(this)"> 🎂 Ngày sinh
+                    <label class="field-check full-col" id="lbl_hoTen">
+                        <input type="checkbox" value="hoTen" onchange="toggleField(this)"> 👤 Họ và tên (Họ, chữ đệm + Tên)
                     </label>
                     <label class="field-check" id="lbl_gioiTinh">
                         <input type="checkbox" value="gioiTinh" onchange="toggleField(this)"> ⚧ Giới tính
@@ -391,28 +391,17 @@
                     <label class="field-check" id="lbl_soDienThoai">
                         <input type="checkbox" value="soDienThoai" onchange="toggleField(this)"> 📱 Số điện thoại
                     </label>
-                    <label class="field-check" id="lbl_cccd">
-                        <input type="checkbox" value="cccd" onchange="toggleField(this)"> 🪪 Số CCCD
-                    </label>
                 </div>
 
-                <%-- BƯỚC 2: Nhập giá trị mới (hiện động theo checkbox) --%>
                 <div id="fieldsForm" style="display:none">
                     <div class="section-title">Bước 2 — Nhập thông tin mới</div>
                     <div class="form-grid">
-                        <div class="form-item" id="field_ho" style="display:none">
-                            <label class="form-label">Họ và chữ đệm mới</label>
-                            <input type="text" class="form-input" id="inp_ho"
-                                   placeholder="${profile.ho}" value="">
-                        </div>
-                        <div class="form-item" id="field_ten" style="display:none">
-                            <label class="form-label">Tên mới</label>
-                            <input type="text" class="form-input" id="inp_ten"
-                                   placeholder="${profile.ten}" value="">
-                        </div>
-                        <div class="form-item" id="field_ngaySinh" style="display:none">
-                            <label class="form-label">Ngày sinh mới</label>
-                            <input type="date" class="form-input" id="inp_ngaySinh">
+                        <div class="form-item full" id="field_hoTen" style="display:none">
+                            <label class="form-label">Họ và tên đầy đủ mới</label>
+                            <input type="text" class="form-input" id="inp_hoTen"
+                                   placeholder="${profile.ho} ${profile.ten}"
+                                   value="" autocomplete="name">
+                            <div class="form-hint">Nhập đầy đủ họ, chữ đệm và tên — ví dụ: <strong>Nguyễn Văn An</strong>. Hệ thống sẽ tự tách họ và tên.</div>
                         </div>
                         <div class="form-item" id="field_gioiTinh" style="display:none">
                             <label class="form-label">Giới tính mới</label>
@@ -433,15 +422,9 @@
                             <input type="text" class="form-input" id="inp_soDienThoai"
                                    placeholder="${profile.soDienThoai}" value="">
                         </div>
-                        <div class="form-item full" id="field_cccd" style="display:none">
-                            <label class="form-label">Số CCCD mới</label>
-                            <input type="text" class="form-input" id="inp_cccd"
-                                   placeholder="${profile.cccd}" maxlength="12">
-                        </div>
                     </div>
                 </div>
 
-                <%-- LÝ DO (luôn hiện) --%>
                 <div class="section-title">Lý do yêu cầu cập nhật <span style="color:var(--danger)">*</span></div>
                 <div class="form-item">
                     <textarea class="form-textarea" id="inp_lyDo"
@@ -459,8 +442,6 @@
         </div>
     </div>
 
-    <div class="toast" id="toast"></div>
-
     <script>
         const CTX = '${pageContext.request.contextPath}';
 
@@ -477,19 +458,18 @@
         }
         document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-        // Toggle hiện/ẩn field input khi check/uncheck
         function toggleField(cb) {
             const field = document.getElementById('field_' + cb.value);
             const lbl   = document.getElementById('lbl_'   + cb.value);
             if (field) field.style.display = cb.checked ? '' : 'none';
             if (lbl)   lbl.classList.toggle('checked', cb.checked);
-
-            // Hiện/ẩn section bước 2
+            if (cb.value === 'hoTen' && !cb.checked) {
+                document.getElementById('inp_hoTen').value = '';
+            }
             const anyChecked = document.querySelectorAll('#fieldsCheck input:checked').length > 0;
             document.getElementById('fieldsForm').style.display = anyChecked ? '' : 'none';
         }
 
-        // Gửi yêu cầu
         function submitYeuCau() {
             const lyDo = document.getElementById('inp_lyDo').value.trim();
             if (!lyDo) { showToast('error', '⚠ Vui lòng nhập lý do cập nhật.'); return; }
@@ -497,13 +477,20 @@
             const checked = document.querySelectorAll('#fieldsCheck input:checked');
             if (checked.length === 0) { showToast('error', '⚠ Vui lòng chọn ít nhất 1 trường muốn cập nhật.'); return; }
 
-            // Validate từng field đã chọn
             let valid = true;
             checked.forEach(cb => {
-                const inp = document.getElementById('inp_' + cb.value);
-                if (inp && !inp.value.trim()) {
-                    showToast('error', '⚠ Vui lòng nhập giá trị mới cho: ' + cb.value);
-                    valid = false;
+                if (cb.value === 'hoTen') {
+                    const hoTen = document.getElementById('inp_hoTen').value.trim();
+                    if (hoTen.split(/\s+/).filter(Boolean).length < 2) {
+                        showToast('error', '⚠ Họ và tên phải có ít nhất 2 từ (ví dụ: Nguyễn An).');
+                        valid = false;
+                    }
+                } else {
+                    const inp = document.getElementById('inp_' + cb.value);
+                    if (inp && !inp.value.trim()) {
+                        showToast('error', '⚠ Vui lòng nhập giá trị mới cho trường đã chọn.');
+                        valid = false;
+                    }
                 }
             });
             if (!valid) return;
@@ -516,10 +503,13 @@
             params.append('action', 'tao');
             params.append('lyDo', lyDo);
 
-            // Chỉ gửi các field được chọn
             checked.forEach(cb => {
-                const inp = document.getElementById('inp_' + cb.value);
-                if (inp) params.append(cb.value, inp.value.trim());
+                if (cb.value === 'hoTen') {
+                    params.append('hoTen', document.getElementById('inp_hoTen').value.trim());
+                } else {
+                    const inp = document.getElementById('inp_' + cb.value);
+                    if (inp) params.append(cb.value, inp.value.trim());
+                }
             });
 
             fetch(CTX + '/hodan/yeu-cau-cap-nhat', {
@@ -548,7 +538,8 @@
         }
 
         function resetForm() {
-            document.getElementById('inp_lyDo').value = '';
+            document.getElementById('inp_lyDo').value  = '';
+            document.getElementById('inp_hoTen').value = '';
             document.querySelectorAll('#fieldsCheck input').forEach(cb => {
                 cb.checked = false;
                 const lbl = document.getElementById('lbl_' + cb.value);
@@ -558,16 +549,50 @@
             document.getElementById('fieldsForm').style.display = 'none';
             document.querySelectorAll('.form-input, .form-select').forEach(i => i.value = '');
         }
-
-        function showToast(type, msg) {
-            const t = document.getElementById('toast');
-            t.className = 'toast ' + type + ' show';
-            t.textContent = msg;
-            clearTimeout(t._t);
-            t._t = setTimeout(() => t.classList.remove('show'), 3500);
-        }
     </script>
 </c:if>
+
+<%-- ── TOAST HELPER + AUTO-REDIRECT SAU KHI ĐỔI AVATAR ── --%>
+<%-- Dùng chung cho mọi vai trò, không cần nằm trong block HoDan --%>
+<script>
+    function showToast(type, msg) {
+        const t = document.getElementById('toast');
+        t.className = 'toast ' + type + ' show';
+        t.textContent = msg;
+        clearTimeout(t._t);
+        t._t = setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    // Phát hiện server redirect về /profile?avatarUpdated=true sau khi upload ảnh
+    (function () {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('avatarUpdated') !== 'true') return;
+
+        // Xoá param khỏi URL cho sạch, không reload trang
+        history.replaceState(null, '', window.location.pathname);
+
+        // Hiện toast
+        showToast('success', '✅ Ảnh đại diện đã được cập nhật!');
+
+        // Redirect về đúng dashboard theo vai trò sau 1.5 giây
+        setTimeout(function () {
+            <c:choose>
+                <c:when test="${profile.tenVaiTro == 'Admin'}">
+                    window.location.href = '${pageContext.request.contextPath}/admin/dashboard';
+                </c:when>
+                <c:when test="${profile.tenVaiTro == 'ToTruong'}">
+                    window.location.href = '${pageContext.request.contextPath}/totruong/dashboard';
+                </c:when>
+                <c:when test="${profile.tenVaiTro == 'CanBoPhuong'}">
+                    window.location.href = '${pageContext.request.contextPath}/canbophuong/dashboard';
+                </c:when>
+                <c:otherwise>
+                    window.location.href = '${pageContext.request.contextPath}/hodan/dashboard';
+                </c:otherwise>
+            </c:choose>
+        }, 1500);
+    })();
+</script>
 
 </body>
 </html>

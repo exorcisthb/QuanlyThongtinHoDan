@@ -14,7 +14,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
-import java.sql.Date;
 import java.util.*;
 
 @WebServlet("/hodan/yeu-cau-cap-nhat")
@@ -82,31 +81,55 @@ public class YeuCauCapNhatServlet extends HttpServlet {
 
     // ------------------------------------------------------------------ //
     //  HANDLER: Tạo yêu cầu cập nhật thông tin
+    //  - CCCD và NgaySinh KHÔNG cho phép sửa
+    //  - Họ và tên gửi 1 chuỗi "hoTen", Servlet tự tách → Ho + Ten
     // ------------------------------------------------------------------ //
     private void handleTao(HttpServletRequest req, HttpServletResponse resp,
                            int nguoiDungID) throws IOException {
 
-        String lyDo = req.getParameter("lyDo");
+        String lyDo = emptyToNull(req.getParameter("lyDo"));
+        if (lyDo == null) {
+            sendJson(resp, HttpServletResponse.SC_BAD_REQUEST,
+                    false, "Vui lòng nhập lý do cập nhật.");
+            return;
+        }
 
-        // Đọc thông tin mới từ form (null/rỗng = không thay đổi trường đó)
-        YeuCauDoiTrangThai thongTinMoi = new YeuCauDoiTrangThai();
-        thongTinMoi.setHo_Moi(emptyToNull(req.getParameter("ho")));
-        thongTinMoi.setTen_Moi(emptyToNull(req.getParameter("ten")));
-        thongTinMoi.setGioiTinh_Moi(emptyToNull(req.getParameter("gioiTinh")));
-        thongTinMoi.setEmail_Moi(emptyToNull(req.getParameter("email")));
-        thongTinMoi.setSDT_Moi(emptyToNull(req.getParameter("soDienThoai")));
-        thongTinMoi.setCCCD_Moi(emptyToNull(req.getParameter("cccd")));
-
-        String ngaySinhStr = req.getParameter("ngaySinh");
-        if (ngaySinhStr != null && !ngaySinhStr.trim().isEmpty()) {
-            try {
-                thongTinMoi.setNgaySinh_Moi(Date.valueOf(ngaySinhStr));
-            } catch (Exception e) {
+        // ── Tách họ và tên từ 1 chuỗi đầy đủ ──
+        String ho  = null;
+        String ten = null;
+        String hoTenDayDu = emptyToNull(req.getParameter("hoTen"));
+        if (hoTenDayDu != null) {
+            String[] parts = hoTenDayDu.trim().split("\\s+");
+            if (parts.length < 2) {
                 sendJson(resp, HttpServletResponse.SC_BAD_REQUEST,
-                        false, "Ngày sinh không hợp lệ (định dạng: yyyy-MM-dd).");
+                        false, "Họ và tên phải có ít nhất 2 từ (ví dụ: Nguyễn An).");
                 return;
             }
+            // Chữ cuối cùng = Tên, phần còn lại = Họ và chữ đệm
+            ten = parts[parts.length - 1];
+            ho  = hoTenDayDu.substring(0, hoTenDayDu.lastIndexOf(ten)).trim();
         }
+
+        // ── Các trường khác ──
+        String gioiTinh    = emptyToNull(req.getParameter("gioiTinh"));
+        String email       = emptyToNull(req.getParameter("email"));
+        String soDienThoai = emptyToNull(req.getParameter("soDienThoai"));
+
+        // ── Phải chọn ít nhất 1 trường ──
+        if (ho == null && gioiTinh == null && email == null && soDienThoai == null) {
+            sendJson(resp, HttpServletResponse.SC_BAD_REQUEST,
+                    false, "Vui lòng chọn ít nhất 1 trường muốn cập nhật.");
+            return;
+        }
+
+        // ── Build entity — CCCD_Moi và NgaySinh_Moi luôn null ──
+        YeuCauDoiTrangThai thongTinMoi = new YeuCauDoiTrangThai();
+        thongTinMoi.setHo_Moi(ho);
+        thongTinMoi.setTen_Moi(ten);
+        thongTinMoi.setGioiTinh_Moi(gioiTinh);
+        thongTinMoi.setEmail_Moi(email);
+        thongTinMoi.setSDT_Moi(soDienThoai);
+        // CCCD_Moi và NgaySinh_Moi không set → mặc định null
 
         Map<String, Object> result = service.taoYeuCauCapNhat(
                 nguoiDungID, thongTinMoi, lyDo);

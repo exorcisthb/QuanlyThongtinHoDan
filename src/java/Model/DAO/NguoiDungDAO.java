@@ -394,4 +394,23 @@ public class NguoiDungDAO {
         }
         return null;
     }
+    public NguoiDung layTheoThanhVienID(int thanhVienID) {
+    String sql = "SELECT nd.*, vt.TenVaiTro, tdp.TenTo "
+            + "FROM NguoiDung nd "
+            + "LEFT JOIN VaiTro vt ON nd.VaiTroID = vt.VaiTroID "
+            + "LEFT JOIN ToDanPho tdp ON nd.ToDanPhoID = tdp.ToDanPhoID "
+            + "JOIN ThanhVienHo tv ON tv.NguoiDungID = nd.NguoiDungID "
+            + "WHERE tv.ThanhVienID = ?";
+    try (Connection conn = DBContext.getInstance().getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setInt(1, thanhVienID);
+        ResultSet rs = ps.executeQuery();
+        if (rs.next()) {
+            return mapRow(rs);
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return null;
+}
 }

@@ -367,13 +367,38 @@
                     padding: 16px;
                 }
             }
+            .btn-back {
+                padding: 8px 16px;
+                border-radius: 8px;
+                font-size: 13px;
+                font-weight: 600;
+                text-decoration: none;
+                border: 1px solid var(--border);
+                background: var(--surface2);
+                color: var(--muted);
+                transition: all .18s;
+            }
+
+            .btn-back:hover {
+                border-color: var(--accent);
+                color: var(--accent);
+                background: rgba(79,142,247,.1);
+            }s
         </style>
     </head>
     <body>
 
         <div class="page-header">
-            <h1>🏡 Thông tin hộ dân</h1>
-            <p>Thông tin hộ khẩu và danh sách nhân khẩu của bạn</p>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <h1>🏡 Thông tin hộ dân</h1>
+                    <p>Thông tin hộ khẩu và danh sách nhân khẩu của bạn</p>
+                </div>
+
+                <a href="${pageContext.request.contextPath}/hodan/dashboard" class="btn-back">
+                    ⬅️ Dashboard
+                </a>
+            </div>
         </div>
 
         <%-- THÔNG BÁO --%>

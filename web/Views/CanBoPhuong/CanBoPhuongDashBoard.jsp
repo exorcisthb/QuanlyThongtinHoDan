@@ -65,6 +65,9 @@
             .np-tag.yeucau{background:rgba(251,191,36,.15);color:var(--warn)}
             .np-tag.duyet{background:rgba(56,217,169,.15);color:var(--accent2)}
             .np-tag.hethong{background:rgba(79,142,247,.15);color:var(--accent)}
+            /* ✅ TAG MỚI: nhân khẩu + cập nhật */
+            .np-tag.nhankhau,.tb-tag.nhankhau{background:rgba(168,85,247,.15);color:#c084fc}
+            .np-tag.capnhat,.tb-tag.capnhat{background:rgba(251,191,36,.15);color:var(--warn)}
             .np-title{font-size:12px;line-height:1.5;color:var(--text)}
             .np-item.unread .np-title{font-weight:600}
             .np-noidung{font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -134,10 +137,7 @@
             .dc-btn.green:hover{background:var(--accent2);color:#000}
             .dc-btn.orange:hover{background:var(--warn);color:#000}
             .dc-btn.red:hover{background:var(--danger);color:#fff}
-
-            /* Badge số lượng chờ xử lý trên card */
             .dc-badge{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 7px;border-radius:11px;background:var(--danger);color:#fff;font-size:11px;font-weight:700;margin-left:8px;vertical-align:middle;animation:pulse 2s infinite}
-
             .activity-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
             .ac-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
             .ac-header h3{font-size:15px;font-weight:700}
@@ -170,6 +170,7 @@
             .mico.green{background:rgba(56,217,169,.15)}
             .mico.red{background:rgba(247,92,92,.15)}
             .mico.blue{background:rgba(79,142,247,.15)}
+            .mico.purple{background:rgba(168,85,247,.15)}
             .mtitle{font-size:16px;font-weight:800}
             .msub{font-size:12px;color:var(--muted);margin-top:2px}
             .mclose{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s}
@@ -313,6 +314,12 @@
             .tc-textarea.err{border-color:var(--danger)}
             .tc-err{font-size:11px;color:var(--danger);margin-top:5px;margin-bottom:0;display:none}
             .tc-err.show{display:block}
+            /* ✅ Bảng thay đổi thông tin nhân khẩu */
+            .nk-change-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:18px;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+            .nk-change-table th{padding:9px 14px;text-align:left;color:var(--muted);font-size:11px;font-weight:700;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02)}
+            .nk-change-table td{padding:9px 14px;border-bottom:1px solid rgba(42,48,72,.5);vertical-align:middle}
+            .nk-change-table tbody tr:last-child td{border-bottom:none}
+            .nk-change-table tbody tr:hover td{background:var(--surface2)}
         </style>
     </head>
     <body>
@@ -427,7 +434,6 @@
                         <div class="dc-desc">Xem xét và xử lý các yêu cầu từ tổ trưởng và hộ dân.</div>
                         <span class="dc-btn green">Xem yêu cầu →</span>
                     </div>
-                    <%-- ✅ CARD MỚI: Phản ánh chuyển cấp --%>
                     <a href="${pageContext.request.contextPath}/canbophuong/phan-anh" class="dash-card red">
                         <div class="dc-icon red">💬</div>
                         <div class="dc-title">
@@ -450,7 +456,6 @@
             </div>
         </main>
 
-        <%-- Tất cả modal giữ nguyên từ bản gốc --%>
         <div class="modal-overlay" id="modalTatCaTB" onclick="if(event.target===this)closeM('modalTatCaTB')">
             <div class="modal-tb">
                 <div class="tb-hdr">
@@ -496,7 +501,7 @@
                 <div class="modal-body modal-body-list">
                     <div class="ml-type-tabs">
                         <button class="ml-type-tab active" id="typeTab1" onclick="mlTypeFilter(1)">🏠 Cư trú</button>
-                        <button class="ml-type-tab tab2"   id="typeTab2" onclick="mlTypeFilter(2)">👤 Thông tin cá nhân</button>
+                        <button class="ml-type-tab tab2"   id="typeTab2" onclick="mlTypeFilter(2)">👤 Thông tin nhân khẩu</button>
                     </div>
                     <div class="ml-summary" id="mlSummary">
                         <div class="ml-stat"><div class="ml-stat-num all" id="ml_total">--</div><div class="ml-stat-lbl">Tổng</div></div>
@@ -582,7 +587,7 @@
                     <div class="tc-ico">✕</div>
                     <div>
                         <div class="tc-title">Từ chối yêu cầu</div>
-                        <div class="tc-sub">Hộ dân sẽ được thông báo lý do từ chối</div>
+                        <div class="tc-sub">Nhân khẩu sẽ được thông báo lý do từ chối</div>
                     </div>
                 </div>
                 <div class="tc-body">
@@ -606,7 +611,6 @@
     var _mlData = [], _mlFilter = 'all', _mlLoaded = false, _mlType = 1;
     var _tbData = [], _tbLoaded = false, _tbFilter = 'all';
 
-    // ✅ Load so luong phan anh cho hieu thi badge tren card
     (function loadPhanAnhBadge() {
         fetch(CTX + '/canbophuong/phan-anh?format=count', {credentials:'include'})
             .then(r => r.json())
@@ -706,29 +710,53 @@
         }).join('');
     }
 
+    // ✅ FIX: detectTag — nhận diện đúng loại thông báo nhân khẩu
     function detectTag(t) {
-        if(!t)return{cls:'hethong',label:'Hệ thống'};
-        const s=t.toLowerCase();
-        if(s.includes('yêu cầu')||s.includes('trạng thái')||s.includes('thông tin'))return{cls:'yeucau',label:'Yêu cầu'};
-        if(s.includes('duyệt')||s.includes('chấp thuận'))return{cls:'duyet',label:'Duyệt'};
-        if(s.includes('phản ánh')||s.includes('kiến nghị'))return{cls:'yeucau',label:'Phản ánh'};
-        return{cls:'hethong',label:'Hệ thống'};
+        if(!t) return {cls:'hethong', label:'Hệ thống'};
+        const s = t.toLowerCase();
+        if(s.includes('nhân khẩu') || s.includes('nhan khau'))        return {cls:'nhankhau', label:'Nhân khẩu'};
+        if(s.includes('cập nhật') || s.includes('cap nhat'))           return {cls:'capnhat',  label:'Cập nhật'};
+        if(s.includes('yêu cầu') || s.includes('trạng thái') || s.includes('cư trú')) return {cls:'yeucau', label:'Yêu cầu'};
+        if(s.includes('duyệt') || s.includes('chấp thuận'))            return {cls:'duyet',    label:'Duyệt'};
+        if(s.includes('phản ánh') || s.includes('kiến nghị'))          return {cls:'yeucau',   label:'Phản ánh'};
+        return {cls:'hethong', label:'Hệ thống'};
     }
 
-    function clickNotif(thongBaoID, isUnread) {
-        document.getElementById('notifPanel').classList.remove('open');
-        if(isUnread){
-            fetch(CTX+'/thong-bao',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({action:'doc',id:thongBaoID}).toString(),credentials:'include'})
-                .then(r=>r.json()).then(()=>{
-                    var item=document.getElementById('nitem-'+thongBaoID),dot=document.getElementById('ndot-'+thongBaoID);
-                    if(item)item.classList.remove('unread');if(dot)dot.classList.add('read');
-                    updateBadge(Math.max(0,(parseInt(document.getElementById('bellBadge').textContent)||0)-1));
-                    var entry=_tbData.find(n=>n.thongBaoID==thongBaoID);if(entry)entry.daDoc=true;
-                }).catch(()=>{});
-        }
-        // Neu la phan anh thi chuyen sang trang phan anh
+   // ✅ MỚI — phân loại đúng theo tiêu đề thông báo
+function clickNotif(thongBaoID, isUnread) {
+    document.getElementById('notifPanel').classList.remove('open');
+
+    // Lấy tiêu đề từ data đã load
+    var entry = _tbData.find(function(n){ return n.thongBaoID == thongBaoID; });
+    var tieuDe = entry ? (entry.tieuDe || '').toLowerCase() : '';
+
+    // Phản ánh → redirect sang trang phản ánh
+    var isPhanAnh = tieuDe.includes('phản ánh') || tieuDe.includes('phan anh');
+
+    if (isUnread) {
+        fetch(CTX+'/thong-bao', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: new URLSearchParams({action:'doc', id: thongBaoID}).toString(),
+            credentials: 'include'
+        }).then(r=>r.json()).then(function() {
+            var item = document.getElementById('nitem-'+thongBaoID);
+            var dot  = document.getElementById('ndot-'+thongBaoID);
+            if(item) item.classList.remove('unread');
+            if(dot)  dot.classList.add('read');
+            updateBadge(Math.max(0, (parseInt(document.getElementById('bellBadge').textContent)||0) - 1));
+            if(entry) entry.daDoc = true;
+        }).catch(function(){});
+    }
+
+    if (isPhanAnh) {
+        // Redirect sang trang phản ánh
+        window.location.href = CTX + '/canbophuong/phan-anh';
+    } else {
+        // Yêu cầu cư trú / nhân khẩu → mở modal như cũ
         openModalChiTiet(thongBaoID);
     }
+}
 
     function openModalChiTiet(thongBaoID) {
         document.getElementById('myc_ico').textContent='📋';document.getElementById('myc_ico').className='mico warn';
@@ -738,18 +766,101 @@
         openM('modalYeuCau');
         fetch(CTX+'/yeu-cau-doi-trang-thai?action=chitiet-notif&thongBaoID='+thongBaoID,{credentials:'include'})
             .then(r=>r.json()).then(function(data){
-                if(!data||!data.yeuCauID){document.getElementById('myc_skeleton').style.display='none';document.getElementById('myc_content').style.display='';document.getElementById('myc_content').innerHTML='<div style="text-align:center;padding:32px;color:var(--muted);font-size:13px">Không tìm thấy yêu cầu liên quan.</div>';return;}
-                _activeYeuCauID=data.yeuCauID;renderModalChiTiet(data);
-            }).catch(function(err){document.getElementById('myc_skeleton').style.display='none';document.getElementById('myc_content').style.display='';document.getElementById('myc_content').innerHTML='<div style="text-align:center;padding:32px;color:var(--danger);font-size:13px">⚠ Lỗi: '+err.message+'</div>';});
+                if(!data||!data.yeuCauID){
+                    document.getElementById('myc_skeleton').style.display='none';
+                    document.getElementById('myc_content').style.display='';
+                    document.getElementById('myc_content').innerHTML='<div style="text-align:center;padding:32px;color:var(--muted);font-size:13px">Không tìm thấy yêu cầu liên quan.</div>';
+                    return;
+                }
+                _activeYeuCauID=data.yeuCauID;
+                renderModalChiTiet(data);
+            }).catch(function(err){
+                document.getElementById('myc_skeleton').style.display='none';
+                document.getElementById('myc_content').style.display='';
+                document.getElementById('myc_content').innerHTML='<div style="text-align:center;padding:32px;color:var(--danger);font-size:13px">⚠ Lỗi: '+err.message+'</div>';
+            });
     }
 
     function fetchYeuCauJSON(){return fetch(CTX+'/yeu-cau-doi-trang-thai?format=json',{credentials:'include'}).then(function(r){var ct=r.headers.get('content-type')||'';if(ct.indexOf('json')>=0)return r.json();return r.text().then(function(html){return parseYCFromHTML(html);});});}
     function parseYCFromHTML(html){var parser=new DOMParser(),doc=parser.parseFromString(html,'text/html'),rows=doc.querySelectorAll('tbody tr[data-search]'),result=[];rows.forEach(function(tr,idx){var cells=tr.querySelectorAll('td');if(cells.length<9)return;var ttYCEl=cells[8].querySelector('[class^="badge"]'),ttYC=ttYCEl?ttYCEl.className.replace('badge-',''):'cho',ttCuEl=cells[4].querySelector('.pill'),ttMoiEl=cells[5].querySelector('.pill');result.push({yeuCauID:parseInt(tr.getAttribute('data-id')||(idx+1)),loaiYeuCau:parseInt(tr.getAttribute('data-loai')||1),maHoKhau:cells[1].textContent.trim(),tenChuHo:cells[2].textContent.trim(),tenTo:cells[3].textContent.trim(),tenTrangThaiCu:ttCuEl?ttCuEl.textContent.trim():cells[4].textContent.trim(),tenTrangThaiMoi:ttMoiEl?ttMoiEl.textContent.trim():cells[5].textContent.trim(),trangThaiCuID:ttCuEl?getPillID(ttCuEl.className):1,trangThaiMoiID:ttMoiEl?getPillID(ttMoiEl.className):3,ngayTao:cells[7].textContent.trim(),ttYC});});return result;}
     function getPillID(cls){if(cls.indexOf('p-tt')>=0)return 1;if(cls.indexOf('p-tv')>=0)return 2;return 3;}
-    function mlTypeFilter(type){_mlType=type;_mlFilter='all';document.getElementById('typeTab1').classList.toggle('active',type===1);document.getElementById('typeTab2').classList.toggle('active',type===2);var ico=document.getElementById('mlIco'),title=document.getElementById('mlTitle');if(type===2){ico.textContent='👤';ico.className='mico blue';title.textContent='Yêu cầu cập nhật thông tin cá nhân';}else{ico.textContent='📋';ico.className='mico green';title.textContent='Yêu cầu đổi trạng thái cư trú';}updateTableHeader();var filteredByType=_mlData.filter(r=>(r.loaiYeuCau||1)===_mlType);renderMLSummary(filteredByType);renderMLTable('all');}
-    function updateTableHeader(){var thead=document.getElementById('mlThead');if(_mlType===2){thead.innerHTML='<tr><th>Người gửi</th><th>Tổ</th><th>Thông tin thay đổi</th><th>Ngày gửi</th><th>Trạng thái</th><th style="text-align:center">Thao tác</th></tr>';}else{thead.innerHTML='<tr><th>Mã hộ</th><th>Chủ hộ</th><th>Tổ</th><th>Cũ → Mới</th><th>Ngày gửi</th><th>Trạng thái</th><th style="text-align:center">Thao tác</th></tr>';}}
+
+    function mlTypeFilter(type){
+        _mlType=type;_mlFilter='all';
+        document.getElementById('typeTab1').classList.toggle('active',type===1);
+        document.getElementById('typeTab2').classList.toggle('active',type===2);
+        var ico=document.getElementById('mlIco'),title=document.getElementById('mlTitle');
+        if(type===2){ico.textContent='👤';ico.className='mico purple';title.textContent='Yêu cầu cập nhật thông tin nhân khẩu';}
+        else{ico.textContent='📋';ico.className='mico green';title.textContent='Yêu cầu đổi trạng thái cư trú';}
+        updateTableHeader();
+        var filteredByType=_mlData.filter(r=>(r.loaiYeuCau||1)===_mlType);
+        renderMLSummary(filteredByType);renderMLTable('all');
+    }
+
+    function updateTableHeader(){
+        var thead=document.getElementById('mlThead');
+        if(_mlType===2){
+            thead.innerHTML='<tr><th>Nhân khẩu</th><th>Mã NK</th><th>Tổ</th><th>Trường thay đổi</th><th>Ngày gửi</th><th>Trạng thái</th><th style="text-align:center">Thao tác</th></tr>';
+        }else{
+            thead.innerHTML='<tr><th>Mã hộ</th><th>Chủ hộ</th><th>Tổ</th><th>Cũ → Mới</th><th>Ngày gửi</th><th>Trạng thái</th><th style="text-align:center">Thao tác</th></tr>';
+        }
+    }
+
     function renderMLSummary(list){var cho=list.filter(r=>r.ttYC==='cho').length,duyet=list.filter(r=>r.ttYC==='duyet').length,tuchoi=list.filter(r=>r.ttYC==='tuchoi').length;document.getElementById('ml_total').textContent=list.length;document.getElementById('ml_cho').textContent=cho;document.getElementById('ml_ok').textContent=duyet;document.getElementById('ml_no').textContent=tuchoi;document.getElementById('mlSub').textContent=list.length+' yêu cầu · '+cho+' chờ duyệt';var totalCho=_mlData.filter(r=>r.ttYC==='cho').length;document.getElementById('statChoDuyet').textContent=totalCho>0?totalCho:'0';var cells=document.querySelectorAll('#mlSummary .ml-stat'),filters=['all','cho','duyet','tuchoi'];cells.forEach((c,i)=>{c.setAttribute('onclick',"mlFilter('"+filters[i]+"', this)");c.setAttribute('data-filter',filters[i]);});}
-    function renderMLTable(filter){_mlFilter=filter;var byType=_mlData.filter(r=>(r.loaiYeuCau||1)===_mlType),filtered=filter==='all'?byType:byType.filter(r=>r.ttYC===filter);var tbody=document.getElementById('mlTbody'),empty=document.getElementById('mlEmpty'),tbl=document.getElementById('mlTable');document.querySelectorAll('#mlTabs .ml-tab').forEach(b=>b.classList.remove('active'));var activeTab=document.querySelector('#mlTabs .ml-tab[data-filter="'+filter+'"]');if(activeTab)activeTab.classList.add('active');document.querySelectorAll('#mlSummary .ml-stat').forEach(s=>s.classList.remove('active'));var activeStat=document.querySelector('#mlSummary .ml-stat[data-filter="'+filter+'"]');if(activeStat)activeStat.classList.add('active');if(!filtered.length){tbl.style.display='none';empty.style.display='';empty.textContent='Không có yêu cầu nào';return;}tbl.style.display='';empty.style.display='none';tbody.innerHTML=filtered.map(function(r){var ttYC=r.ttYC.replace('badge-',''),ttBadge=ttYC==='cho'?'<span class="pill-cho">Chờ duyệt</span>':ttYC==='duyet'?'<span class="pill-ok">Đã duyệt</span>':ttYC==='tuchoi'?'<span class="pill-no">Từ chối</span>':'<span style="color:var(--muted);font-size:11px">Đã huỷ</span>';var actBtns=ttYC==='cho'?'<div style="display:flex;gap:6px;justify-content:center"><button class="btn-yc-duyet" onclick="mlQuickDuyet('+r.yeuCauID+')">✓ Duyệt</button><button class="btn-yc-tc" onclick="mlQuickTuChoi('+r.yeuCauID+')">✕ Từ chối</button></div>':'<span style="font-size:11px;color:var(--muted)">—</span>';if(_mlType===2){var fields=[];if(r.ho_Moi)fields.push('Họ');if(r.ten_Moi)fields.push('Tên');if(r.ngaySinh_Moi)fields.push('Ngày sinh');if(r.gioiTinh_Moi)fields.push('Giới tính');if(r.email_Moi)fields.push('Email');if(r.sDT_Moi)fields.push('SĐT');if(r.cCCD_Moi)fields.push('CCCD');var fieldStr=fields.length?fields.join(', '):'—';return'<tr id="mlrow-'+r.yeuCauID+'"><td><strong>'+esc(r.tenNguoiYeuCau||r.tenChuHo||'—')+'</strong></td><td style="color:var(--muted)">'+esc(r.tenTo||'—')+'</td><td style="color:var(--accent2);font-size:12px">'+esc(fieldStr)+'</td><td style="color:var(--muted);font-size:12px">'+esc(r.ngayTao)+'</td><td>'+ttBadge+'</td><td style="text-align:center">'+actBtns+'</td></tr>';}var pillCu=pillTT(r.trangThaiCuID,r.tenTrangThaiCu),pillMoi=pillTT(r.trangThaiMoiID,r.tenTrangThaiMoi);return'<tr id="mlrow-'+r.yeuCauID+'"><td style="font-family:monospace;color:var(--accent);font-weight:600">'+esc(r.maHoKhau)+'</td><td><strong>'+esc(r.tenChuHo)+'</strong></td><td style="color:var(--muted)">'+esc(r.tenTo)+'</td><td>'+pillCu+' → '+pillMoi+'</td><td style="color:var(--muted);font-size:12px">'+esc(r.ngayTao)+'</td><td>'+ttBadge+'</td><td style="text-align:center">'+actBtns+'</td></tr>';}).join('');}
+
+    function renderMLTable(filter){
+        _mlFilter=filter;
+        var byType=_mlData.filter(r=>(r.loaiYeuCau||1)===_mlType),filtered=filter==='all'?byType:byType.filter(r=>r.ttYC===filter);
+        var tbody=document.getElementById('mlTbody'),empty=document.getElementById('mlEmpty'),tbl=document.getElementById('mlTable');
+        document.querySelectorAll('#mlTabs .ml-tab').forEach(b=>b.classList.remove('active'));
+        var activeTab=document.querySelector('#mlTabs .ml-tab[data-filter="'+filter+'"]');if(activeTab)activeTab.classList.add('active');
+        document.querySelectorAll('#mlSummary .ml-stat').forEach(s=>s.classList.remove('active'));
+        var activeStat=document.querySelector('#mlSummary .ml-stat[data-filter="'+filter+'"]');if(activeStat)activeStat.classList.add('active');
+        if(!filtered.length){tbl.style.display='none';empty.style.display='';empty.textContent='Không có yêu cầu nào';return;}
+        tbl.style.display='';empty.style.display='none';
+        tbody.innerHTML=filtered.map(function(r){
+            var ttYC=r.ttYC.replace('badge-','');
+            var ttBadge=ttYC==='cho'?'<span class="pill-cho">Chờ duyệt</span>':ttYC==='duyet'?'<span class="pill-ok">Đã duyệt</span>':ttYC==='tuchoi'?'<span class="pill-no">Từ chối</span>':'<span style="color:var(--muted);font-size:11px">Đã huỷ</span>';
+            var actBtns=ttYC==='cho'?'<div style="display:flex;gap:6px;justify-content:center"><button class="btn-yc-duyet" onclick="mlQuickDuyet('+r.yeuCauID+')">✓ Duyệt</button><button class="btn-yc-tc" onclick="mlQuickTuChoi('+r.yeuCauID+')">✕ Từ chối</button></div>':'<span style="font-size:11px;color:var(--muted)">—</span>';
+            if(_mlType===2){
+                // ✅ Hiển thị đúng: tên nhân khẩu + mã nhân khẩu + các trường thay đổi
+                var tenNK = r.tenNhanKhau || r.tenNguoiYeuCau || '—';
+                var maNK  = r.maNhanKhau  || '—';
+                var fields=[];
+                if(r.ho_Moi)              fields.push('Họ');
+                if(r.ten_Moi)             fields.push('Tên');
+                if(r.ngaySinh_Moi)        fields.push('Ngày sinh');
+                if(r.gioiTinh_Moi)        fields.push('Giới tính');
+                if(r.email_Moi)           fields.push('Email');
+                if(r.sDT_Moi)             fields.push('SĐT');
+                if(r.cCCD_Moi)            fields.push('CCCD');
+                if(r.quanHe_Moi)          fields.push('Quan hệ');
+                if(r.danToc_Moi)          fields.push('Dân tộc');
+                if(r.tonGiao_Moi)         fields.push('Tôn giáo');
+                if(r.ngheNghiep_Moi)      fields.push('Nghề nghiệp');
+                if(r.trinhDoHocVan_Moi)   fields.push('Trình độ HV');
+                var fieldStr=fields.length?fields.join(', '):'—';
+                return '<tr id="mlrow-'+r.yeuCauID+'">'
+                    +'<td><strong>'+esc(tenNK)+'</strong></td>'
+                    +'<td style="font-family:monospace;color:var(--accent);font-size:12px">'+esc(maNK)+'</td>'
+                    +'<td style="color:var(--muted)">'+esc(r.tenTo||'—')+'</td>'
+                    +'<td style="color:var(--accent2);font-size:12px">'+esc(fieldStr)+'</td>'
+                    +'<td style="color:var(--muted);font-size:12px">'+esc(r.ngayTao)+'</td>'
+                    +'<td>'+ttBadge+'</td>'
+                    +'<td style="text-align:center">'+actBtns+'</td></tr>';
+            }
+            var pillCu=pillTT(r.trangThaiCuID,r.tenTrangThaiCu),pillMoi=pillTT(r.trangThaiMoiID,r.tenTrangThaiMoi);
+            return '<tr id="mlrow-'+r.yeuCauID+'">'
+                +'<td style="font-family:monospace;color:var(--accent);font-weight:600">'+esc(r.maHoKhau)+'</td>'
+                +'<td><strong>'+esc(r.tenChuHo)+'</strong></td>'
+                +'<td style="color:var(--muted)">'+esc(r.tenTo)+'</td>'
+                +'<td>'+pillCu+' → '+pillMoi+'</td>'
+                +'<td style="color:var(--muted);font-size:12px">'+esc(r.ngayTao)+'</td>'
+                +'<td>'+ttBadge+'</td>'
+                +'<td style="text-align:center">'+actBtns+'</td></tr>';
+        }).join('');
+    }
+
     function pillTT(id,label){var cls=id===1?'pill-tt':id===2?'pill-tv':'pill-tm';return'<span class="'+cls+'">'+esc(label||'—')+'</span>';}
     function mlFilter(f,btn){renderMLTable(f);}
     function mlQuickDuyet(yeuCauID){if(!confirm('Xác nhận duyệt yêu cầu #'+yeuCauID+'?'))return;fetch(CTX+'/yeu-cau-doi-trang-thai',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({action:'duyet',yeuCauID,ghiChu:''}).toString(),credentials:'include'}).then(r=>r.json()).then(function(res){if(res.success){showToast('success','✓ '+res.message);_mlLoaded=false;notifLoaded=false;_tbLoaded=false;setTimeout(reloadAllData,400);}else showToast('error','✕ '+res.message);}).catch(()=>showToast('error','✕ Lỗi kết nối'));}
@@ -758,9 +869,184 @@
     function closeTuChoi(){document.getElementById('modalTuChoi').classList.remove('show');document.body.style.overflow='';}
     function confirmTuChoi(){const ly=document.getElementById('tcLyDo').value.trim();if(!ly){document.getElementById('tcErr').classList.add('show');document.getElementById('tcLyDo').classList.add('err');return;}const btn=document.getElementById('btnConfirmTC2');btn.disabled=true;btn.textContent='Đang xử lý...';fetch(CTX+'/yeu-cau-doi-trang-thai',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({action:'tuchoi',yeuCauID:_tcYeuCauID,lyDoTuChoi:ly}).toString(),credentials:'include'}).then(r=>r.json()).then(function(res){btn.disabled=false;btn.textContent='✕ Xác nhận từ chối';closeTuChoi();if(res.success){showToast('success','✓ '+res.message);_mlLoaded=false;notifLoaded=false;_tbLoaded=false;setTimeout(reloadAllData,400);}else showToast('error','✕ '+res.message);}).catch(()=>{btn.disabled=false;btn.textContent='✕ Xác nhận từ chối';showToast('error','✕ Lỗi kết nối');});}
     function reloadAllData(){fetchYeuCauJSON().then(function(list){_mlData=list;_mlLoaded=true;var byType=list.filter(r=>(r.loaiYeuCau||1)===_mlType);if(document.getElementById('modalYCList').classList.contains('show')){renderMLSummary(byType);renderMLTable(_mlFilter);document.getElementById('mlLoading').style.display='none';document.getElementById('mlTable').style.display='';}else{var totalCho=list.filter(r=>r.ttYC==='cho').length;document.getElementById('statChoDuyet').textContent=totalCho>0?totalCho:'0';}pollBadge();}).catch(()=>{});}
-    function renderModalChiTiet(d){const isCho=d.trangThaiYeuCauID===1,loai=d.loaiYeuCau||1;document.getElementById('myc_skeleton').style.display='none';document.getElementById('myc_content').style.display='';if(loai===2){document.getElementById('myc_ico').textContent='👤';document.getElementById('myc_ico').className='mico blue';document.getElementById('myc_title').textContent='Yêu cầu cập nhật thông tin cá nhân';document.getElementById('myc_sub').textContent='Người gửi: '+(d.tenNguoiYeuCau||'—');}else{document.getElementById('myc_ico').textContent='📋';document.getElementById('myc_ico').className='mico warn';document.getElementById('myc_title').textContent='Yêu cầu đổi trạng thái cư trú';document.getElementById('myc_sub').textContent='Mã hộ: '+(d.maHoKhau||'—')+' · '+(d.tenTo||'');}var formHtml='';if(isCho){formHtml='<div id="form-duyet" style="display:none"><div class="sec-title">Ghi chú duyệt</div><div class="form-group"><label class="form-label">Ghi chú <span style="color:var(--muted);font-weight:400">(tuỳ chọn)</span></label><textarea class="form-textarea" id="inp_ghichu" placeholder="Nhập ghi chú nếu cần..."></textarea></div></div><div id="form-tuchoi" style="display:none"><div class="sec-title">Lý do từ chối</div><div class="form-group"><label class="form-label">Lý do từ chối <span style="color:var(--danger)">*</span></label><textarea class="form-textarea red" id="inp_lydotc" placeholder="Bắt buộc nhập lý do từ chối..."></textarea></div></div>';}var contentHtml='';if(loai===1){contentHtml='<div class="sec-title">Thông tin hộ</div><div class="dgrid"><div><div class="dlbl">Mã hộ khẩu</div><div class="dval mono">'+orD(d.maHoKhau)+'</div></div><div><div class="dlbl">Chủ hộ</div><div class="dval">'+orD(d.tenChuHo)+'</div></div><div><div class="dlbl">Tổ dân phố</div><div class="dval">'+orD(d.tenTo)+'</div></div><div><div class="dlbl">Địa chỉ</div><div class="dval muted">'+orD(d.diaChiHo)+'</div></div></div><div class="sec-title">Chi tiết yêu cầu</div><div class="dgrid"><div><div class="dlbl">Trạng thái cũ</div>'+pillH(d.trangThaiCuID,d.tenTrangThaiCu)+'</div><div><div class="dlbl">→ Trạng thái mới</div>'+pillH(d.trangThaiMoiID,d.tenTrangThaiMoi)+'</div><div class="full"><div class="dlbl">Lý do</div><div class="dval muted">'+orD(d.lyDoYeuCau)+'</div></div><div><div class="dlbl">Ngày gửi</div><div class="dval muted">'+orD(d.ngayTao)+'</div></div><div><div class="dlbl">Tổ trưởng gửi</div><div class="dval">'+orD(d.tenNguoiYeuCau)+'</div></div></div>'+formHtml;}else{var fields=[{label:'Họ',cu:d.ho_Cu,moi:d.ho_Moi},{label:'Tên',cu:d.ten_Cu,moi:d.ten_Moi},{label:'Ngày sinh',cu:d.ngaySinh_Cu,moi:d.ngaySinh_Moi},{label:'Giới tính',cu:d.gioiTinh_Cu,moi:d.gioiTinh_Moi},{label:'Email',cu:d.email_Cu,moi:d.email_Moi},{label:'Số điện thoại',cu:d.sDT_Cu,moi:d.sDT_Moi},{label:'CCCD',cu:d.cCCD_Cu,moi:d.cCCD_Moi}];var changedRows=fields.filter(f=>f.moi&&f.moi!=='null').map(f=>'<tr><td style="color:var(--muted);font-size:12px;padding:8px 12px;border-bottom:1px solid var(--border)">'+esc(f.label)+'</td><td style="padding:8px 12px;border-bottom:1px solid var(--border);text-decoration:line-through;color:var(--muted)">'+orD(f.cu)+'</td><td style="padding:8px 12px;border-bottom:1px solid var(--border);color:var(--accent2);font-weight:600">→ '+orD(f.moi)+'</td></tr>').join('');contentHtml='<div class="sec-title">Thông tin người gửi</div><div class="dgrid"><div><div class="dlbl">Họ tên</div><div class="dval">'+orD(d.tenNguoiYeuCau)+'</div></div><div><div class="dlbl">Ngày gửi</div><div class="dval muted">'+orD(d.ngayTao)+'</div></div><div class="full"><div class="dlbl">Lý do</div><div class="dval muted">'+orD(d.lyDoYeuCau)+'</div></div></div><div class="sec-title">Thông tin muốn thay đổi</div><table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:18px"><thead><tr><th style="padding:8px 12px;text-align:left;color:var(--muted);font-size:11px;font-weight:700;border-bottom:1px solid var(--border)">Trường</th><th style="padding:8px 12px;text-align:left;color:var(--muted);font-size:11px;font-weight:700;border-bottom:1px solid var(--border)">Hiện tại</th><th style="padding:8px 12px;text-align:left;color:var(--muted);font-size:11px;font-weight:700;border-bottom:1px solid var(--border)">Muốn đổi thành</th></tr></thead><tbody>'+(changedRows||'<tr><td colspan="3" style="padding:16px;text-align:center;color:var(--muted)">Không có thông tin</td></tr>')+'</tbody></table>'+formHtml;}document.getElementById('myc_content').innerHTML=contentHtml;setModalFooter(isCho?'chitiet':'readonly');}
-    function setModalFooter(state){var el=document.getElementById('myc_footer'),urlYC=CTX+'/yeu-cau-doi-trang-thai';if(state==='loading'){el.innerHTML='<button class="btn-m btn-cancel" onclick="closeM(\'modalYeuCau\')">Đóng</button>';}else if(state==='readonly'){el.innerHTML='<button class="btn-m btn-cancel" onclick="closeM(\'modalYeuCau\')">Đóng</button><a href="'+urlYC+'" class="btn-m btn-goto">Xem toàn bộ →</a>';}else if(state==='chitiet'){el.innerHTML='<button class="btn-m btn-cancel" onclick="closeM(\'modalYeuCau\')">Đóng</button><a href="'+urlYC+'" class="btn-m btn-goto">Xem tất cả</a><button class="btn-m btn-no" onclick="switchState(\'tuchoi\')">✕ Từ chối</button><button class="btn-m btn-ok" onclick="switchState(\'duyet\')">✓ Duyệt</button>';}else if(state==='duyet'){el.innerHTML='<button class="btn-m btn-cancel" onclick="switchState(\'chitiet\')">← Quay lại</button><button class="btn-m btn-ok" onclick="submitDuyet()" id="btnConfirmDuyet">✓ Xác nhận duyệt</button>';}else if(state==='tuchoi'){el.innerHTML='<button class="btn-m btn-cancel" onclick="switchState(\'chitiet\')">← Quay lại</button><button class="btn-m btn-no" onclick="submitTuChoi()" id="btnConfirmTC">✕ Xác nhận từ chối</button>';}}
-    function switchState(state){const fDuyet=document.getElementById('form-duyet'),fTuChoi=document.getElementById('form-tuchoi'),isCapNhat=document.getElementById('myc_title').textContent.includes('cá nhân');if(state==='duyet'){if(fDuyet)fDuyet.style.display='';if(fTuChoi)fTuChoi.style.display='none';setModalFooter('duyet');document.getElementById('myc_ico').textContent='✓';document.getElementById('myc_ico').className='mico green';document.getElementById('myc_title').textContent=isCapNhat?'Duyệt cập nhật thông tin cá nhân':'Duyệt yêu cầu cư trú';}else if(state==='tuchoi'){if(fDuyet)fDuyet.style.display='none';if(fTuChoi)fTuChoi.style.display='';setModalFooter('tuchoi');document.getElementById('myc_ico').textContent='✕';document.getElementById('myc_ico').className='mico red';document.getElementById('myc_title').textContent=isCapNhat?'Từ chối cập nhật thông tin cá nhân':'Từ chối yêu cầu cư trú';}else{if(fDuyet)fDuyet.style.display='none';if(fTuChoi)fTuChoi.style.display='none';setModalFooter('chitiet');document.getElementById('myc_ico').textContent=isCapNhat?'👤':'📋';document.getElementById('myc_ico').className=isCapNhat?'mico blue':'mico warn';document.getElementById('myc_title').textContent=isCapNhat?'Yêu cầu cập nhật thông tin cá nhân':'Yêu cầu đổi trạng thái cư trú';}}
+
+    // ✅ FIX CHÍNH: renderModalChiTiet — hiển thị đúng thông tin nhân khẩu (loại 2)
+   function renderModalChiTiet(d) {
+    const isCho = d.trangThaiYeuCauID === 1;
+    const loai  = d.loaiYeuCau || 1;
+
+    document.getElementById('myc_skeleton').style.display = 'none';
+    document.getElementById('myc_content').style.display  = '';
+
+    if (loai === 2) {
+        document.getElementById('myc_ico').textContent = '👤';
+        document.getElementById('myc_ico').className   = 'mico purple';
+        document.getElementById('myc_title').textContent = 'Yêu cầu cập nhật thông tin nhân khẩu';
+        var tenNK = d.tenNhanKhau || d.tenNguoiYeuCau || '—';
+        var maNK  = d.maNhanKhau ? ' · Mã NK: ' + d.maNhanKhau : '';
+        document.getElementById('myc_sub').textContent = 'Nhân khẩu: ' + tenNK + maNK;
+    } else if (loai === 3) {
+        document.getElementById('myc_ico').textContent = '🏠';
+        document.getElementById('myc_ico').className   = 'mico warn';
+        document.getElementById('myc_title').textContent = 'Yêu cầu đổi trạng thái cư trú';
+        var tenNK3 = (d.ho_Cu && d.ten_Cu) ? d.ho_Cu + ' ' + d.ten_Cu : (d.tenNguoiYeuCau || '—');
+        document.getElementById('myc_sub').textContent = 'Nhân khẩu: ' + tenNK3;
+    } else {
+        document.getElementById('myc_ico').textContent = '📋';
+        document.getElementById('myc_ico').className   = 'mico warn';
+        document.getElementById('myc_title').textContent = 'Yêu cầu đổi trạng thái cư trú';
+        document.getElementById('myc_sub').textContent = 'Mã hộ: ' + (d.maHoKhau||'—') + ' · ' + (d.tenTo||'');
+    }
+
+    var formHtml = '';
+    if (isCho) {
+        formHtml = '<div id="form-duyet" style="display:none">'
+            + '<div class="sec-title">Ghi chú duyệt</div>'
+            + '<div class="form-group"><label class="form-label">Ghi chú <span style="color:var(--muted);font-weight:400">(tuỳ chọn)</span></label>'
+            + '<textarea class="form-textarea" id="inp_ghichu" placeholder="Nhập ghi chú nếu cần..."></textarea></div>'
+            + '</div>'
+            + '<div id="form-tuchoi" style="display:none">'
+            + '<div class="sec-title">Lý do từ chối</div>'
+            + '<div class="form-group"><label class="form-label">Lý do từ chối <span style="color:var(--danger)">*</span></label>'
+            + '<textarea class="form-textarea red" id="inp_lydotc" placeholder="Bắt buộc nhập lý do từ chối..."></textarea></div>'
+            + '</div>';
+    }
+
+    var contentHtml = '';
+
+    if (loai === 3) {
+        // --- Loại 3: Đổi trạng thái từng nhân khẩu ---
+        contentHtml = '<div class="sec-title">Thông tin nhân khẩu</div>'
+            + '<div class="dgrid">'
+            + '<div><div class="dlbl">Họ tên nhân khẩu</div><div class="dval">' + orD(d.ho_Cu && d.ten_Cu ? d.ho_Cu + ' ' + d.ten_Cu : null) + '</div></div>'
+            + '<div><div class="dlbl">CCCD</div><div class="dval mono">' + orD(d.cCCD_Cu) + '</div></div>'
+            + '<div><div class="dlbl">Ngày sinh</div><div class="dval muted">' + orD(d.ngaySinh_Cu) + '</div></div>'
+            + '<div><div class="dlbl">Giới tính</div><div class="dval">' + orD(d.gioiTinh_Cu) + '</div></div>'
+            + '</div>'
+            + '<div class="sec-title">Người gửi yêu cầu</div>'
+            + '<div class="dgrid">'
+            + '<div><div class="dlbl">Tổ trưởng gửi</div><div class="dval">' + orD(d.tenNguoiYeuCau) + '</div></div>'
+            + '<div><div class="dlbl">Ngày gửi</div><div class="dval muted">' + orD(d.ngayTao) + '</div></div>'
+            + '<div class="full"><div class="dlbl">Lý do</div><div class="dval muted">' + orD(d.lyDoYeuCau) + '</div></div>'
+            + '</div>'
+            + '<div class="sec-title">Thông tin muốn thay đổi</div>'
+            + '<div class="dgrid">'
+            + '<div><div class="dlbl">Trạng thái cũ</div>' + pillH(d.trangThaiCuID, d.tenTrangThaiCu) + '</div>'
+            + '<div><div class="dlbl">→ Trạng thái mới</div>' + pillH(d.trangThaiMoiID, d.tenTrangThaiMoi) + '</div>'
+            + '</div>'
+            + formHtml;
+
+    } else if (loai === 1) {
+        // --- Loại 1: Đổi trạng thái cả hộ ---
+        contentHtml = '<div class="sec-title">Thông tin hộ</div>'
+            + '<div class="dgrid">'
+            + '<div><div class="dlbl">Mã hộ khẩu</div><div class="dval mono">'+orD(d.maHoKhau)+'</div></div>'
+            + '<div><div class="dlbl">Chủ hộ</div><div class="dval">'+orD(d.tenChuHo)+'</div></div>'
+            + '<div><div class="dlbl">Tổ dân phố</div><div class="dval">'+orD(d.tenTo)+'</div></div>'
+            + '<div><div class="dlbl">Địa chỉ</div><div class="dval muted">'+orD(d.diaChiHo)+'</div></div>'
+            + '</div>'
+            + '<div class="sec-title">Chi tiết yêu cầu</div>'
+            + '<div class="dgrid">'
+            + '<div><div class="dlbl">Trạng thái cũ</div>'+pillH(d.trangThaiCuID,d.tenTrangThaiCu)+'</div>'
+            + '<div><div class="dlbl">→ Trạng thái mới</div>'+pillH(d.trangThaiMoiID,d.tenTrangThaiMoi)+'</div>'
+            + '<div class="full"><div class="dlbl">Lý do</div><div class="dval muted">'+orD(d.lyDoYeuCau)+'</div></div>'
+            + '<div><div class="dlbl">Ngày gửi</div><div class="dval muted">'+orD(d.ngayTao)+'</div></div>'
+            + '<div><div class="dlbl">Tổ trưởng gửi</div><div class="dval">'+orD(d.tenNguoiYeuCau)+'</div></div>'
+            + '</div>' + formHtml;
+
+    } else {
+        // --- Loại 2: Cập nhật thông tin nhân khẩu ---
+        contentHtml += '<div class="sec-title">Thông tin nhân khẩu</div>'
+            + '<div class="dgrid">'
+            + '<div><div class="dlbl">Họ tên nhân khẩu</div><div class="dval">'+orD(d.tenNhanKhau || d.tenNguoiYeuCau)+'</div></div>'
+            + '<div><div class="dlbl">Mã nhân khẩu</div><div class="dval mono">'+orD(d.maNhanKhau)+'</div></div>'
+            + '<div><div class="dlbl">Quan hệ với chủ hộ</div><div class="dval">'+orD(d.quanHeVoiChuHo || d.quanHe_Cu)+'</div></div>'
+            + '<div><div class="dlbl">Số CCCD hiện tại</div><div class="dval mono">'+orD(d.cCCD_Cu || d.cccd)+'</div></div>'
+            + '<div><div class="dlbl">Hộ khẩu</div><div class="dval muted">'+orD(d.maHoKhau)+'</div></div>'
+            + '<div><div class="dlbl">Tổ dân phố</div><div class="dval muted">'+orD(d.tenTo)+'</div></div>'
+            + '</div>'
+            + '<div class="sec-title">Người gửi yêu cầu</div>'
+            + '<div class="dgrid">'
+            + '<div><div class="dlbl">Họ tên người gửi</div><div class="dval">'+orD(d.tenNguoiYeuCau)+'</div></div>'
+            + '<div><div class="dlbl">Ngày gửi</div><div class="dval muted">'+orD(d.ngayTao)+'</div></div>'
+            + '<div class="full"><div class="dlbl">Lý do yêu cầu</div><div class="dval muted">'+orD(d.lyDoYeuCau)+'</div></div>'
+            + '</div>';
+
+        var fields = [
+            {label:'Họ',            cu: d.ho_Cu,            moi: d.ho_Moi},
+            {label:'Tên',           cu: d.ten_Cu,           moi: d.ten_Moi},
+            {label:'Ngày sinh',     cu: d.ngaySinh_Cu,      moi: d.ngaySinh_Moi},
+            {label:'Giới tính',     cu: d.gioiTinh_Cu,      moi: d.gioiTinh_Moi},
+            {label:'Email',         cu: d.email_Cu,         moi: d.email_Moi},
+            {label:'Số điện thoại', cu: d.sDT_Cu,           moi: d.sDT_Moi},
+            {label:'CCCD',          cu: d.cCCD_Cu,          moi: d.cCCD_Moi},
+            {label:'Quan hệ hộ',    cu: d.quanHe_Cu,        moi: d.quanHe_Moi},
+            {label:'Dân tộc',       cu: d.danToc_Cu,        moi: d.danToc_Moi},
+            {label:'Tôn giáo',      cu: d.tonGiao_Cu,       moi: d.tonGiao_Moi},
+            {label:'Nghề nghiệp',   cu: d.ngheNghiep_Cu,    moi: d.ngheNghiep_Moi},
+            {label:'Trình độ HV',   cu: d.trinhDoHocVan_Cu, moi: d.trinhDoHocVan_Moi},
+            {label:'Nơi sinh',      cu: d.noiSinh_Cu,       moi: d.noiSinh_Moi},
+            {label:'Quê quán',      cu: d.queQuan_Cu,       moi: d.queQuan_Moi}
+        ];
+        var changedRows = fields
+            .filter(f => f.moi && f.moi !== 'null' && f.moi !== null && f.moi !== undefined)
+            .map(function(f) {
+                return '<tr>'
+                    + '<td style="color:var(--muted);font-size:12px;font-weight:600">'+esc(f.label)+'</td>'
+                    + '<td style="text-decoration:line-through;color:var(--muted);font-size:13px">'+orD(f.cu)+'</td>'
+                    + '<td style="color:var(--accent2);font-weight:600;font-size:13px">→ '+orD(f.moi)+'</td>'
+                    + '</tr>';
+            }).join('');
+        contentHtml += '<div class="sec-title">Thông tin muốn thay đổi</div>'
+            + '<table class="nk-change-table"><thead><tr>'
+            + '<th>Trường</th><th>Hiện tại</th><th>Muốn đổi thành</th>'
+            + '</tr></thead><tbody>'
+            + (changedRows || '<tr><td colspan="3" style="padding:20px;text-align:center;color:var(--muted)">⚠ Không có thông tin thay đổi</td></tr>')
+            + '</tbody></table>'
+            + formHtml;
+    }
+
+    document.getElementById('myc_content').innerHTML = contentHtml;
+    setModalFooter(isCho ? 'chitiet' : 'readonly');
+}
+
+    function setModalFooter(state){
+        var el=document.getElementById('myc_footer'),urlYC=CTX+'/yeu-cau-doi-trang-thai';
+        if(state==='loading'){
+            el.innerHTML='<button class="btn-m btn-cancel" onclick="closeM(\'modalYeuCau\')">Đóng</button>';
+        }else if(state==='readonly'){
+            el.innerHTML='<button class="btn-m btn-cancel" onclick="closeM(\'modalYeuCau\')">Đóng</button><a href="'+urlYC+'" class="btn-m btn-goto">Xem toàn bộ →</a>';
+        }else if(state==='chitiet'){
+            el.innerHTML='<button class="btn-m btn-cancel" onclick="closeM(\'modalYeuCau\')">Đóng</button><a href="'+urlYC+'" class="btn-m btn-goto">Xem tất cả</a><button class="btn-m btn-no" onclick="switchState(\'tuchoi\')">✕ Từ chối</button><button class="btn-m btn-ok" onclick="switchState(\'duyet\')">✓ Duyệt</button>';
+        }else if(state==='duyet'){
+            el.innerHTML='<button class="btn-m btn-cancel" onclick="switchState(\'chitiet\')">← Quay lại</button><button class="btn-m btn-ok" onclick="submitDuyet()" id="btnConfirmDuyet">✓ Xác nhận duyệt</button>';
+        }else if(state==='tuchoi'){
+            el.innerHTML='<button class="btn-m btn-cancel" onclick="switchState(\'chitiet\')">← Quay lại</button><button class="btn-m btn-no" onclick="submitTuChoi()" id="btnConfirmTC">✕ Xác nhận từ chối</button>';
+        }
+    }
+
+    function switchState(state){
+        const fDuyet=document.getElementById('form-duyet'),fTuChoi=document.getElementById('form-tuchoi');
+        const isNhanKhau=document.getElementById('myc_title').textContent.includes('nhân khẩu');
+        if(state==='duyet'){
+            if(fDuyet)fDuyet.style.display='';if(fTuChoi)fTuChoi.style.display='none';
+            setModalFooter('duyet');
+            document.getElementById('myc_ico').textContent='✓';document.getElementById('myc_ico').className='mico green';
+            document.getElementById('myc_title').textContent=isNhanKhau?'Duyệt cập nhật thông tin nhân khẩu':'Duyệt yêu cầu cư trú';
+        }else if(state==='tuchoi'){
+            if(fDuyet)fDuyet.style.display='none';if(fTuChoi)fTuChoi.style.display='';
+            setModalFooter('tuchoi');
+            document.getElementById('myc_ico').textContent='✕';document.getElementById('myc_ico').className='mico red';
+            document.getElementById('myc_title').textContent=isNhanKhau?'Từ chối cập nhật thông tin nhân khẩu':'Từ chối yêu cầu cư trú';
+        }else{
+            if(fDuyet)fDuyet.style.display='none';if(fTuChoi)fTuChoi.style.display='none';
+            setModalFooter('chitiet');
+            document.getElementById('myc_ico').textContent=isNhanKhau?'👤':'📋';
+            document.getElementById('myc_ico').className=isNhanKhau?'mico purple':'mico warn';
+            document.getElementById('myc_title').textContent=isNhanKhau?'Yêu cầu cập nhật thông tin nhân khẩu':'Yêu cầu đổi trạng thái cư trú';
+        }
+    }
+
     function submitDuyet(){if(!_activeYeuCauID)return;const ghiChu=(document.getElementById('inp_ghichu')?.value||'').trim(),btn=document.getElementById('btnConfirmDuyet');btn.disabled=true;btn.textContent='Đang xử lý...';fetch(CTX+'/yeu-cau-doi-trang-thai',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({action:'duyet',yeuCauID:_activeYeuCauID,ghiChu}).toString(),credentials:'include'}).then(r=>r.json()).then(res=>{if(res.success){closeM('modalYeuCau');showToast('success','✓ '+res.message);notifLoaded=false;_mlLoaded=false;_tbLoaded=false;setTimeout(reloadAllData,400);}else{btn.disabled=false;btn.textContent='✓ Xác nhận duyệt';showToast('error','✕ '+res.message);}}).catch(()=>{btn.disabled=false;btn.textContent='✓ Xác nhận duyệt';showToast('error','✕ Lỗi kết nối');});}
     function submitTuChoi(){if(!_activeYeuCauID)return;const lyDoTC=(document.getElementById('inp_lydotc')?.value||'').trim();if(!lyDoTC){showToast('error','⚠ Vui lòng nhập lý do từ chối.');return;}const btn=document.getElementById('btnConfirmTC');btn.disabled=true;btn.textContent='Đang xử lý...';fetch(CTX+'/yeu-cau-doi-trang-thai',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({action:'tuchoi',yeuCauID:_activeYeuCauID,lyDoTuChoi:lyDoTC}).toString(),credentials:'include'}).then(r=>r.json()).then(res=>{if(res.success){closeM('modalYeuCau');showToast('success','✓ '+res.message);notifLoaded=false;_mlLoaded=false;_tbLoaded=false;setTimeout(reloadAllData,400);}else{btn.disabled=false;btn.textContent='✕ Xác nhận từ chối';showToast('error','✕ '+res.message);}}).catch(()=>{btn.disabled=false;btn.textContent='✕ Xác nhận từ chối';showToast('error','✕ Lỗi kết nối');});}
     function markAllRead(){fetch(CTX+'/thong-bao',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'action=docTatCa',credentials:'include'}).then(r=>r.json()).then(()=>{document.querySelectorAll('.np-item.unread').forEach(el=>el.classList.remove('unread'));document.querySelectorAll('.np-dot').forEach(d=>d.classList.add('read'));_tbData.forEach(n=>n.daDoc=true);_tbLoaded=false;updateBadge(0);notifLoaded=false;}).catch(()=>{});}
@@ -774,7 +1060,7 @@
     function closeMOutside(e,id){if(e.target===document.getElementById(id))closeM(id);}
     document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeM('modalYeuCau');closeM('modalYCList');closeM('modalTatCaTB');hideLogoutModal();closeTuChoi();}});
     function pillH(id,label){const m={1:'p-tt',2:'p-tv',3:'p-tm'};return'<span class="pill '+(m[id]||'p-tt')+'">'+esc(label||'—')+'</span>';}
-    function orD(v){return(v&&v!=='null')?esc(String(v)):'—';}
+    function orD(v){return(v&&v!=='null'&&v!==null&&v!==undefined)?esc(String(v)):'—';}
     function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
     function formatTime(d){if(!d)return'';try{const diff=Math.floor((Date.now()-new Date(d))/1000);if(diff<60)return'Vừa xong';if(diff<3600)return Math.floor(diff/60)+' phút trước';if(diff<86400)return Math.floor(diff/3600)+' giờ trước';if(diff<604800)return Math.floor(diff/86400)+' ngày trước';return new Date(d).toLocaleDateString('vi-VN');}catch(e){return d;}}
     function showToast(type,msg){const t=document.getElementById('toast');t.className='toast '+type+' show';t.textContent=msg;clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3500);}

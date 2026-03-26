@@ -9,7 +9,7 @@ public class YeuCauDoiTrangThaiDAO {
     // PostgreSQL: || thay +
     private static final String BASE_SELECT
             = "SELECT "
-            + "    yc.YeuCauID, yc.LoaiYeuCau, "
+            + "    yc.YeuCauID, yc.LoaiYeuCau, yc.NhanKhauID, "  // ✅ THÊM NhanKhauID
             + "    yc.HoDanID, yc.TrangThaiCuID, yc.TrangThaiMoiID, "
             + "    yc.NguoiYeuCauID, yc.LyDoYeuCau, yc.TrangThaiYeuCauID, "
             + "    yc.NguoiDuyetID, yc.NgayDuyet, yc.GhiChuDuyet, yc.NgayTao, "
@@ -40,6 +40,7 @@ public class YeuCauDoiTrangThaiDAO {
         Map<String, Object> row = new LinkedHashMap<>();
         row.put("yeuCauID",           rs.getInt("YeuCauID"));
         row.put("loaiYeuCau",         rs.getInt("LoaiYeuCau"));
+        row.put("nhanKhauID",         rs.getInt("NhanKhauID"));  // ✅ THÊM
         row.put("hoDanID",            rs.getInt("HoDanID"));
         row.put("trangThaiCuID",      rs.getInt("TrangThaiCuID"));
         row.put("trangThaiMoiID",     rs.getInt("TrangThaiMoiID"));
@@ -306,17 +307,14 @@ public class YeuCauDoiTrangThaiDAO {
 
     public boolean duyetYeuCau(int yeuCauID, int nguoiDuyetID, String ghiChu,
             ThongBaoDAO thongBaoDAO) {
-        // PostgreSQL: NOW() → NOW()
         String sqlYC
                 = "UPDATE YeuCauDoiTrangThai "
                 + "SET TrangThaiYeuCauID = 2, NguoiDuyetID = ?, NgayDuyet = NOW(), GhiChuDuyet = ? "
                 + "WHERE YeuCauID = ? AND TrangThaiYeuCauID = 1";
-        // PostgreSQL: FROM ... JOIN update syntax → dùng UPDATE ... FROM
         String sqlHD
                 = "UPDATE HoDan hd SET TrangThaiID = yc.TrangThaiMoiID "
                 + "FROM YeuCauDoiTrangThai yc "
                 + "WHERE yc.HoDanID = hd.HoDanID AND yc.YeuCauID = ? AND yc.LoaiYeuCau = 1";
-        // PostgreSQL: UPDATE ... FROM syntax
         String sqlND
                 = "UPDATE NguoiDung nd "
                 + "SET Ho           = COALESCE(yc.Ho_Moi,       nd.Ho), "
@@ -329,6 +327,11 @@ public class YeuCauDoiTrangThaiDAO {
                 + "    AvatarPath   = COALESCE(yc.Avatar_Moi,   nd.AvatarPath) "
                 + "FROM YeuCauDoiTrangThai yc "
                 + "WHERE yc.NguoiDungCapNhatID = nd.NguoiDungID AND yc.YeuCauID = ? AND yc.LoaiYeuCau = 2";
+        // ✅ THÊM: SQL update trạng thái nhân khẩu
+        String sqlNK
+                = "UPDATE NhanKhau nk SET TrangThaiID = yc.TrangThaiMoiID "
+                + "FROM YeuCauDoiTrangThai yc "
+                + "WHERE yc.NhanKhauID = nk.NhanKhauID AND yc.YeuCauID = ? AND yc.LoaiYeuCau = 3";
 
         Connection conn = null;
         try {
@@ -371,14 +374,28 @@ public class YeuCauDoiTrangThaiDAO {
                         return false;
                     }
                 }
+            } else if (loai == 3) {  // ✅ THÊM: xử lý duyệt nhân khẩu
+                try (PreparedStatement ps = conn.prepareStatement(sqlNK)) {
+                    ps.setInt(1, yeuCauID);
+                    int rows = ps.executeUpdate();
+                    System.out.println("[duyetYeuCau] UPDATE NhanKhau rows=" + rows);
+                    if (rows == 0) {
+                        System.err.println("[duyetYeuCau] CẢNH BÁO: Không update được NhanKhau, "
+                                + "kiểm tra NhanKhauID trong bản ghi yeuCauID=" + yeuCauID);
+                        conn.rollback();
+                        return false;
+                    }
+                }
             }
 
             thongBaoDAO.guiThongBaoCaNhan(
                 "Yêu cầu của bạn đã được duyệt",
                 loai == 1
                     ? "Yêu cầu đổi trạng thái hộ khẩu của bạn đã được cán bộ phường chấp thuận."
-                    : "Yêu cầu cập nhật thông tin cá nhân của bạn đã được cán bộ phường chấp thuận. "
-                    + "Vui lòng đăng xuất và đăng nhập lại để cập nhật thông tin mới.",
+                    : loai == 2
+                    ? "Yêu cầu cập nhật thông tin cá nhân của bạn đã được cán bộ phường chấp thuận. "
+                    + "Vui lòng đăng xuất và đăng nhập lại để cập nhật thông tin mới."
+                    : "Yêu cầu đổi trạng thái nhân khẩu của bạn đã được cán bộ phường chấp thuận.",  // ✅ THÊM
                 nguoiDuyetID, nguoiYeuCauID, conn
             );
 
@@ -427,7 +444,8 @@ public class YeuCauDoiTrangThaiDAO {
             thongBaoDAO.guiThongBaoCaNhan(
                 "Yêu cầu của bạn bị từ chối",
                 (loai == 1 ? "Yêu cầu đổi trạng thái hộ khẩu"
-                           : "Yêu cầu cập nhật thông tin cá nhân")
+                 : loai == 2 ? "Yêu cầu cập nhật thông tin cá nhân"
+                 : "Yêu cầu đổi trạng thái nhân khẩu")  // ✅ THÊM
                     + " bị từ chối. Lý do: " + lyDoTuChoi,
                 nguoiDuyetID, nguoiYeuCauID, conn
             );
@@ -461,7 +479,6 @@ public class YeuCauDoiTrangThaiDAO {
     }
 
     public Map<String, Object> layChiTietTheoThongBao(int thongBaoID) {
-        // PostgreSQL: TOP 1 ... ORDER BY → dùng LIMIT 1, subquery cần alias
         String sql = BASE_SELECT
                 + "WHERE yc.TrangThaiYeuCauID = 1 "
                 + "AND yc.NgayTao <= (SELECT NgayGui FROM ThongBao WHERE ThongBaoID = ? LIMIT 1) "
@@ -493,12 +510,14 @@ public class YeuCauDoiTrangThaiDAO {
         }
         return list;
     }
+
     public boolean taoYeuCauNhanKhau(int nhanKhauID, int trangThaiCuID, int trangThaiMoiID,
-        int nguoiYeuCauID, String lyDo) {
+        int nguoiYeuCauID, String lyDo, YeuCauDoiTrangThai snapshot) {
     String sql
             = "INSERT INTO YeuCauDoiTrangThai "
-            + "    (LoaiYeuCau, NhanKhauID, TrangThaiCuID, TrangThaiMoiID, NguoiYeuCauID, LyDoYeuCau, TrangThaiYeuCauID) "
-            + "VALUES (3, ?, ?, ?, ?, ?, 1)";
+            + "    (LoaiYeuCau, NhanKhauID, TrangThaiCuID, TrangThaiMoiID, NguoiYeuCauID, LyDoYeuCau, TrangThaiYeuCauID, "
+            + "     Ho_Cu, Ten_Cu, NgaySinh_Cu, GioiTinh_Cu, Email_Cu, SDT_Cu, CCCD_Cu, Avatar_Cu) "
+            + "VALUES (3, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?)";
     try (Connection conn = DBContext.getInstance().getConnection();
          PreparedStatement ps = conn.prepareStatement(sql)) {
         ps.setInt(1, nhanKhauID);
@@ -506,7 +525,28 @@ public class YeuCauDoiTrangThaiDAO {
         ps.setInt(3, trangThaiMoiID);
         ps.setInt(4, nguoiYeuCauID);
         ps.setString(5, lyDo);
+        ps.setString(6,  snapshot.getHo_Cu());
+        ps.setString(7,  snapshot.getTen_Cu());
+        ps.setDate(8,    snapshot.getNgaySinh_Cu());
+        ps.setString(9,  snapshot.getGioiTinh_Cu());
+        ps.setString(10, snapshot.getEmail_Cu());
+        ps.setString(11, snapshot.getSDT_Cu());
+        ps.setString(12, snapshot.getCCCD_Cu());
+        ps.setString(13, snapshot.getAvatar_Cu());
         return ps.executeUpdate() > 0;
+    } catch (Exception e) {
+        e.printStackTrace();
+        return false;
+    }
+}
+    public boolean dangCoYeuCauNhanKhauChoDuyet(int nhanKhauID) {
+    String sql = "SELECT COUNT(1) FROM YeuCauDoiTrangThai "
+            + "WHERE NhanKhauID = ? AND LoaiYeuCau = 3 AND TrangThaiYeuCauID = 1";
+    try (Connection conn = DBContext.getInstance().getConnection();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        ps.setInt(1, nhanKhauID);
+        ResultSet rs = ps.executeQuery();
+        return rs.next() && rs.getInt(1) > 0;
     } catch (Exception e) {
         e.printStackTrace();
         return false;

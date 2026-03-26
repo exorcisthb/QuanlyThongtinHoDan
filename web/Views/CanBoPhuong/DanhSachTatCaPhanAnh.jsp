@@ -171,6 +171,14 @@
         .inline-panel-inner textarea:focus{outline:none;border-color:var(--accent);}
         .inline-panel-inner .btn-row{display:flex;gap:8px;margin-top:10px;}
 
+        /* ✅ THÊM MỚI: Ảnh đính kèm + Lightbox */
+        .detail-anh-thumb{width:90px;height:70px;border-radius:8px;object-fit:cover;border:1px solid var(--border);cursor:zoom-in;transition:opacity .15s;}
+        .detail-anh-thumb:hover{opacity:.8;}
+        .lightbox{display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.92);align-items:center;justify-content:center;}
+        .lightbox.show{display:flex;}
+        .lightbox img{max-width:90vw;max-height:90vh;border-radius:10px;}
+        .lightbox-close{position:absolute;top:20px;right:24px;color:#fff;font-size:28px;cursor:pointer;line-height:1;}
+
         .logout-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);align-items:center;justify-content:center;}
         .logout-overlay.show{display:flex;animation:mfade .2s ease;}
         .logout-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:380px;max-width:calc(100vw - 32px);box-shadow:0 24px 64px rgba(0,0,0,.6);overflow:hidden;animation:mpop .22s cubic-bezier(.34,1.56,.64,1);}
@@ -360,7 +368,6 @@
                         <td style="color:var(--muted);font-size:12px;white-space:nowrap">${pa.ngayTao}</td>
                         <td class="center">
                             <div class="act-wrap">
-                                <%-- Nút chi tiết — luôn hiển thị --%>
                                 <button type="button" class="act-btn detail"
                                         data-id="${paID}"
                                         data-title="${pa.tieuDe}"
@@ -375,7 +382,6 @@
                                         onclick="xemChiTiet(this)">
                                     🔍 Chi tiết
                                 </button>
-                                <%-- Nút thao tác nhanh bên ngoài (chỉ TT=3) --%>
                                 <c:if test="${ttID==3}">
                                     <div class="act-menu-wrap">
                                         <button type="button" class="act-btn" onclick="toggleAct('act-${paID}',event)">Thao tác ▾</button>
@@ -441,6 +447,11 @@
                 <div class="detail-section">
                     <div class="detail-section-title">Nội dung phản ánh</div>
                     <div class="detail-noidung" id="dt-noidung">—</div>
+                </div>
+                <!-- ✅ THÊM MỚI: Ảnh đính kèm -->
+                <div class="detail-section" id="dt-anh-section" style="display:none">
+                    <div class="detail-section-title">Ảnh đính kèm</div>
+                    <div id="dt-anh" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px"></div>
                 </div>
                 <div class="detail-section">
                     <div class="detail-section-title">Lịch sử xử lý</div>
@@ -509,6 +520,12 @@
             <button class="btn-lx" onclick="window.location.href='${pageContext.request.contextPath}/logout'">🚪 Đăng xuất</button>
         </div>
     </div>
+</div>
+
+<!-- ✅ THÊM MỚI: Lightbox xem ảnh -->
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('show')">
+    <span class="lightbox-close" onclick="event.stopPropagation();document.getElementById('lightbox').classList.remove('show')">✕</span>
+    <img id="lightboxImg" src="" alt="">
 </div>
 
 <script>
@@ -597,24 +614,47 @@ function xemChiTiet(btn) {
     document.getElementById('dt-mucdo').innerHTML       = '<span class="pill ' + m[0] + '">' + m[1] + '</span>';
     document.getElementById('dt-noidung').textContent   = d.noidung  || '(Không có nội dung)';
 
-    loadLichSu(d.id);
+    // Reset ảnh
+    document.getElementById('dt-anh-section').style.display = 'none';
+    document.getElementById('dt-anh').innerHTML = '';
+    document.getElementById('dt-lichsu').innerHTML =
+        '<div style="color:var(--muted);font-size:13px;padding:8px 0">Đang tải...</div>';
+
+    // ✅ Gọi loadChiTiet thay vì loadLichSu
+    loadChiTiet(d.id);
     renderActions(ttID, d.id);
 
     document.getElementById('m-chiTiet').classList.add('show');
     document.body.style.overflow = 'hidden';
 }
 
-function loadLichSu(id) {
-    var el = document.getElementById('dt-lichsu');
-    el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">Đang tải...</div>';
-    fetch(CTX + '/canbophuong/phan-anh?action=lichSu&phanAnhID=' + id)
+// ✅ Hàm mới: fetch action=chiTiet, xử lý cả ảnh lẫn lịch sử
+function loadChiTiet(id) {
+    fetch(CTX + '/canbophuong/phan-anh?action=chiTiet&phanAnhID=' + id)
         .then(function(r){ return r.json(); })
         .then(function(data) {
-            if (!data || !data.length) {
-                el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">Chưa có lịch sử.</div>';
+            // ── Render ảnh ──
+            var anhList = data.danhSachAnh;
+            if (anhList && anhList.length > 0) {
+                document.getElementById('dt-anh-section').style.display = '';
+                var anhHtml = '';
+                for (var i = 0; i < anhList.length; i++) {
+                    var url = CTX + '/' + anhList[i].duongDan.replace(/^\//, '');
+                    anhHtml += '<img class="detail-anh-thumb" src="' + url + '" '
+                             + 'onerror="this.style.display=\'none\'" '
+                             + 'onclick="xemAnh(\'' + url + '\')" alt="Ảnh ' + (i + 1) + '">';
+                }
+                document.getElementById('dt-anh').innerHTML = anhHtml;
+            }
+
+            // ── Render lịch sử ──
+            var lsEl = document.getElementById('dt-lichsu');
+            var lichSu = data.lichSuXuLy;
+            if (!lichSu || !lichSu.length) {
+                lsEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">Chưa có lịch sử.</div>';
                 return;
             }
-            el.innerHTML = data.map(function(ls) {
+            lsEl.innerHTML = lichSu.map(function(ls) {
                 return '<div class="ls-item">'
                     + '<div class="ls-dot"></div>'
                     + '<div>'
@@ -627,8 +667,15 @@ function loadLichSu(id) {
             }).join('');
         })
         .catch(function() {
-            el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">Không thể tải lịch sử.</div>';
+            document.getElementById('dt-lichsu').innerHTML =
+                '<div style="color:var(--muted);font-size:13px;padding:8px 0">Không thể tải dữ liệu.</div>';
         });
+}
+
+// ✅ Hàm xem ảnh phóng to
+function xemAnh(url) {
+    document.getElementById('lightboxImg').src = url;
+    document.getElementById('lightbox').classList.add('show');
 }
 
 function renderActions(ttID, id) {
@@ -684,6 +731,8 @@ function hideLogoutModal(){
 
 document.addEventListener('keydown',function(e){
     if(e.key!=='Escape')return;
+    // ✅ Thêm đóng lightbox khi nhấn Escape
+    document.getElementById('lightbox').classList.remove('show');
     ['giaiQuyet','phanHoi'].forEach(function(t){closeModal(t);});
     closeDetail();
     hideLogoutModal();

@@ -136,18 +136,23 @@
     List<Map<String, Object>> danhSachTB =
         (List<Map<String, Object>>) request.getAttribute("danhSachThongBao");
     Integer soChuaDoc = (Integer) request.getAttribute("soChuaDoc");
-    String vaiTro     = (String)  request.getAttribute("vaiTro");
+
+    // ✅ SỬA: đọc vaiTro từ session thay vì request attribute
+    String vaiTro = (String) session.getAttribute("vaiTro");
+
     if (danhSachTB == null) danhSachTB = new java.util.ArrayList<>();
     if (soChuaDoc  == null) soChuaDoc  = 0;
     if (vaiTro     == null) vaiTro     = "";
     String ctx = request.getContextPath();
 
+    // ✅ SỬA: thêm case HoDan, đổi default về /login tránh 404
     String dashUrl;
     switch (vaiTro) {
-        case "Admin":       dashUrl = ctx + "/admin/dashboard";         break;
-        case "ToTruong":    dashUrl = ctx + "/totruong/dashboard";      break;
-        case "CanBoPhuong": dashUrl = ctx + "/canbophuong/dashboard";   break;
-        default:            dashUrl = ctx + "/dashboard";               break;
+        case "Admin":       dashUrl = ctx + "/admin/dashboard";       break;
+        case "ToTruong":    dashUrl = ctx + "/totruong/dashboard";    break;
+        case "CanBoPhuong": dashUrl = ctx + "/canbophuong/dashboard"; break;
+        case "HoDan":       dashUrl = ctx + "/hodan/dashboard";       break;
+        default:            dashUrl = ctx + "/login";                 break;
     }
 %>
 

@@ -55,138 +55,188 @@ public class HoDanService {
     public int tongSoHo(Map<String, List<HoDan>> map) {
         return map.values().stream().mapToInt(List::size).sum();
     }
+public ImportResult importFromExcel(InputStream inputStream, int toDanPhoID) {
+    List<Map<String, Object>> danhSach = new ArrayList<>();
+    List<String> parseErrors = new ArrayList<>();
+    int totalRows = 0;
 
-// ── Import tổng hợp ─────────────────────────────────────────────────
-    public ImportResult importFromExcel(InputStream inputStream, int toDanPhoID) {
-        List<Map<String, Object>> danhSach = new ArrayList<>();
-        List<String> parseErrors = new ArrayList<>();
-        int totalRows = 0;
+    try (Workbook workbook = new XSSFWorkbook(inputStream)) {
+        Sheet sheet = workbook.getSheetAt(0);
 
-        try (Workbook workbook = new XSSFWorkbook(inputStream)) {
-            Sheet sheet = workbook.getSheetAt(0);
+        for (int i = 0; i <= sheet.getLastRowNum(); i++) {
+            Row row = sheet.getRow(i);
+            if (row == null) continue;
+            Cell firstCell = row.getCell(0);
+            if (firstCell == null || firstCell.getCellType() == CellType.BLANK) continue;
 
-            for (int i = 0; i <= sheet.getLastRowNum(); i++) {
-                Row row = sheet.getRow(i);
-                if (row == null) {
-                    continue;
-                }
-                Cell firstCell = row.getCell(0);
-                if (firstCell == null || firstCell.getCellType() == CellType.BLANK) {
-                    continue;
-                }
+            String tenHoDan = getCellString(row.getCell(0));
+            if (tenHoDan == null || tenHoDan.trim().isEmpty()
+                    || tenHoDan.startsWith("★")
+                    || tenHoDan.contains("(VD:")) continue;
 
-                String tenHoDan = getCellString(row.getCell(0));
-                if (tenHoDan == null || tenHoDan.trim().isEmpty()
-                        || tenHoDan.startsWith("★")
-                        || tenHoDan.contains("(VD:")) {
-                    continue;
-                }
+            totalRows++;
 
-                totalRows++;
+            String cccd        = getCellString(row.getCell(1));
+            String ho          = getCellString(row.getCell(2));
+            String ten         = getCellString(row.getCell(3));
+            java.sql.Date ngaySinh = getCellSqlDate(row.getCell(4));
+            String gioiTinh    = getCellString(row.getCell(5));
+            String soDienThoai = getCellString(row.getCell(6));
+            String email       = getCellString(row.getCell(7));
+            String quanHe      = getCellString(row.getCell(8));
+            String diaChi      = getCellString(row.getCell(9));
 
-                String cccd = getCellString(row.getCell(1));
-                String ho = getCellString(row.getCell(2));
-                String ten = getCellString(row.getCell(3));
-                java.sql.Date ngaySinh = getCellSqlDate(row.getCell(4));
-                String gioiTinh = getCellString(row.getCell(5));
-                String soDienThoai = getCellString(row.getCell(6));
-                String email = getCellString(row.getCell(7));
-                String quanHe = getCellString(row.getCell(8));
-                String diaChi = getCellString(row.getCell(9));
+            // ✅ VALIDATE CƠ BẢN
+            List<String> rowErrors = new ArrayList<>();
 
-                // ✅ VALIDATE TRƯỚC KHI THÊM VÀO DANH SÁCH
-                List<String> rowErrors = new ArrayList<>();
-
-                if (cccd == null || cccd.trim().isEmpty()) {
-                    rowErrors.add("Dòng " + (i + 1) + ": CCCD không được trống");
-                } else if (!cccd.trim().matches("\\d{12}")) {
-                    rowErrors.add("Dòng " + (i + 1) + ": CCCD không hợp lệ (phải đủ 12 chữ số)");
-                }
-
-                if (ho == null || ho.trim().isEmpty()) {
-                    rowErrors.add("Dòng " + (i + 1) + ": Họ không được trống");
-                }
-
-                if (ten == null || ten.trim().isEmpty()) {
-                    rowErrors.add("Dòng " + (i + 1) + ": Tên không được trống");
-                }
-
-                if (ngaySinh == null) {
-                    rowErrors.add("Dòng " + (i + 1) + ": Ngày sinh không được trống hoặc sai định dạng (dd/MM/yyyy)");
-                }
-
-                if (gioiTinh == null || gioiTinh.trim().isEmpty()) {
-                    rowErrors.add("Dòng " + (i + 1) + ": Giới tính không được trống");
-                } else if (!gioiTinh.trim().matches("Nam|Nữ|Khác")) {
-                    rowErrors.add("Dòng " + (i + 1) + ": Giới tính phải là Nam / Nữ / Khác");
-                }
-
-                if (quanHe == null || quanHe.trim().isEmpty()) {
-                    rowErrors.add("Dòng " + (i + 1) + ": Quan hệ hộ gia đình không được trống");
-                }
-
-                if (!rowErrors.isEmpty()) {
-                    parseErrors.addAll(rowErrors);
-                    continue; // không thêm dòng lỗi vào danh sách
-                }
-                // ✅ Check trùng CCCD với DB
-                if (cccd != null && !cccd.trim().isEmpty() && cccd.trim().matches("\\d{12}")) {
-                    if (hoDanDAO.isCCCDExists(cccd.trim())) {
-                        rowErrors.add("Dòng " + (i + 1) + ": CCCD '" + cccd.trim() + "' đã tồn tại trong hệ thống");
-                    }
-                }
-// ✅ Check trùng SĐT với DB
-                if (soDienThoai != null && !soDienThoai.trim().isEmpty()) {
-                    if (hoDanDAO.isSDTExists(soDienThoai.trim())) {
-                        rowErrors.add("Dòng " + (i + 1) + ": Số điện thoại '" + soDienThoai.trim() + "' đã tồn tại trong hệ thống");
-                    }
-                }
-
-// ✅ FIX: merge lỗi vào parseErrors và KHÔNG thêm vào danhSach
-                if (!rowErrors.isEmpty()) {
-                    parseErrors.addAll(rowErrors);
-                    continue;  // ← bỏ qua dòng này
-                }
-
-                // ✅ Chỉ thêm vào danh sách nếu không có lỗi
-                Map<String, Object> data = new HashMap<>();
-                data.put("rowNum", i + 1);
-                data.put("tenHoDan", tenHoDan.trim().toUpperCase());
-                data.put("cccd", cccd);
-                data.put("ho", ho);
-                data.put("ten", ten);
-                data.put("ngaySinh", ngaySinh);
-                data.put("gioiTinh", gioiTinh);
-                data.put("soDienThoai", soDienThoai);
-                data.put("email", email);
-                data.put("quanHe", quanHe);
-                data.put("diaChi", diaChi != null ? diaChi.trim() : "");
-                danhSach.add(data);
+            if (cccd == null || cccd.trim().isEmpty()) {
+                rowErrors.add("Dòng " + (i + 1) + ": CCCD không được trống");
+            } else if (!cccd.trim().matches("\\d{12}")) {
+                rowErrors.add("Dòng " + (i + 1) + ": CCCD không hợp lệ (phải đủ 12 chữ số)");
             }
 
-            // ✅ NẾU CÓ BẤT KỲ LỖI NÀO → KHÔNG INSERT GÌ CẢ
-            if (!parseErrors.isEmpty()) {
-                return new ImportResult(totalRows, 0, parseErrors);
+            if (ho == null || ho.trim().isEmpty())
+                rowErrors.add("Dòng " + (i + 1) + ": Họ không được trống");
+
+            if (ten == null || ten.trim().isEmpty())
+                rowErrors.add("Dòng " + (i + 1) + ": Tên không được trống");
+
+            if (ngaySinh == null)
+                rowErrors.add("Dòng " + (i + 1) + ": Ngày sinh không được trống hoặc sai định dạng (dd/MM/yyyy)");
+
+            if (gioiTinh == null || gioiTinh.trim().isEmpty()) {
+                rowErrors.add("Dòng " + (i + 1) + ": Giới tính không được trống");
+            } else if (!gioiTinh.trim().matches("Nam|Nữ|Khác")) {
+                rowErrors.add("Dòng " + (i + 1) + ": Giới tính phải là Nam / Nữ / Khác");
             }
 
-            // ✅ Toàn bộ hợp lệ → mới insert
-            Map<String, List<Map<String, Object>>> grouped = new LinkedHashMap<>();
-            for (Map<String, Object> row : danhSach) {
-                String key = ((String) row.get("tenHoDan")).trim().toUpperCase();
-                grouped.computeIfAbsent(key, k -> new ArrayList<>()).add(row);
+            if (quanHe == null || quanHe.trim().isEmpty())
+                rowErrors.add("Dòng " + (i + 1) + ": Quan hệ hộ gia đình không được trống");
+
+            if (!rowErrors.isEmpty()) {
+                parseErrors.addAll(rowErrors);
+                continue;
             }
 
-            List<String> insertErrors = hoDanDAO.importHoDanVaNguoiDung(
-                    flattenGrouped(grouped), toDanPhoID);
+            // ✅ CHECK TRÙNG VỚI DB
+            if (cccd != null && !cccd.trim().isEmpty() && cccd.trim().matches("\\d{12}")) {
+                if (hoDanDAO.isCCCDExists(cccd.trim()))
+                    rowErrors.add("Dòng " + (i + 1) + ": CCCD '" + cccd.trim() + "' đã tồn tại trong hệ thống");
+            }
+            if (soDienThoai != null && !soDienThoai.trim().isEmpty()) {
+                if (hoDanDAO.isSDTExists(soDienThoai.trim()))
+                    rowErrors.add("Dòng " + (i + 1) + ": Số điện thoại '" + soDienThoai.trim() + "' đã tồn tại trong hệ thống");
+            }
 
-            int success = danhSach.size() - insertErrors.size();
-            return new ImportResult(totalRows, success, insertErrors);
+            if (!rowErrors.isEmpty()) {
+                parseErrors.addAll(rowErrors);
+                continue;
+            }
 
-        } catch (Exception e) {
-            parseErrors.add("Không thể đọc file Excel: " + e.getMessage());
+            Map<String, Object> data = new HashMap<>();
+            data.put("rowNum", i + 1);
+            data.put("tenHoDan", tenHoDan.trim().toUpperCase());
+            data.put("cccd", cccd.trim());
+            data.put("ho", ho);
+            data.put("ten", ten);
+            data.put("ngaySinh", ngaySinh);
+            data.put("gioiTinh", gioiTinh);
+            data.put("soDienThoai", soDienThoai);
+            data.put("email", email);
+            data.put("quanHe", quanHe);
+            data.put("diaChi", diaChi != null ? diaChi.trim() : "");
+            danhSach.add(data);
+        }
+
+        // ════════════════════════════════════════════════════════
+        // ✅ CHECK TRÙNG NỘI BỘ FILE EXCEL
+        // ════════════════════════════════════════════════════════
+
+        // 1️⃣ Trùng CCCD trong file
+        Map<String, Integer> cccdSeenAt = new LinkedHashMap<>();
+        for (Map<String, Object> row : danhSach) {
+            String cccd = (String) row.get("cccd");
+            if (cccd == null || cccd.trim().isEmpty()) continue;
+            int rowNum = (int) row.get("rowNum");
+            if (cccdSeenAt.containsKey(cccd.trim())) {
+                parseErrors.add("Dòng " + rowNum + ": CCCD '" + cccd.trim()
+                        + "' bị trùng với dòng " + cccdSeenAt.get(cccd.trim()) + " trong file Excel");
+            } else {
+                cccdSeenAt.put(cccd.trim(), rowNum);
+            }
+        }
+
+        // 2️⃣ Trùng SĐT trong file
+        Map<String, Integer> sdtSeenAt = new LinkedHashMap<>();
+        for (Map<String, Object> row : danhSach) {
+            String sdt = (String) row.get("soDienThoai");
+            if (sdt == null || sdt.trim().isEmpty()) continue;
+            int rowNum = (int) row.get("rowNum");
+            if (sdtSeenAt.containsKey(sdt.trim())) {
+                parseErrors.add("Dòng " + rowNum + ": Số điện thoại '" + sdt.trim()
+                        + "' bị trùng với dòng " + sdtSeenAt.get(sdt.trim()) + " trong file Excel");
+            } else {
+                sdtSeenAt.put(sdt.trim(), rowNum);
+            }
+        }
+
+        // 3️⃣ Mỗi số nhà (cùng địa chỉ) chỉ được có 1 Chủ hộ
+        // ✅ FIX: key = tenHoDan + "|" + diaChi (phân biệt Số nhà 12 Hòa Bình vs Số nhà 12 Vị Hoàng)
+        Map<String, Integer> chuHoSeenAt = new LinkedHashMap<>();
+        for (Map<String, Object> row : danhSach) {
+            String tenHoDan = (String) row.get("tenHoDan");
+            String quanHe   = (String) row.get("quanHe");
+            String diaChi   = (String) row.get("diaChi");
+            int rowNum      = (int)    row.get("rowNum");
+            if (quanHe == null) continue;
+            boolean laChuHo = quanHe.trim().equalsIgnoreCase("Chủ hộ")
+                           || quanHe.trim().equalsIgnoreCase("Chu ho");
+            if (!laChuHo) continue;
+            // ✅ FIX: key kết hợp cả tenHoDan + diaChi
+            String key = tenHoDan.trim().toUpperCase() + "|" + (diaChi != null ? diaChi.trim().toUpperCase() : "");
+            if (chuHoSeenAt.containsKey(key)) {
+                parseErrors.add("Dòng " + rowNum + ": Số nhà '" + tenHoDan
+                        + "' (địa chỉ: " + diaChi + ") đã có Chủ hộ ở dòng " + chuHoSeenAt.get(key)
+                        + " — mỗi hộ chỉ được có 1 Chủ hộ");
+            } else {
+                chuHoSeenAt.put(key, rowNum);
+            }
+        }
+
+        // ════════════════════════════════════════════════════════
+        // ✅ NẾU CÓ BẤT KỲ LỖI NÀO → KHÔNG INSERT GÌ CẢ
+        if (!parseErrors.isEmpty()) {
             return new ImportResult(totalRows, 0, parseErrors);
         }
+
+        // ════════════════════════════════════════════════════════
+        // ✅ GROUP ĐÚNG: key = tenHoDan + "|" + diaChi (KHÁC TỔ/NGÁCH/NGÕ = HỘ KHÁC NHAU)
+        // ════════════════════════════════════════════════════════
+        Map<String, List<Map<String, Object>>> grouped = new LinkedHashMap<>();
+        for (Map<String, Object> row : danhSach) {
+            String tenHoDan = ((String) row.get("tenHoDan")).trim().toUpperCase();
+            String diaChi   = ((String) row.get("diaChi")).trim().toUpperCase();
+            // ✅ FIX CHÍNH: Số nhà 12 Hòa Bình ≠ Số nhà 12 Vị Hoàng
+            String key = tenHoDan + "|" + diaChi;
+            grouped.computeIfAbsent(key, k -> new ArrayList<>()).add(row);
+        }
+
+        // ✅ Với mỗi group, kiểm tra xem DB đã có hộ trùng tenHoDan+diaChi chưa
+        // Nếu có → kiểm tra quanHe:
+        //   - Là thành viên (em/con/cháu) → thêm vào hộ đã có
+        //   - Là Chủ hộ → báo lỗi (hộ đó đã có chủ hộ rồi)
+        // Nếu chưa có → tạo hộ mới
+        List<String> insertErrors = hoDanDAO.importHoDanVaNguoiDung(
+                flattenGrouped(grouped), toDanPhoID);
+
+        int success = danhSach.size() - insertErrors.size();
+        return new ImportResult(totalRows, success, insertErrors);
+
+    } catch (Exception e) {
+        parseErrors.add("Không thể đọc file Excel: " + e.getMessage());
+        return new ImportResult(totalRows, 0, parseErrors);
     }
+}
 
     // ════════════════════════════════════════════════════════════════════
     // ── QR CODE METHODS ─────────────────────────────────────────────────

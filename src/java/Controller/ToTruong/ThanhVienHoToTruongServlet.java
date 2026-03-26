@@ -1,5 +1,4 @@
 package Controller.ToTruong;
-
 import Model.DAO.ThanhVienDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -32,9 +31,10 @@ public class ThanhVienHoToTruongServlet extends HttpServlet {
                 Map<String, Object> row = list.get(i);
                 if (i > 0) json.append(",");
                 json.append("{")
-                    // ✅ THÊM: nhanKhauID và trangThaiID cho nút Sửa TT từng người
-                    .append("\"nhanKhauID\":")   .append(row.get("nhanKhauID") != null ? row.get("nhanKhauID") : 0).append(",")
-                    .append("\"trangThaiID\":")  .append(row.get("trangThaiID") != null ? row.get("trangThaiID") : 1).append(",")
+                    .append("\"nhanKhauID\":")   .append(row.get("nhanKhauID")  != null ? row.get("nhanKhauID")  : 0)    .append(",")
+                    .append("\"trangThaiID\":")  .append(row.get("trangThaiID") != null ? row.get("trangThaiID") : 1)    .append(",")
+                    .append("\"tenTrangThai\":") .append(q(row.get("tenTrangThai")))                                      .append(",") // ← THÊM
+                    .append("\"daKichHoat\":")   .append(row.get("daKichHoat")  != null ? row.get("daKichHoat")  : false).append(",") // ← THÊM
                     .append("\"hoTen\":")        .append(q(row.get("hoTen")))        .append(",")
                     .append("\"cccd\":")         .append(q(row.get("cccd")))         .append(",")
                     .append("\"ngaySinh\":")     .append(q(row.get("ngaySinh")))     .append(",")

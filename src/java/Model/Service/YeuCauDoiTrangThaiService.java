@@ -59,24 +59,34 @@ public class YeuCauDoiTrangThaiService {
     // ------------------------------------------------------------------ //
     //  THÊM MỚI: TẠO YÊU CẦU CẬP NHẬT THÔNG TIN (loại 2 - hộ dân)
     // ------------------------------------------------------------------ //
-    public Map<String, Object> taoYeuCauCapNhat(int nguoiDungID,
+     public Map<String, Object> taoYeuCauCapNhat(int nguoiDungID,
             YeuCauDoiTrangThai thongTinMoi, String lyDo) {
         Map<String, Object> result = new HashMap<>();
-
+ 
+        // ── 1. Validate lý do ──
         if (lyDo == null || lyDo.trim().isEmpty()) {
             result.put("success", false);
             result.put("message", "Vui lòng nhập lý do cập nhật.");
             return result;
         }
-
-        // Lấy thông tin hiện tại để snapshot thông tin cũ
+ 
+        // ── 2. Chặn trùng: đang có yêu cầu loại 2 chờ duyệt ──
+        if (yeuCauDAO.dangCoYeuCauCapNhatChoDuyet(nguoiDungID)) {
+            result.put("success", false);
+            result.put("message", "Bạn đang có yêu cầu cập nhật chờ duyệt. "
+                    + "Vui lòng chờ cán bộ phường xử lý hoặc huỷ yêu cầu cũ trước.");
+            return result;
+        }
+ 
+        // ── 3. Lấy thông tin hiện tại để snapshot thông tin cũ ──
         NguoiDung cu = nguoiDungDAO.layTheoID(nguoiDungID);
         if (cu == null) {
             result.put("success", false);
             result.put("message", "Không tìm thấy thông tin người dùng.");
             return result;
         }
-
+ 
+        // ── 4. Gán snapshot thông tin cũ ──
         thongTinMoi.setLyDoYeuCau(lyDo.trim());
         thongTinMoi.setHo_Cu(cu.getHo());
         thongTinMoi.setTen_Cu(cu.getTen());
@@ -86,7 +96,12 @@ public class YeuCauDoiTrangThaiService {
         thongTinMoi.setSDT_Cu(cu.getSoDienThoai());
         thongTinMoi.setCCCD_Cu(cu.getCccd());
         thongTinMoi.setAvatar_Cu(cu.getAvatarPath());
-
+ 
+        // ── 5. CCCD_Moi và NgaySinh_Moi luôn null — không cho phép sửa ──
+        thongTinMoi.setCCCD_Moi(null);
+        thongTinMoi.setNgaySinh_Moi(null);
+ 
+        // ── 6. Lưu DB ──
         boolean ok = yeuCauDAO.taoYeuCauCapNhat(nguoiDungID, thongTinMoi, thongBaoDAO);
         if (ok) {
             result.put("success", true);
@@ -241,7 +256,6 @@ public class YeuCauDoiTrangThaiService {
 public Map<String, Object> taoYeuCauNhanKhau(int nhanKhauID, int trangThaiCuID,
         int trangThaiMoiID, int nguoiYeuCauID, String lyDo) {
     Map<String, Object> result = new HashMap<>();
-
     if (lyDo == null || lyDo.trim().isEmpty()) {
         result.put("success", false);
         result.put("message", "Vui lòng nhập lý do yêu cầu.");
@@ -252,9 +266,30 @@ public Map<String, Object> taoYeuCauNhanKhau(int nhanKhauID, int trangThaiCuID,
         result.put("message", "Trạng thái mới phải khác trạng thái hiện tại.");
         return result;
     }
-
+    // ✅ THÊM: chặn tạo trùng
+    if (yeuCauDAO.dangCoYeuCauNhanKhauChoDuyet(nhanKhauID)) {
+        result.put("success", false);
+        result.put("message", "Nhân khẩu này đang có yêu cầu chờ duyệt, không thể tạo thêm.");
+        return result;
+    }
+    // ✅ Query snapshot thông tin hiện tại của nhân khẩu
+    NguoiDung cu = nguoiDungDAO.layTheoThanhVienID(nhanKhauID);
+    if (cu == null) {
+        result.put("success", false);
+        result.put("message", "Không tìm thấy thông tin nhân khẩu.");
+        return result;
+    }
+    YeuCauDoiTrangThai snapshot = new YeuCauDoiTrangThai();
+    snapshot.setHo_Cu(cu.getHo());
+    snapshot.setTen_Cu(cu.getTen());
+    snapshot.setNgaySinh_Cu(cu.getNgaySinh());
+    snapshot.setGioiTinh_Cu(cu.getGioiTinh());
+    snapshot.setEmail_Cu(cu.getEmail());
+    snapshot.setSDT_Cu(cu.getSoDienThoai());
+    snapshot.setCCCD_Cu(cu.getCccd());
+    snapshot.setAvatar_Cu(cu.getAvatarPath());
     boolean ok = yeuCauDAO.taoYeuCauNhanKhau(nhanKhauID, trangThaiCuID,
-            trangThaiMoiID, nguoiYeuCauID, lyDo.trim());
+            trangThaiMoiID, nguoiYeuCauID, lyDo.trim(), snapshot);
     if (ok) {
         thongBaoDAO.guiThongBaoTheoVaiTro(
                 "Yêu cầu đổi trạng thái nhân khẩu mới",
@@ -270,4 +305,5 @@ public Map<String, Object> taoYeuCauNhanKhau(int nhanKhauID, int trangThaiCuID,
     }
     return result;
 }
+
 }

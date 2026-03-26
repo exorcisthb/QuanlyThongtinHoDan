@@ -82,7 +82,8 @@
         .user-menu{position:relative;}
         .avatar-btn{display:flex;align-items:center;gap:10px;background:none;border:1px solid transparent;border-radius:40px;padding:5px 14px 5px 5px;cursor:pointer;color:var(--text);font-family:inherit;transition:all .18s;}
         .avatar-btn:hover{background:var(--surface2);border-color:var(--border);}
-        .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;text-transform:uppercase;}
+        .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;text-transform:uppercase;overflow:hidden;}
+        .avatar img{width:100%;height:100%;object-fit:cover;}
         .avatar-info{text-align:left;}
         .avatar-name{font-size:13px;font-weight:600;line-height:1.2;}
         .avatar-role{font-size:11px;color:var(--accent2);font-weight:500;}
@@ -224,7 +225,15 @@
 
     <div class="user-menu">
         <button class="avatar-btn" id="avatarBtn" onclick="toggleMenu()">
-            <div class="avatar" id="avatarInitials">TT</div>
+            <%-- ── FIX: render avatar từ JSP, không dùng JS textContent ── --%>
+            <div class="avatar">
+                <c:choose>
+                    <c:when test="${not empty currentUser.avatarPath}">
+                        <img src="${pageContext.request.contextPath}/${currentUser.avatarPath}" alt="avatar">
+                    </c:when>
+                    <c:otherwise>${currentUser.ten.substring(0,1)}</c:otherwise>
+                </c:choose>
+            </div>
             <div class="avatar-info">
                 <div class="avatar-name">${currentUser.ho} ${currentUser.ten}</div>
                 <div class="avatar-role">Tổ trưởng</div>
@@ -233,7 +242,15 @@
         </button>
         <div class="user-dropdown" id="userDropdown">
             <div class="ud-header">
-                <div class="avatar" id="avatarInitials2">TT</div>
+                <%-- ── FIX: avatar trong dropdown ── --%>
+                <div class="avatar">
+                    <c:choose>
+                        <c:when test="${not empty currentUser.avatarPath}">
+                            <img src="${pageContext.request.contextPath}/${currentUser.avatarPath}" alt="avatar">
+                        </c:when>
+                        <c:otherwise>${currentUser.ten.substring(0,1)}</c:otherwise>
+                    </c:choose>
+                </div>
                 <div>
                     <div class="ud-name">${currentUser.ho} ${currentUser.ten}</div>
                     <div class="ud-email">${currentUser.email}</div>
@@ -320,7 +337,6 @@
                 <div class="dc-desc">Xem danh sách, thêm, sửa, xóa thông tin hộ khẩu trong tổ dân phố.</div>
                 <span class="dc-btn blue">Xem danh sách →</span>
             </a>
-            
             <a href="${pageContext.request.contextPath}/danh-sach-lich-hop" class="dash-card green">
                 <div class="dc-icon green">📅</div>
                 <div class="dc-title">Lịch họp tổ</div>
@@ -362,12 +378,7 @@
 <script>
     const ctx = '<%= ctx %>';
 
-    (function() {
-        const ten = '${currentUser.ten}' || 'TT';
-        const initials = ten.trim().substring(0,2).toUpperCase();
-        document.getElementById('avatarInitials').textContent  = initials;
-        document.getElementById('avatarInitials2').textContent = initials;
-    })();
+    // ── JS initials đã bị XOÁ, avatar được render bởi JSP c:choose ở trên ──
 
     function toggleMenu() {
         const dd = document.getElementById('userDropdown');
@@ -384,8 +395,6 @@
         document.getElementById('notifPanel').classList.toggle('open');
     }
 
-    // ── Tổ trưởng chỉ nhận TB về: phản ánh, yêu cầu hộ khẩu, lịch họp
-    // Không redirect về thiệp mời vì tổ trưởng là người tạo, không cần nhận TB
     function docThongBao(id, el, tieuDe, lichHopID) {
         const params = new URLSearchParams({ action: 'doc', id: id });
         fetch(ctx + '/thong-bao?' + params, { method: 'POST' })
@@ -404,22 +413,18 @@
 
     function _redirect(tieuDe, lichHopID) {
         const t = (tieuDe || '').toLowerCase();
-        // Phản ánh / kiến nghị
         if (t.includes('phản ánh') || t.includes('kiến nghị')) {
             location.href = ctx + '/totruong/phan-anh';
             return;
         }
-        // Lịch họp
         if (t.includes('lịch họp') || (lichHopID && lichHopID > 0)) {
             location.href = ctx + '/danh-sach-lich-hop' + (lichHopID > 0 ? '?id=' + lichHopID : '');
             return;
         }
-        // Yêu cầu đổi trạng thái hộ khẩu
         if (t.includes('yêu cầu') || t.includes('hộ khẩu') || t.includes('trạng thái')) {
             location.href = ctx + '/todan/hodan';
             return;
         }
-        // Mặc định
         location.href = ctx + '/thong-bao/lich-su';
     }
 

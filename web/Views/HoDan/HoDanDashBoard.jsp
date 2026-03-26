@@ -58,7 +58,8 @@
         .user-menu { position: relative; }
         .avatar-btn { display: flex; align-items: center; gap: 10px; background: none; border: 1px solid transparent; border-radius: 40px; padding: 5px 14px 5px 5px; cursor: pointer; color: var(--text); font-family: inherit; transition: all .18s; }
         .avatar-btn:hover { background: var(--surface2); border-color: var(--border); }
-        .avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
+        .avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; overflow: hidden; }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
         .avatar-info { text-align: left; }
         .avatar-name { font-size: 13px; font-weight: 600; line-height: 1.2; }
         .avatar-role { font-size: 11px; color: var(--accent2); font-weight: 500; }
@@ -120,8 +121,6 @@
         .ac-header h3 { font-size: 15px; font-weight: 700; }
         .ac-empty { padding: 40px; text-align: center; color: var(--muted); font-size: 13px; }
         .ac-empty-icon { font-size: 32px; margin-bottom: 10px; }
-
-        /* ── MODAL ĐĂNG XUẤT ── */
         .logout-overlay { display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.7); backdrop-filter:blur(6px); align-items:center; justify-content:center; }
         .logout-overlay.show { display:flex; animation:fadeIn .2s ease; }
         @keyframes fadeIn { from{opacity:0} to{opacity:1} }
@@ -136,8 +135,57 @@
         .btn-logout-cancel:hover { border-color:var(--text); color:var(--text); }
         .btn-logout-confirm { flex:1; height:40px; border-radius:10px; background:var(--danger); border:none; color:#fff; font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; transition:opacity .15s; }
         .btn-logout-confirm:hover { opacity:.85; }
-
-        @media (max-width: 600px) { .cards-grid { grid-template-columns: 1fr; } .hero { flex-direction: column; gap: 20px; } }
+        .yc-overlay { display:none; position:fixed; inset:0; z-index:9998; background:rgba(0,0,0,.75); backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:16px; }
+        .yc-overlay.show { display:flex; animation:fadeIn .2s ease; }
+        .yc-box { background:var(--surface); border:1px solid var(--border); border-radius:18px; width:600px; max-width:100%; max-height:90vh; overflow-y:auto; box-shadow:0 32px 80px rgba(0,0,0,.7); animation:popIn .22s cubic-bezier(.34,1.56,.64,1); }
+        .yc-box::-webkit-scrollbar { width:5px; }
+        .yc-box::-webkit-scrollbar-track { background:transparent; }
+        .yc-box::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+        .yc-header { padding:24px 28px 0; display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+        .yc-header-left { display:flex; align-items:center; gap:14px; }
+        .yc-icon-wrap { width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0; }
+        .yc-icon-wrap.approved { background:rgba(56,217,169,.15); border:1px solid rgba(56,217,169,.2); }
+        .yc-icon-wrap.rejected { background:rgba(247,92,92,.15); border:1px solid rgba(247,92,92,.2); }
+        .yc-icon-wrap.pending  { background:rgba(251,191,36,.15); border:1px solid rgba(251,191,36,.2); }
+        .yc-htitle { font-size:16px; font-weight:800; margin-bottom:4px; }
+        .yc-subtitle { font-size:12px; color:var(--muted); }
+        .yc-close { width:32px; height:32px; border-radius:50%; background:var(--surface2); border:1px solid var(--border); cursor:pointer; font-size:14px; color:var(--muted); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; transition:all .15s; font-family:inherit; }
+        .yc-close:hover { background:rgba(247,92,92,.1); border-color:var(--danger); color:var(--danger); }
+        .yc-body { padding:20px 28px 4px; }
+        .yc-status-bar { display:flex; align-items:center; gap:10px; margin-bottom:20px; padding:12px 16px; border-radius:10px; font-size:13px; font-weight:600; }
+        .yc-status-bar.approved { background:rgba(56,217,169,.08); border:1px solid rgba(56,217,169,.2); color:var(--accent2); }
+        .yc-status-bar.rejected { background:rgba(247,92,92,.08); border:1px solid rgba(247,92,92,.2); color:var(--danger); }
+        .yc-status-bar.pending  { background:rgba(251,191,36,.08); border:1px solid rgba(251,191,36,.2); color:var(--warn); }
+        .yc-status-icon { font-size:16px; }
+        .yc-status-info { flex:1; }
+        .yc-status-label { font-size:13px; font-weight:700; }
+        .yc-status-meta  { font-size:11px; font-weight:400; opacity:.75; margin-top:1px; }
+        .yc-section-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:10px; margin-top:20px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+        .yc-field { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:12px 14px; }
+        .yc-field-label { font-size:10px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.8px; margin-bottom:5px; }
+        .yc-field-val { font-size:13px; font-weight:600; color:var(--text); line-height:1.4; }
+        .yc-change-badge { display:inline-flex; align-items:center; gap:5px; font-size:10px; font-weight:600; padding:2px 8px; border-radius:20px; background:rgba(56,217,169,.1); color:var(--accent2); border:1px solid rgba(56,217,169,.2); margin-top:4px; }
+        .yc-note-box { background:var(--surface2); border-radius:10px; padding:14px 16px; font-size:13px; line-height:1.7; color:var(--text); margin-top:6px; border:1px solid var(--border); }
+        .yc-note-box.accent  { border-left:3px solid var(--accent); }
+        .yc-note-box.accent2 { border-left:3px solid var(--accent2); }
+        .yc-note-box.danger  { border-left:3px solid var(--danger); }
+        .yc-loading { padding:48px; text-align:center; color:var(--muted); }
+        .yc-spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; margin:0 auto 14px; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .yc-error { padding:32px 28px; text-align:center; }
+        .yc-error-ico { font-size:36px; margin-bottom:12px; }
+        .yc-error-msg { font-size:14px; color:var(--muted); }
+        .yc-footer { padding:16px 28px 24px; display:flex; gap:10px; justify-content:flex-end; border-top:1px solid var(--border); margin-top:20px; }
+        .yc-btn { height:38px; padding:0 20px; border-radius:10px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; transition:all .15s; border:none; }
+        .yc-btn.secondary { background:var(--surface2); border:1px solid var(--border); color:var(--muted); }
+        .yc-btn.secondary:hover { border-color:var(--text); color:var(--text); }
+        .yc-btn.primary { background:var(--accent); color:#fff; }
+        .yc-btn.primary:hover { opacity:.85; }
+        @media (max-width: 600px) {
+            .cards-grid { grid-template-columns: 1fr; }
+            .hero { flex-direction: column; gap: 20px; }
+            .yc-box { border-radius:14px; }
+        }
     </style>
 </head>
 <body>
@@ -152,7 +200,7 @@
 %>
 
 <header class="topbar">
-    <a href="<%= ctx %>/hodan/hodan/dashboard" class="topbar-logo">
+    <a href="<%= ctx %>/hodan/dashboard" class="topbar-logo">
         <div class="logo-icon">🏘</div>
         <div class="logo-text">Cổng <span>Dịch Vụ</span></div>
     </a>
@@ -207,8 +255,7 @@
                 </div>
                 <% } } %>
             </div>
-            <div class="np-footer"
-                 onclick="location.href='<%= ctx %>/thong-bao/lich-su'">
+            <div class="np-footer" onclick="location.href='<%= ctx %>/thong-bao/lich-su'">
                 Xem tất cả thông báo
             </div>
         </div>
@@ -216,7 +263,15 @@
 
     <div class="user-menu">
         <button class="avatar-btn" id="avatarBtn" onclick="toggleMenu()">
-            <div class="avatar" id="avatarInitials">ND</div>
+            <%-- ── FIX: render avatar từ JSP, không dùng JS textContent ── --%>
+            <div class="avatar">
+                <c:choose>
+                    <c:when test="${not empty currentUser.avatarPath}">
+                        <img src="${pageContext.request.contextPath}/${currentUser.avatarPath}" alt="avatar">
+                    </c:when>
+                    <c:otherwise>${currentUser.ten.substring(0,1)}</c:otherwise>
+                </c:choose>
+            </div>
             <div class="avatar-info">
                 <div class="avatar-name">${currentUser.ho} ${currentUser.ten}</div>
                 <div class="avatar-role">Người dân</div>
@@ -225,7 +280,15 @@
         </button>
         <div class="user-dropdown" id="userDropdown">
             <div class="ud-header">
-                <div class="avatar" id="avatarInitials2">ND</div>
+                <%-- ── FIX: avatar trong dropdown ── --%>
+                <div class="avatar">
+                    <c:choose>
+                        <c:when test="${not empty currentUser.avatarPath}">
+                            <img src="${pageContext.request.contextPath}/${currentUser.avatarPath}" alt="avatar">
+                        </c:when>
+                        <c:otherwise>${currentUser.ten.substring(0,1)}</c:otherwise>
+                    </c:choose>
+                </div>
                 <div>
                     <div class="ud-name">${currentUser.ho} ${currentUser.ten}</div>
                     <div class="ud-email">${currentUser.email}</div>
@@ -239,15 +302,11 @@
             <a class="ud-item" href="<%= ctx %>/profile">
                 <span class="ud-icon">👤</span> Thông tin cá nhân
             </a>
-            <a class="ud-item" href="<%= ctx %>/hodan/sua-profile">
-                <span class="ud-icon">✏️</span> Thêm quan hệ
-            </a>
             <div class="ud-section">Tài khoản</div>
             <a class="ud-item" href="<%= ctx %>/admin/change_password">
                 <span class="ud-icon">🔑</span> Đổi mật khẩu
             </a>
             <hr class="ud-divider">
-            <%-- ✅ SỬA: gọi modal thay vì href trực tiếp --%>
             <div class="ud-item danger" onclick="showLogoutModal()">
                 <span class="ud-icon">🚪</span> Đăng xuất
             </div>
@@ -323,7 +382,7 @@
     </div>
 </main>
 
-<!-- ✅ MODAL ĐĂNG XUẤT -->
+<!-- MODAL ĐĂNG XUẤT -->
 <div class="logout-overlay" id="logoutModal" onclick="if(event.target===this)hideLogoutModal()">
     <div class="logout-box">
         <div class="logout-body">
@@ -338,16 +397,13 @@
     </div>
 </div>
 
+<!-- MODAL YÊU CẦU CẬP NHẬT THÔNG TIN -->
+<div class="yc-overlay" id="ycModal" onclick="if(event.target===this)hideYcModal()">
+    <div class="yc-box" id="ycBox"></div>
+</div>
+
 <script>
     const CTX = '<%= ctx %>';
-
-    // ── Avatar initials ──
-    (function() {
-        const ten = '${currentUser.ten}' || 'ND';
-        const initials = ten.trim().split(' ').map(w => w[0]).slice(-2).join('').toUpperCase();
-        document.getElementById('avatarInitials').textContent  = initials || 'ND';
-        document.getElementById('avatarInitials2').textContent = initials || 'ND';
-    })();
 
     // ── User menu ──
     function toggleMenu() {
@@ -358,7 +414,7 @@
         btn.classList.toggle('open', open);
     }
 
-    // ── Notif ──
+    // ── Notif panel ──
     function toggleNotif(e) {
         e.stopPropagation();
         const panel = document.getElementById('notifPanel');
@@ -367,7 +423,6 @@
         panel.classList.toggle('open');
     }
 
-    // ── Thông báo ──
     function docThongBao(id, el, tieuDe, lichHopID) {
         const params = new URLSearchParams({ action: 'doc', id: id });
         fetch(CTX + '/thong-bao?' + params, { method: 'POST' })
@@ -394,8 +449,9 @@
             location.href = CTX + '/nguoidan/lich-hop?id=' + lichHopID;
         } else if (t.includes('lịch họp')) {
             location.href = CTX + '/nguoidan/lich-hop';
-        } else if (t.includes('yêu cầu') || t.includes('hộ khẩu')) {
-            location.href = CTX + '/hodan/yeu-cau-cap-nhat';
+        } else if (t.includes('yêu cầu') || t.includes('hộ khẩu') || t.includes('cập nhật thông tin')) {
+            document.getElementById('notifPanel').classList.remove('open');
+            showYcModal();
         } else if (t.includes('phản ánh') || t.includes('kiến nghị')) {
             location.href = CTX + '/hodan/phan-anh';
         } else {
@@ -424,7 +480,7 @@
         else { badge.textContent = cur; badge.style.display = ''; }
     }
 
-    // ── ✅ MODAL ĐĂNG XUẤT ──
+    // ── MODAL ĐĂNG XUẤT ──
     function showLogoutModal() {
         document.getElementById('userDropdown').classList.remove('open');
         document.getElementById('avatarBtn').classList.remove('open');
@@ -435,12 +491,95 @@
         document.getElementById('logoutModal').classList.remove('show');
         document.body.style.overflow = '';
     }
-    function doLogout() {
-        // Gọi servlet logout để invalidate session đúng cách
-        window.location.href = CTX + '/logout';
+    function doLogout() { window.location.href = CTX + '/logout'; }
+
+    // ── MODAL YÊU CẦU CẬP NHẬT ──
+    function showYcModal() {
+        const box = document.getElementById('ycBox');
+        box.innerHTML = '<div class="yc-loading"><div class="yc-spinner"></div>'
+            + '<div style="font-size:13px;font-weight:500;">Đang tải thông tin yêu cầu...</div></div>';
+        document.getElementById('ycModal').classList.add('show');
+        document.body.style.overflow = 'hidden';
+
+        fetch(CTX + '/hodan/yeu-cau-cap-nhat')
+            .then(r => r.json())
+            .then(data => {
+                const arr  = Array.isArray(data) ? data : [data];
+                const item = arr.find(x => x && x.loaiYeuCau == 2) || arr[0];
+                if (!item) { renderYcError('Không tìm thấy yêu cầu nào.'); return; }
+                renderYcModal(item);
+            })
+            .catch(() => renderYcError('Không thể tải dữ liệu. Vui lòng thử lại.'));
     }
 
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') hideLogoutModal(); });
+    function hideYcModal() {
+        document.getElementById('ycModal').classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    function renderYcError(msg) {
+        document.getElementById('ycBox').innerHTML =
+            '<div class="yc-header" style="padding:24px 28px;">'
+            + '<div class="yc-header-left"><div class="yc-icon-wrap rejected">⚠️</div>'
+            + '<div><div class="yc-htitle">Lỗi tải dữ liệu</div></div></div>'
+            + '<button class="yc-close" onclick="hideYcModal()">✕</button></div>'
+            + '<div class="yc-error"><div class="yc-error-ico">📭</div>'
+            + '<div class="yc-error-msg">' + msg + '</div></div>'
+            + '<div class="yc-footer"><button class="yc-btn secondary" onclick="hideYcModal()">Đóng</button></div>';
+    }
+
+    function renderYcModal(d) {
+        const fmtDate = s => {
+            if (!s || s === 'null' || s === 'undefined') return null;
+            try {
+                return new Date(s).toLocaleString('vi-VN', {
+                    day:'2-digit', month:'2-digit', year:'numeric',
+                    hour:'2-digit', minute:'2-digit'
+                });
+            } catch(e) { return s; }
+        };
+        const ok = v => v && v !== 'null' && v !== 'undefined' && String(v).trim() !== '';
+        const stMap = {
+            1: { cls:'pending',  icon:'⏳', label:'Đang chờ xử lý',    meta:'Yêu cầu chưa được cán bộ phường xử lý' },
+            2: { cls:'approved', icon:'✅', label:'Đã được duyệt',      meta:'Thông tin cá nhân đã được cập nhật thành công' },
+            3: { cls:'rejected', icon:'❌', label:'Yêu cầu bị từ chối', meta:'Thông tin không thay đổi — xem lý do từ chối bên dưới' },
+            4: { cls:'rejected', icon:'🚫', label:'Đã huỷ',             meta:'Yêu cầu này đã bị huỷ' },
+        };
+        const st = stMap[d.trangThaiYeuCauID] || stMap[1];
+        const fields = [
+            { label:'Họ và chữ đệm', cu: d.ho_Cu,       moi: d.ho_Moi },
+            { label:'Tên',           cu: d.ten_Cu,       moi: d.ten_Moi },
+            { label:'Giới tính',     cu: d.gioiTinh_Cu,  moi: d.gioiTinh_Moi },
+            { label:'Email',         cu: d.email_Cu,     moi: d.email_Moi },
+            { label:'Số điện thoại', cu: d.sDT_Cu,       moi: d.sDT_Moi },
+        ].filter(f => ok(f.cu));
+        const anyChange = fields.some(f => ok(f.moi) && f.moi !== f.cu);
+        const colTpl = anyChange ? '120px 1fr 1fr' : '120px 1fr';
+        const tblHdr = anyChange
+            ? '<div style="display:grid;grid-template-columns:' + colTpl + ';gap:8px;padding:8px 0;border-bottom:2px solid var(--border);margin-bottom:2px;"><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;">Trường</div><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;">Thông tin cũ</div><div style="font-size:10px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.8px;">Thông tin mới ✦</div></div>'
+            : '<div style="display:grid;grid-template-columns:' + colTpl + ';gap:8px;padding:8px 0;border-bottom:2px solid var(--border);margin-bottom:2px;"><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;">Trường</div><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;">Thông tin hiện tại</div></div>';
+        const tblRows = fields.map(f => {
+            const changed = ok(f.moi) && f.moi !== f.cu;
+            const cuCell = '<div style="padding:9px 12px;background:var(--surface);border-radius:8px;font-size:13px;' + (changed ? 'text-decoration:line-through;color:var(--muted);' : 'font-weight:500;color:var(--text);') + '">' + (f.cu || '—') + '</div>';
+            const moiCell = anyChange ? '<div style="padding:9px 12px;border-radius:8px;border:1px solid ' + (changed ? 'rgba(56,217,169,.3);background:rgba(56,217,169,.07)' : 'transparent;background:var(--surface)') + ';">' + (changed ? '<div style="font-size:13px;font-weight:700;color:var(--accent2);">' + f.moi + '</div><span class="yc-change-badge">✦ Đã thay đổi</span>' : '<div style="font-size:12px;color:var(--muted);font-style:italic;">Không đổi</div>') + '</div>' : '';
+            return '<div style="display:grid;grid-template-columns:' + colTpl + ';gap:8px;padding:5px 0;border-bottom:1px solid rgba(42,48,72,.5);"><div style="font-size:11px;font-weight:600;color:var(--muted);display:flex;align-items:center;padding:0 2px;">' + f.label + '</div>' + cuCell + moiCell + '</div>';
+        }).join('');
+        const tableHtml = fields.length ? '<div class="yc-section-lbl">Thông tin cá nhân</div><div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:10px 14px;">' + tblHdr + tblRows + '</div>' : '';
+        const metaHtml = '<div class="yc-section-lbl">Thông tin xử lý</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><div class="yc-field"><div class="yc-field-label">Người yêu cầu</div><div class="yc-field-val">' + (d.tenNguoiYeuCau || '—') + '</div></div><div class="yc-field"><div class="yc-field-label">Ngày gửi</div><div class="yc-field-val">' + (fmtDate(d.ngayTao) || '—') + '</div></div>' + (ok(d.tenNguoiDuyet) ? '<div class="yc-field"><div class="yc-field-label">Người duyệt</div><div class="yc-field-val">' + d.tenNguoiDuyet + '</div></div>' : '') + (fmtDate(d.ngayDuyet) ? '<div class="yc-field"><div class="yc-field-label">Ngày duyệt</div><div class="yc-field-val">' + fmtDate(d.ngayDuyet) + '</div></div>' : '') + '</div>';
+        const noteCls = st.cls === 'approved' ? 'accent2' : st.cls === 'rejected' ? 'danger' : 'accent';
+        const lyDo   = ok(d.lyDoYeuCau)  ? d.lyDoYeuCau  : null;
+        const ghiChu = ok(d.ghiChuDuyet) ? d.ghiChuDuyet : null;
+        const bottomHtml = (lyDo || ghiChu) ? '<div style="display:grid;grid-template-columns:' + (lyDo && ghiChu ? '1fr 1fr' : '1fr') + ';gap:12px;margin-top:4px;">' + (lyDo ? '<div><div class="yc-section-lbl">Lý do yêu cầu</div><div class="yc-note-box accent">' + lyDo + '</div></div>' : '') + (ghiChu ? '<div><div class="yc-section-lbl">Ghi chú duyệt</div><div class="yc-note-box ' + noteCls + '">' + ghiChu + '</div></div>' : '') + '</div>' : '';
+        document.getElementById('ycBox').innerHTML =
+            '<div class="yc-header"><div class="yc-header-left"><div class="yc-icon-wrap ' + st.cls + '">' + st.icon + '</div><div><div class="yc-htitle">Yêu cầu #' + (d.yeuCauID || '') + '</div><div class="yc-subtitle">Cập nhật thông tin cá nhân</div></div></div><button class="yc-close" onclick="hideYcModal()">✕</button></div>'
+            + '<div class="yc-body"><div class="yc-status-bar ' + st.cls + '"><span class="yc-status-icon">' + st.icon + '</span><div class="yc-status-info"><div class="yc-status-label">' + st.label + '</div><div class="yc-status-meta">' + st.meta + '</div></div></div>'
+            + metaHtml + tableHtml + bottomHtml + '</div>'
+            + '<div class="yc-footer"><button class="yc-btn secondary" onclick="hideYcModal()">Đóng</button><button class="yc-btn primary" onclick="location.href=CTX+\'/profile\'">Xem hồ sơ →</button></div>';
+    }
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { hideLogoutModal(); hideYcModal(); }
+    });
 
     document.addEventListener('click', function(e) {
         if (!document.getElementById('bellWrap').contains(e.target))

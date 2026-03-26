@@ -385,7 +385,7 @@
             <div class="card-icon">👤</div>
             <h3>Hồ sơ Cá nhân</h3>
             <p>Cập nhật thông tin cá nhân, thay đổi mật khẩu và theo dõi lịch sử hoạt động của tài khoản.</p>
-            <a href="${pageContext.request.contextPath}/profile" class="card-link">Hồ sơ của tôi</a>
+            <a href="${pageContext.request.contextPath}/" class="card-link">Hồ sơ của tôi</a>
         </div>
 
         <c:if test="${vaiTro == 'Cán bộ tổ dân phố' || vaiTro == 'Tổ trưởng'}">
