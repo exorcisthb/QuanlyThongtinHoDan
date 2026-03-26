@@ -355,12 +355,7 @@
                 <div class="dc-desc">Tiếp nhận và xử lý phản ánh, kiến nghị từ người dân trong tổ dân phố.</div>
                 <span class="dc-btn red">Xem phản ánh →</span>
             </a>
-            <a href="#" class="dash-card blue">
-                <div class="dc-icon blue">📝</div>
-                <div class="dc-title">Báo cáo</div>
-                <div class="dc-desc">Lập báo cáo định kỳ gửi lên cấp trên về tình hình tổ dân phố.</div>
-                <span class="dc-btn blue">Tạo báo cáo →</span>
-            </a>
+            
         </div>
 
         <div class="section-title">Hoạt động gần đây</div>
