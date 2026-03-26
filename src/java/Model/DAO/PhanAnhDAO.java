@@ -50,7 +50,6 @@ public class PhanAnhDAO {
         };
     }
 
-    // PostgreSQL: NOW() → NOW()
     private void ghiLog(Connection conn, int phanAnhID, int nguoiThucHienID,
                         String hanhDong, Integer trangThaiCu, Integer trangThaiMoi,
                         String ghiChu) throws SQLException {
@@ -72,7 +71,6 @@ public class PhanAnhDAO {
     private void luuAnh(Connection conn, int phanAnhID,
                         List<String> duongDanAnh) throws SQLException {
         if (duongDanAnh == null || duongDanAnh.isEmpty()) return;
-        // PostgreSQL: NOW() → NOW()
         String sql =
             "INSERT INTO FileDinhKemPhanAnh (PhanAnhID, DuongDan, NgayUpload) " +
             "VALUES (?, ?, NOW())";
@@ -95,9 +93,34 @@ public class PhanAnhDAO {
         }
     }
 
-    // PostgreSQL: NOW() → NOW(), RETURN_GENERATED_KEYS → RETURNING
+    // ── GỬI THÔNG BÁO CÓ LIÊN KẾT PHẢN ÁNH (dùng cho tất cả hành động phản ánh) ──
     private void guiThongBao(Connection conn, int nguoiGuiID, int nguoiNhanID,
-                              String tieuDe, String noiDung) throws SQLException {
+                              String tieuDe, String noiDung, int phanAnhID) throws SQLException {
+        String sqlTB =
+            "INSERT INTO ThongBao (TieuDe, NoiDung, NguoiGuiID, NgayGui, PhanAnhID) " +
+            "VALUES (?, ?, ?, NOW(), ?) RETURNING ThongBaoID";
+        String sqlNN =
+            "INSERT INTO NguoiNhanThongBao (ThongBaoID, NguoiDungID) VALUES (?, ?)";
+        try (PreparedStatement psTB = conn.prepareStatement(sqlTB)) {
+            psTB.setString(1, tieuDe);
+            psTB.setString(2, noiDung);
+            psTB.setInt(3, nguoiGuiID);
+            psTB.setInt(4, phanAnhID);
+            ResultSet keys = psTB.executeQuery();
+            if (keys.next()) {
+                int tbID = keys.getInt(1);
+                try (PreparedStatement psNN = conn.prepareStatement(sqlNN)) {
+                    psNN.setInt(1, tbID);
+                    psNN.setInt(2, nguoiNhanID);
+                    psNN.executeUpdate();
+                }
+            }
+        }
+    }
+
+    // ── GỬI THÔNG BÁO KHÔNG CÓ PHẢN ÁNH (dùng cho bình luận / phản hồi) ──
+    private void guiThongBaoChung(Connection conn, int nguoiGuiID, int nguoiNhanID,
+                                   String tieuDe, String noiDung) throws SQLException {
         String sqlTB =
             "INSERT INTO ThongBao (TieuDe, NoiDung, NguoiGuiID, NgayGui) " +
             "VALUES (?, ?, ?, NOW()) RETURNING ThongBaoID";
@@ -124,13 +147,11 @@ public class PhanAnhDAO {
     public int guiPhanAnh(int nguoiGuiID, int toDanPhoID, int loaiID,
                            int mucDoUuTien, String tieuDe, String noiDung,
                            List<String> duongDanAnh) {
-        // PostgreSQL: NOW() → NOW(), RETURNING thay RETURN_GENERATED_KEYS
         String sqlPA =
             "INSERT INTO PhanAnh " +
             "    (TieuDe, NoiDung, LoaiID, MucDoID, NguoiGuiID, ToDanPhoID, " +
             "     TrangThaiID, DaChuyenCap, NgayTao) " +
             "VALUES (?, ?, ?, ?, ?, ?, 1, FALSE, NOW()) RETURNING PhanAnhID";
-        // PostgreSQL: IsActivated = 1 → TRUE
         String sqlToTruong =
             "SELECT NguoiDungID FROM NguoiDung " +
             "WHERE ToDanPhoID = ? AND VaiTroID = 3 AND IsActivated = TRUE";
@@ -175,7 +196,8 @@ public class PhanAnhDAO {
                         while (rs.next()) {
                             guiThongBao(conn2, nguoiGuiID, rs.getInt("NguoiDungID"),
                                     "[Phản ánh mới] " + tieuDe,
-                                    "Hộ dân vừa gửi phản ánh mới. Vui lòng kiểm tra và xử lý.");
+                                    "Hộ dân vừa gửi phản ánh mới. Vui lòng kiểm tra và xử lý.",
+                                    phanAnhID); // ← ĐÃ THÊM
                         }
                     }
                     conn2.commit();
@@ -207,14 +229,12 @@ public class PhanAnhDAO {
         boolean daChuyenCap = (boolean) hien.get("daChuyenCap");
         if (ttHienTai == 4 || ttHienTai == 5 || ttHienTai == 6 || ttHienTai == 7) return false;
 
-        // PostgreSQL: NOW() → NOW()
         String sqlUpdate =
             "UPDATE PhanAnh " +
             "   SET TieuDe = ?, NoiDung = ?, LoaiID = ?, MucDoID = ?, NgayCapNhat = NOW() " +
             " WHERE PhanAnhID = ? AND NguoiGuiID = ?";
         String sqlXoaAnh =
             "DELETE FROM FileDinhKemPhanAnh WHERE FileID = ? AND PhanAnhID = ?";
-        // PostgreSQL: IsActivated = 1 → TRUE
         String sqlNguoiNhan = daChuyenCap
             ? "SELECT NguoiDungID FROM NguoiDung WHERE VaiTroID = 5 AND IsActivated = TRUE"
             : "SELECT NguoiDungID FROM NguoiDung WHERE ToDanPhoID = ? AND VaiTroID = 3 AND IsActivated = TRUE";
@@ -256,7 +276,8 @@ public class PhanAnhDAO {
                     while (rs.next()) {
                         guiThongBao(conn, nguoiGuiID, rs.getInt("NguoiDungID"),
                                 "[Cập nhật phản ánh] " + tieuDe,
-                                "Hộ dân vừa chỉnh sửa nội dung phản ánh. Vui lòng xem lại.");
+                                "Hộ dân vừa chỉnh sửa nội dung phản ánh. Vui lòng xem lại.",
+                                phanAnhID); // ← ĐÃ THÊM
                     }
                 }
                 conn.commit();
@@ -307,7 +328,8 @@ public class PhanAnhDAO {
                     while (rs.next()) {
                         guiThongBao(conn, nguoiGuiID, rs.getInt("NguoiDungID"),
                                 "[Hủy phản ánh] " + tieuDe,
-                                "Hộ dân đã hủy phản ánh. Lý do: " + lyDo);
+                                "Hộ dân đã hủy phản ánh. Lý do: " + lyDo,
+                                phanAnhID); // ← ĐÃ THÊM
                     }
                 }
                 conn.commit();
@@ -380,7 +402,8 @@ public class PhanAnhDAO {
                 ghiLog(conn, phanAnhID, toTruongID, "TU_CHOI", ttHienTai, 5, lyDo);
                 guiThongBao(conn, toTruongID, nguoiGuiID,
                         "[Từ chối phản ánh] " + tieuDe,
-                        "Phản ánh của bạn đã bị từ chối. Lý do: " + lyDo);
+                        "Phản ánh của bạn đã bị từ chối. Lý do: " + lyDo,
+                        phanAnhID); // ← ĐÃ THÊM
                 conn.commit();
                 return true;
             } catch (Exception e) {
@@ -403,7 +426,6 @@ public class PhanAnhDAO {
         int nguoiGuiID = (int) hien.get("nguoiGuiID");
         String tieuDe  = (String) hien.get("tieuDe");
 
-        // PostgreSQL: IsSpam = 1 → TRUE
         String sql =
             "UPDATE PhanAnh " +
             "   SET TrangThaiID = 6, IsSpam = TRUE, NgayCapNhat = NOW() " +
@@ -421,7 +443,8 @@ public class PhanAnhDAO {
                 ghiLog(conn, phanAnhID, toTruongID, "SPAM", ttHienTai, 6, ghiChu);
                 guiThongBao(conn, toTruongID, nguoiGuiID,
                         "[Spam] " + tieuDe,
-                        "Phản ánh của bạn đã bị đánh dấu spam. Lý do: " + ghiChu);
+                        "Phản ánh của bạn đã bị đánh dấu spam. Lý do: " + ghiChu,
+                        phanAnhID); // ← ĐÃ THÊM
                 conn.commit();
                 return true;
             } catch (Exception e) {
@@ -443,7 +466,6 @@ public class PhanAnhDAO {
         int nguoiGuiID = (int) hien.get("nguoiGuiID");
         String tieuDe  = (String) hien.get("tieuDe");
 
-        // PostgreSQL: DaChuyenCap = 1 → TRUE
         String sql =
             "UPDATE PhanAnh " +
             "   SET TrangThaiID = 3, DaChuyenCap = TRUE, NgayCapNhat = NOW() " +
@@ -461,15 +483,19 @@ public class PhanAnhDAO {
                 }
                 if (rows == 0) { conn.rollback(); return false; }
                 ghiLog(conn, phanAnhID, toTruongID, "CHUYEN_CAP", 1, 3, ghiChu);
+                // Thông báo cho người gửi (hộ dân)
                 guiThongBao(conn, toTruongID, nguoiGuiID,
                         "[Chuyển cấp] " + tieuDe,
-                        "Phản ánh của bạn đã được chuyển lên cán bộ phường xử lý.");
+                        "Phản ánh của bạn đã được chuyển lên cán bộ phường xử lý.",
+                        phanAnhID); // ← ĐÃ THÊM
+                // Thông báo cho cán bộ phường
                 try (PreparedStatement ps = conn.prepareStatement(sqlCanBo)) {
                     ResultSet rs = ps.executeQuery();
                     while (rs.next()) {
                         guiThongBao(conn, toTruongID, rs.getInt("NguoiDungID"),
                                 "[Phản ánh chuyển cấp] " + tieuDe,
-                                "Tổ trưởng đã chuyển phản ánh lên để xử lý. Ghi chú: " + ghiChu);
+                                "Tổ trưởng đã chuyển phản ánh lên để xử lý. Ghi chú: " + ghiChu,
+                                phanAnhID); // ← ĐÃ THÊM
                     }
                 }
                 conn.commit();
@@ -511,7 +537,8 @@ public class PhanAnhDAO {
                 ghiLog(conn, phanAnhID, canBoID, "GIAI_QUYET", 3, 4, ketQua);
                 guiThongBao(conn, canBoID, nguoiGuiID,
                         "[Đã giải quyết] " + tieuDe,
-                        "Phản ánh của bạn đã được giải quyết. Kết quả: " + ketQua);
+                        "Phản ánh của bạn đã được giải quyết. Kết quả: " + ketQua,
+                        phanAnhID); // ← ĐÃ THÊM
                 conn.commit();
                 return true;
             } catch (Exception e) {
@@ -528,7 +555,6 @@ public class PhanAnhDAO {
     // ==================== QUERY ====================
 
     public Map<String, Object> getPhanAnhByID(int phanAnhID) {
-        // PostgreSQL: || thay +
         String sql =
             "SELECT pa.*, " +
             "       lp.TenLoai, " +
@@ -587,7 +613,6 @@ public class PhanAnhDAO {
     }
 
     public List<Map<String, Object>> getPhanAnhDaChuyenCap() {
-        // PostgreSQL: DaChuyenCap = 1 → TRUE
         String sql =
             "SELECT pa.*, lp.TenLoai, tt.TenTrangThai, " +
             "       ng.Ho || ' ' || ng.Ten AS TenNguoiGui, " +
@@ -715,7 +740,8 @@ public class PhanAnhDAO {
                 ghiLog(conn, phanAnhID, toTruongID, "GIAI_QUYET", 2, 4, ketQua);
                 guiThongBao(conn, toTruongID, nguoiGuiID,
                         "[Đã giải quyết] " + tieuDe,
-                        "Phản ánh của bạn đã được tổ trưởng giải quyết. Kết quả: " + ketQua);
+                        "Phản ánh của bạn đã được tổ trưởng giải quyết. Kết quả: " + ketQua,
+                        phanAnhID); // ← ĐÃ THÊM
                 conn.commit();
                 return true;
             } catch (Exception e) {
@@ -729,13 +755,14 @@ public class PhanAnhDAO {
         }
     }
 
+    // guiPhanHoiToTruong là bình luận thông thường — KHÔNG gắn PhanAnhID vào ThongBao
     public boolean guiPhanHoiToTruong(int phanAnhID, int toTruongID,
                                        int nguoiNhanID, String tieuDe, String noiDung) {
         try (Connection conn = DBContext.getInstance().getConnection()) {
             conn.setAutoCommit(false);
             try {
                 ghiLog(conn, phanAnhID, toTruongID, "BINH_LUAN", null, null, noiDung);
-                guiThongBao(conn, toTruongID, nguoiNhanID, tieuDe, noiDung);
+                guiThongBaoChung(conn, toTruongID, nguoiNhanID, tieuDe, noiDung);
                 conn.commit();
                 return true;
             } catch (Exception e) {

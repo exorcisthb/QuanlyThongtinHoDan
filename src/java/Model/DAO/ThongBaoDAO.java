@@ -8,48 +8,50 @@ public class ThongBaoDAO {
     // ------------------------------------------------------------------ //
     //  GỬI THÔNG BÁO CÁ NHÂN
     // ------------------------------------------------------------------ //
-    public boolean guiThongBaoCaNhan(String tieuDe, String noiDung,
-            int nguoiGuiID, int nguoiNhanID) {
-        String sqlThongBao
-                = "INSERT INTO ThongBao (TieuDe, NoiDung, NguoiGuiID, ToDanPhoID) "
-                + "VALUES (?, ?, ?, NULL) RETURNING ThongBaoID";
-        String sqlNguoiNhan
-                = "INSERT INTO NguoiNhanThongBao (ThongBaoID, NguoiDungID) "
-                + "VALUES (?, ?)";
+    // THÊM method mới này vào ThongBaoDAO.java
+public boolean guiThongBaoCaNhan(String tieuDe, String noiDung,
+        int nguoiGuiID, int nguoiNhanID, Integer phanAnhID) {
+    String sqlThongBao
+            = "INSERT INTO ThongBao (TieuDe, NoiDung, NguoiGuiID, ToDanPhoID, PhanAnhID) "
+            + "VALUES (?, ?, ?, NULL, ?) RETURNING ThongBaoID";
+    String sqlNguoiNhan
+            = "INSERT INTO NguoiNhanThongBao (ThongBaoID, NguoiDungID) "
+            + "VALUES (?, ?)";
 
-        Connection conn = null;
-        try {
-            conn = DBContext.getInstance().getConnection();
-            conn.setAutoCommit(false);
+    Connection conn = null;
+    try {
+        conn = DBContext.getInstance().getConnection();
+        conn.setAutoCommit(false);
 
-            int thongBaoID;
-            // PostgreSQL: RETURNING thay RETURN_GENERATED_KEYS + executeQuery thay executeUpdate
-            try (PreparedStatement ps = conn.prepareStatement(sqlThongBao)) {
-                ps.setString(1, tieuDe);
-                ps.setString(2, noiDung);
-                ps.setInt(3, nguoiGuiID);
-                ResultSet keys = ps.executeQuery();
-                if (!keys.next()) { conn.rollback(); return false; }
-                thongBaoID = keys.getInt(1);
-            }
-
-            try (PreparedStatement ps = conn.prepareStatement(sqlNguoiNhan)) {
-                ps.setInt(1, thongBaoID);
-                ps.setInt(2, nguoiNhanID);
-                ps.executeUpdate();
-            }
-
-            conn.commit();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            try { if (conn != null) conn.rollback(); } catch (Exception ignored) {}
-            return false;
-        } finally {
-            try { if (conn != null) conn.setAutoCommit(true); } catch (Exception ignored) {}
-            try { if (conn != null) conn.close(); } catch (Exception ignored) {}
+        int thongBaoID;
+        try (PreparedStatement ps = conn.prepareStatement(sqlThongBao)) {
+            ps.setString(1, tieuDe);
+            ps.setString(2, noiDung);
+            ps.setInt(3, nguoiGuiID);
+            if (phanAnhID != null) ps.setInt(4, phanAnhID);
+            else ps.setNull(4, java.sql.Types.INTEGER);
+            ResultSet keys = ps.executeQuery();
+            if (!keys.next()) { conn.rollback(); return false; }
+            thongBaoID = keys.getInt(1);
         }
+
+        try (PreparedStatement ps = conn.prepareStatement(sqlNguoiNhan)) {
+            ps.setInt(1, thongBaoID);
+            ps.setInt(2, nguoiNhanID);
+            ps.executeUpdate();
+        }
+
+        conn.commit();
+        return true;
+    } catch (Exception e) {
+        e.printStackTrace();
+        try { if (conn != null) conn.rollback(); } catch (Exception ignored) {}
+        return false;
+    } finally {
+        try { if (conn != null) conn.setAutoCommit(true); } catch (Exception ignored) {}
+        try { if (conn != null) conn.close(); } catch (Exception ignored) {}
     }
+}
 
     // ------------------------------------------------------------------ //
     //  GỬI THÔNG BÁO THEO VAI TRÒ
@@ -175,10 +177,9 @@ public class ThongBaoDAO {
     //  LẤY THÔNG BÁO CỦA 1 NGƯỜI DÙNG
     // ------------------------------------------------------------------ //
     public List<Map<String, Object>> layThongBaoCuaNguoiDung(int nguoiDungID) {
-        // PostgreSQL: || thay +
         String sql
                 = "SELECT tb.ThongBaoID, tb.TieuDe, tb.NoiDung, tb.NgayGui, "
-                + "       tb.LichHopID, tb.ThiepMoiID, "
+                + "       tb.LichHopID, tb.ThiepMoiID, tb.PhanAnhID, "  // ← ĐÃ THÊM PhanAnhID
                 + "       nntb.DaDoc, nntb.ThoiGianDoc, "
                 + "       (nd.Ho || ' ' || nd.Ten) AS TenNguoiGui "
                 + "FROM NguoiNhanThongBao nntb "
@@ -194,13 +195,14 @@ public class ThongBaoDAO {
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 Map<String, Object> row = new LinkedHashMap<>();
-                row.put("thongBaoID", rs.getInt("ThongBaoID"));
-                row.put("tieuDe", rs.getString("TieuDe"));
-                row.put("noiDung", rs.getString("NoiDung"));
-                row.put("ngayGui", rs.getString("NgayGui"));
-                row.put("lichHopID", rs.getObject("LichHopID"));
-                row.put("thiepMoiID", rs.getObject("ThiepMoiID"));
-                row.put("daDoc", rs.getBoolean("DaDoc"));
+                row.put("thongBaoID",  rs.getInt("ThongBaoID"));
+                row.put("tieuDe",      rs.getString("TieuDe"));
+                row.put("noiDung",     rs.getString("NoiDung"));
+                row.put("ngayGui",     rs.getString("NgayGui"));
+                row.put("lichHopID",   rs.getObject("LichHopID"));
+                row.put("thiepMoiID",  rs.getObject("ThiepMoiID"));
+                row.put("phanAnhID",   rs.getObject("PhanAnhID"));  // ← ĐÃ THÊM
+                row.put("daDoc",       rs.getBoolean("DaDoc"));
                 row.put("thoiGianDoc", rs.getString("ThoiGianDoc"));
                 row.put("tenNguoiGui", rs.getString("TenNguoiGui"));
                 list.add(row);
@@ -215,7 +217,6 @@ public class ThongBaoDAO {
     //  ĐẾM CHƯA ĐỌC
     // ------------------------------------------------------------------ //
     public int demChuaDoc(int nguoiDungID) {
-        // PostgreSQL: DaDoc = 0 → FALSE
         String sql = "SELECT COUNT(1) FROM NguoiNhanThongBao WHERE NguoiDungID = ? AND DaDoc = FALSE";
         try (Connection conn = DBContext.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -232,7 +233,6 @@ public class ThongBaoDAO {
     //  ĐÁNH DẤU ĐÃ ĐỌC 1
     // ------------------------------------------------------------------ //
     public boolean danhDauDaDoc(int thongBaoID, int nguoiDungID) {
-        // PostgreSQL: NOW() → NOW(), DaDoc = 1/0 → TRUE/FALSE
         String sql = "UPDATE NguoiNhanThongBao SET DaDoc = TRUE, ThoiGianDoc = NOW() "
                 + "WHERE ThongBaoID = ? AND NguoiDungID = ? AND DaDoc = FALSE";
         try (Connection conn = DBContext.getInstance().getConnection();
