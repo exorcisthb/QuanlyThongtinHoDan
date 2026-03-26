@@ -712,13 +712,6 @@
                         </a>
                     </form>
 
-                    <div class="divider">hoặc</div>
-
-                    <a href="${pageContext.request.contextPath}/oauth2/authorization/google" class="google-btn">
-                        <img src="https://www.google.com/favicon.ico" alt="Google" class="google-icon">
-                        Đăng nhập bằng Google
-                    </a>
-
                     <div class="login-footer">
                         Chưa có tài khoản?
                         <a href="${pageContext.request.contextPath}/register">Đăng ký ngay</a>

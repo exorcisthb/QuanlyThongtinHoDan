@@ -68,6 +68,7 @@
         .notif-tag.hop     { background: rgba(251,191,36,.12); color: var(--warn);    border: 1px solid rgba(251,191,36,.2); }
         .notif-tag.yeucau  { background: rgba(56,217,169,.12);  color: var(--accent2); border: 1px solid rgba(56,217,169,.2); }
         .notif-tag.lichHop { background: rgba(79,142,247,.12);  color: var(--accent);  border: 1px solid rgba(79,142,247,.2); }
+        .notif-tag.phananh { background: rgba(247,92,92,.12);   color: var(--danger);  border: 1px solid rgba(247,92,92,.2); }
         .notif-arrow { font-size: 13px; color: var(--accent); opacity: 0; transition: opacity .15s; flex-shrink: 0; margin-top: 3px; }
         .notif-item:hover .notif-arrow { opacity: 1; }
 
@@ -76,7 +77,7 @@
         .empty-state h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
         .empty-state p { font-size: 13px; color: var(--muted); }
 
-        /* ── MODAL ── */
+        /* ── MODAL CHUNG ── */
         .modal-overlay { display: none; position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,.65); backdrop-filter: blur(6px); align-items: center; justify-content: center; }
         .modal-overlay.show { display: flex; animation: overlayIn .2s ease; }
         @keyframes overlayIn { from{opacity:0} to{opacity:1} }
@@ -123,6 +124,29 @@
         .btn-goto { background: rgba(79,142,247,.15); color: var(--accent); border: 1px solid rgba(79,142,247,.3); }
         .btn-goto:hover { background: var(--accent); color: #fff; }
         .btn-m:disabled { opacity: .5; cursor: not-allowed; }
+
+        /* ── STATUS BAR (dùng cho popup phản ánh) ── */
+       .yc-status-bar { display:flex; align-items:center; gap:12px; margin-bottom:20px; padding:14px 18px; border-radius:12px; font-size:13px; font-weight:600; }
+.yc-status-bar.approved { background:rgba(56,217,169,.12); border:1px solid rgba(56,217,169,.3); color:var(--accent2); }
+.yc-status-bar.rejected { background:rgba(247,92,92,.12); border:1px solid rgba(247,92,92,.3); color:var(--danger); }
+.yc-status-bar.pending  { background:rgba(251,191,36,.12); border:1px solid rgba(251,191,36,.3); color:var(--warn); }
+.yc-status-icon { font-size:18px; }
+.yc-status-label { font-size:14px; font-weight:700; }
+.yc-status-meta { font-size:12px; font-weight:400; opacity:.8; margin-top:2px; }
+        .yc-status-icon { font-size:16px; }
+        .yc-status-info { flex:1; }
+        .yc-status-label { font-size:13px; font-weight:700; }
+        .yc-status-meta { font-size:11px; font-weight:400; opacity:.75; margin-top:1px; }
+        .note-box { background:var(--surface2); border-radius:10px; padding:14px 16px; font-size:13px; line-height:1.7; color:var(--text); border:1px solid var(--border); }
+        .note-box.left-accent { border-left:3px solid var(--accent); }
+        .note-box.left-danger { border-left:3px solid var(--danger); }
+        .note-box.left-green  { border-left:3px solid var(--accent2); }
+
+        /* ── LOADING SPINNER ── */
+        .spinner-wrap { padding:48px; text-align:center; color:var(--muted); }
+        .spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; margin:0 auto 14px; }
+        @keyframes spin { to{transform:rotate(360deg)} }
+
         .toast { position: fixed; bottom: 28px; right: 28px; z-index: 9999; padding: 13px 22px; border-radius: 10px; font-size: 13px; font-weight: 600; display: none; align-items: center; gap: 10px; box-shadow: 0 8px 32px rgba(0,0,0,.4); }
         .toast.show { display: flex; animation: slideUp .25s ease; }
         .toast.success { background: rgba(56,217,169,.15); border: 1px solid rgba(56,217,169,.4); color: var(--accent2); }
@@ -136,8 +160,6 @@
     List<Map<String, Object>> danhSachTB =
         (List<Map<String, Object>>) request.getAttribute("danhSachThongBao");
     Integer soChuaDoc = (Integer) request.getAttribute("soChuaDoc");
-
-    // ✅ SỬA: đọc vaiTro từ session thay vì request attribute
     String vaiTro = (String) session.getAttribute("vaiTro");
 
     if (danhSachTB == null) danhSachTB = new java.util.ArrayList<>();
@@ -145,7 +167,6 @@
     if (vaiTro     == null) vaiTro     = "";
     String ctx = request.getContextPath();
 
-    // ✅ SỬA: thêm case HoDan, đổi default về /login tránh 404
     String dashUrl;
     switch (vaiTro) {
         case "Admin":       dashUrl = ctx + "/admin/dashboard";       break;
@@ -205,8 +226,12 @@
                     Object tbID       = tb.get("thongBaoID");
                     Object lichHopID  = tb.get("lichHopID");
                     Object thiepMoiID = tb.get("thiepMoiID");
+                    // ✅ LẤY THÊM phanAnhID
+                    Object phanAnhID  = tb.get("phanAnhID");
                     String lichHopJs  = (lichHopID  != null) ? lichHopID.toString()  : "0";
                     String thiepMoiJs = (thiepMoiID != null) ? thiepMoiID.toString() : "0";
+                    // ✅ THÊM phanAnhJs
+                    String phanAnhJs  = (phanAnhID  != null) ? phanAnhID.toString()  : "0";
                     String tieuDeJs   = tieuDe.replace("\\","\\\\").replace("'","\\'");
 
                     String tagClass = "", tagText = "";
@@ -219,11 +244,16 @@
                         tagClass = "lichHop"; tagText = "Lịch họp";
                     } else if (tl.contains("yêu cầu") || tl.contains("duyệt") || tl.contains("từ chối")) {
                         tagClass = "yeucau"; tagText = "Yêu cầu";
+                    // ✅ THÊM tag phản ánh
+                    } else if (phanAnhID != null || tl.contains("phản ánh") || tl.contains("kiến nghị")
+                               || tl.contains("giải quyết") || tl.contains("chuyển cấp")) {
+                        tagClass = "phananh"; tagText = "Phản ánh";
                     }
             %>
+            <%-- ✅ THÊM phanAnhJs vào onclick --%>
             <div class="notif-item <%= daDoc ? "read" : "unread" %>"
                  id="notif-<%= tbID %>"
-                 onclick="clickThongBao(<%= tbID %>, this, '<%= tieuDeJs %>', <%= lichHopJs %>, <%= thiepMoiJs %>)">
+                 onclick="clickThongBao(<%= tbID %>, this, '<%= tieuDeJs %>', <%= lichHopJs %>, <%= thiepMoiJs %>, <%= phanAnhJs %>)">
                 <div class="notif-dot <%= daDoc ? "read" : "" %>" id="dot-<%= tbID %>"></div>
                 <div class="notif-body">
                     <div class="notif-title"><%= tieuDe %></div>
@@ -245,8 +275,10 @@
     </div>
 </main>
 
-<!-- ── MODAL CHI TIẾT YÊU CẦU ── -->
-<div class="modal-overlay" id="modalYeuCau" onclick="if(event.target===this)closeModal()">
+<!-- ══════════════════════════════════════════════
+     MODAL 1: CHI TIẾT YÊU CẦU (đổi trạng thái / cập nhật thông tin)
+     ══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modalYeuCau" onclick="if(event.target===this)closeModalYeuCau()">
     <div class="modal">
         <div class="modal-hdr">
             <div class="mhdr-left">
@@ -256,7 +288,7 @@
                     <div class="msub"   id="myc_sub">—</div>
                 </div>
             </div>
-            <button class="mclose" onclick="closeModal()">✕</button>
+            <button class="mclose" onclick="closeModalYeuCau()">✕</button>
         </div>
         <div class="modal-body" id="myc_body">
             <div id="myc_skeleton">
@@ -272,7 +304,41 @@
             <div id="myc_content" style="display:none"></div>
         </div>
         <div class="modal-footer" id="myc_footer">
-            <button class="btn-m btn-cancel" onclick="closeModal()">Đóng</button>
+            <button class="btn-m btn-cancel" onclick="closeModalYeuCau()">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODAL 2: CHI TIẾT PHẢN ÁNH / KIẾN NGHỊ
+     ══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modalPhanAnh" onclick="if(event.target===this)closeModalPhanAnh()">
+    <div class="modal">
+        <div class="modal-hdr">
+            <div class="mhdr-left">
+                <div class="mico red" id="mpa_ico">💬</div>
+                <div>
+                    <div class="mtitle" id="mpa_title">Chi tiết phản ánh</div>
+                    <div class="msub"   id="mpa_sub">Đang tải...</div>
+                </div>
+            </div>
+            <button class="mclose" onclick="closeModalPhanAnh()">✕</button>
+        </div>
+        <div class="modal-body" id="mpa_body">
+            <div id="mpa_skeleton">
+                <div class="skeleton" style="width:60%;height:10px;margin-bottom:14px"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+                    <div><div class="skeleton" style="width:60%;height:10px"></div><div class="skeleton" style="height:14px;margin-top:4px"></div></div>
+                    <div><div class="skeleton" style="width:60%;height:10px"></div><div class="skeleton" style="height:14px;margin-top:4px"></div></div>
+                    <div><div class="skeleton" style="width:60%;height:10px"></div><div class="skeleton" style="height:14px;margin-top:4px"></div></div>
+                    <div><div class="skeleton" style="width:60%;height:10px"></div><div class="skeleton" style="height:14px;margin-top:4px"></div></div>
+                    <div style="grid-column:1/-1"><div class="skeleton" style="width:40%;height:10px"></div><div class="skeleton" style="height:56px;margin-top:4px"></div></div>
+                </div>
+            </div>
+            <div id="mpa_content" style="display:none"></div>
+        </div>
+        <div class="modal-footer" id="mpa_footer">
+            <button class="btn-m btn-cancel" onclick="closeModalPhanAnh()">Đóng</button>
         </div>
     </div>
 </div>
@@ -284,15 +350,26 @@
     const role   = '<%= vaiTro %>';
     var _activeYeuCauID = null;
 
-    /* ── Click thông báo: đánh dấu đã đọc rồi quyết định mở modal hay redirect ── */
-    function clickThongBao(id, el, tieuDe, lichHopID, thiepMoiID) {
+    /* ════════════════════════════════════════════════
+       CLICK THÔNG BÁO — phân luồng đúng loại
+       ════════════════════════════════════════════════ */
+    // ✅ SỬA: thêm tham số phanAnhID
+    function clickThongBao(id, el, tieuDe, lichHopID, thiepMoiID, phanAnhID) {
         const t = (tieuDe || '').toLowerCase();
 
-        // Nếu là yêu cầu → mở modal chi tiết
-        const isYeuCau = t.includes('yêu cầu') || t.includes('duyệt') || t.includes('từ chối')
-                      || t.includes('trạng thái') || t.includes('thông tin');
+        // ✅ SỬA: detect phản ánh TRƯỚC (dựa phanAnhID hoặc tiêu đề)
+        const isPhanAnh = (phanAnhID && phanAnhID > 0)
+            || t.includes('phản ánh') || t.includes('kiến nghị')
+            || t.includes('giải quyết') || t.includes('chuyển cấp')
+            || t.includes('[đã giải quyết]') || t.includes('[chuyển cấp]');
 
-        // Đánh dấu đã đọc trước
+        // ✅ SỬA: detect yêu cầu (KHÔNG bao gồm phản ánh)
+        const isYeuCau = !isPhanAnh && (
+            t.includes('yêu cầu') || t.includes('duyệt') || t.includes('từ chối')
+            || t.includes('trạng thái') || t.includes('thông tin cá nhân')
+        );
+
+        // Đánh dấu đã đọc
         const wasUnread = el.classList.contains('unread');
         if (wasUnread) {
             fetch(ctx + '/thong-bao', {
@@ -307,7 +384,6 @@
                     const dot = document.getElementById('dot-' + id);
                     if (dot) dot.classList.add('read');
                     el.querySelector('.notif-title').style.fontWeight = '500';
-                    // Cập nhật badge
                     const badge = document.getElementById('badgeCount');
                     if (badge) {
                         let cur = Math.max(0, (parseInt(badge.textContent) || 0) - 1);
@@ -318,17 +394,20 @@
             }).catch(() => {});
         }
 
-        if (isYeuCau) {
-            openModalChiTiet(id);
+        // Mở đúng popup/trang
+        if (isPhanAnh) {
+            openModalPhanAnh(id, phanAnhID);   // ✅ truyền cả thongBaoID và phanAnhID
+        } else if (isYeuCau) {
+            openModalYeuCau(id);
         } else {
-            // Họp tổ, lịch họp, v.v. → redirect như cũ
             chuyenTrang(tieuDe, lichHopID, thiepMoiID);
         }
     }
 
-    /* ── Mở modal chi tiết yêu cầu ── */
-    function openModalChiTiet(thongBaoID) {
-        // Reset modal
+    /* ════════════════════════════════════════════════
+       MODAL 1 — YÊU CẦU (đổi trạng thái cư trú / cập nhật thông tin)
+       ════════════════════════════════════════════════ */
+    function openModalYeuCau(thongBaoID) {
         document.getElementById('myc_ico').textContent   = '📋';
         document.getElementById('myc_ico').className     = 'mico warn';
         document.getElementById('myc_title').textContent = 'Chi tiết yêu cầu';
@@ -336,7 +415,7 @@
         document.getElementById('myc_skeleton').style.display = '';
         document.getElementById('myc_content').style.display  = 'none';
         document.getElementById('myc_footer').innerHTML =
-            '<button class="btn-m btn-cancel" onclick="closeModal()">Đóng</button>';
+            '<button class="btn-m btn-cancel" onclick="closeModalYeuCau()">Đóng</button>';
         document.getElementById('modalYeuCau').classList.add('show');
         document.body.style.overflow = 'hidden';
 
@@ -351,7 +430,7 @@
                     return;
                 }
                 _activeYeuCauID = data.yeuCauID;
-                renderModalChiTiet(data);
+                renderModalYeuCau(data);
             })
             .catch(function(err) {
                 document.getElementById('myc_skeleton').style.display = 'none';
@@ -361,25 +440,27 @@
             });
     }
 
-    function closeModal() {
+    function closeModalYeuCau() {
         document.getElementById('modalYeuCau').classList.remove('show');
         document.body.style.overflow = '';
     }
 
-    /* ── Render nội dung modal ── */
-    function renderModalChiTiet(d) {
+    function renderModalYeuCau(d) {
         const isCho = d.trangThaiYeuCauID === 1;
+        // ✅ SỬA: đọc loaiYeuCau đúng — loai 2 = cập nhật thông tin cá nhân
         const loai  = d.loaiYeuCau || 1;
 
         document.getElementById('myc_skeleton').style.display = 'none';
         document.getElementById('myc_content').style.display  = '';
 
+        // ✅ SỬA: phân biệt tiêu đề modal đúng theo loại
         if (loai === 2) {
             document.getElementById('myc_ico').textContent   = '👤';
             document.getElementById('myc_ico').className     = 'mico blue';
             document.getElementById('myc_title').textContent = 'Yêu cầu cập nhật thông tin cá nhân';
             document.getElementById('myc_sub').textContent   = 'Người gửi: ' + (d.tenNguoiYeuCau || '—');
         } else {
+            // loai === 1: đổi trạng thái cư trú
             document.getElementById('myc_ico').textContent   = '📋';
             document.getElementById('myc_ico').className     = 'mico warn';
             document.getElementById('myc_title').textContent = 'Yêu cầu đổi trạng thái cư trú';
@@ -417,6 +498,7 @@
                 + '<div><div class="dlbl">Tổ trưởng gửi</div><div class="dval">'              + orD(d.tenNguoiYeuCau) + '</div></div>'
                 + '</div>' + formHtml;
         } else {
+            // loai === 2: cập nhật thông tin cá nhân
             var fields = [
                 {label:'Họ',cu:d.ho_Cu,moi:d.ho_Moi},{label:'Tên',cu:d.ten_Cu,moi:d.ten_Moi},
                 {label:'Ngày sinh',cu:d.ngaySinh_Cu,moi:d.ngaySinh_Moi},
@@ -446,53 +528,53 @@
                 + '</tbody></table>' + formHtml;
         }
         document.getElementById('myc_content').innerHTML = contentHtml;
-        setModalFooter(isCho && (role === 'CanBoPhuong' || role === 'Admin') ? 'chitiet' : 'readonly');
+        setModalYeuCauFooter(isCho && (role === 'CanBoPhuong' || role === 'Admin') ? 'chitiet' : 'readonly');
     }
 
-    function setModalFooter(state) {
+    function setModalYeuCauFooter(state) {
         var el = document.getElementById('myc_footer');
         var urlYC = ctx + '/yeu-cau-doi-trang-thai';
         if (state === 'readonly') {
-            el.innerHTML = '<button class="btn-m btn-cancel" onclick="closeModal()">Đóng</button>'
+            el.innerHTML = '<button class="btn-m btn-cancel" onclick="closeModalYeuCau()">Đóng</button>'
                 + '<a href="' + urlYC + '" class="btn-m btn-goto">Xem tất cả →</a>';
         } else if (state === 'chitiet') {
-            el.innerHTML = '<button class="btn-m btn-cancel" onclick="closeModal()">Đóng</button>'
+            el.innerHTML = '<button class="btn-m btn-cancel" onclick="closeModalYeuCau()">Đóng</button>'
                 + '<a href="' + urlYC + '" class="btn-m btn-goto">Xem tất cả</a>'
-                + '<button class="btn-m btn-no" onclick="switchState(\'tuchoi\')">✕ Từ chối</button>'
-                + '<button class="btn-m btn-ok" onclick="switchState(\'duyet\')">✓ Duyệt</button>';
+                + '<button class="btn-m btn-no" onclick="switchYeuCauState(\'tuchoi\')">✕ Từ chối</button>'
+                + '<button class="btn-m btn-ok" onclick="switchYeuCauState(\'duyet\')">✓ Duyệt</button>';
         } else if (state === 'duyet') {
-            el.innerHTML = '<button class="btn-m btn-cancel" onclick="switchState(\'chitiet\')">← Quay lại</button>'
+            el.innerHTML = '<button class="btn-m btn-cancel" onclick="switchYeuCauState(\'chitiet\')">← Quay lại</button>'
                 + '<button class="btn-m btn-ok" onclick="submitDuyet()" id="btnConfirmDuyet">✓ Xác nhận duyệt</button>';
         } else if (state === 'tuchoi') {
-            el.innerHTML = '<button class="btn-m btn-cancel" onclick="switchState(\'chitiet\')">← Quay lại</button>'
+            el.innerHTML = '<button class="btn-m btn-cancel" onclick="switchYeuCauState(\'chitiet\')">← Quay lại</button>'
                 + '<button class="btn-m btn-no" onclick="submitTuChoi()" id="btnConfirmTC">✕ Xác nhận từ chối</button>';
         } else {
-            el.innerHTML = '<button class="btn-m btn-cancel" onclick="closeModal()">Đóng</button>';
+            el.innerHTML = '<button class="btn-m btn-cancel" onclick="closeModalYeuCau()">Đóng</button>';
         }
     }
 
-    function switchState(state) {
+    function switchYeuCauState(state) {
         const fDuyet  = document.getElementById('form-duyet');
         const fTuChoi = document.getElementById('form-tuchoi');
         const isCapNhat = document.getElementById('myc_title').textContent.includes('cá nhân');
         if (state === 'duyet') {
             if (fDuyet)  fDuyet.style.display  = '';
             if (fTuChoi) fTuChoi.style.display = 'none';
-            setModalFooter('duyet');
+            setModalYeuCauFooter('duyet');
             document.getElementById('myc_ico').textContent = '✓';
             document.getElementById('myc_ico').className   = 'mico green';
             document.getElementById('myc_title').textContent = isCapNhat ? 'Duyệt cập nhật thông tin cá nhân' : 'Duyệt yêu cầu cư trú';
         } else if (state === 'tuchoi') {
             if (fDuyet)  fDuyet.style.display  = 'none';
             if (fTuChoi) fTuChoi.style.display = '';
-            setModalFooter('tuchoi');
+            setModalYeuCauFooter('tuchoi');
             document.getElementById('myc_ico').textContent = '✕';
             document.getElementById('myc_ico').className   = 'mico red';
             document.getElementById('myc_title').textContent = isCapNhat ? 'Từ chối cập nhật thông tin cá nhân' : 'Từ chối yêu cầu cư trú';
         } else {
             if (fDuyet)  fDuyet.style.display  = 'none';
             if (fTuChoi) fTuChoi.style.display = 'none';
-            setModalFooter('chitiet');
+            setModalYeuCauFooter('chitiet');
             document.getElementById('myc_ico').textContent = isCapNhat ? '👤' : '📋';
             document.getElementById('myc_ico').className   = isCapNhat ? 'mico blue' : 'mico warn';
             document.getElementById('myc_title').textContent = isCapNhat ? 'Yêu cầu cập nhật thông tin cá nhân' : 'Yêu cầu đổi trạng thái cư trú';
@@ -509,7 +591,7 @@
             body: new URLSearchParams({action:'duyet', yeuCauID:_activeYeuCauID, ghiChu}).toString(),
             credentials: 'include'
         }).then(r=>r.json()).then(res=>{
-            if (res.success) { closeModal(); showToast('success', '✓ ' + res.message); }
+            if (res.success) { closeModalYeuCau(); showToast('success', '✓ ' + res.message); }
             else { btn.disabled=false; btn.textContent='✓ Xác nhận duyệt'; showToast('error','✕ ' + res.message); }
         }).catch(()=>{ btn.disabled=false; btn.textContent='✓ Xác nhận duyệt'; showToast('error','✕ Lỗi kết nối'); });
     }
@@ -525,12 +607,190 @@
             body: new URLSearchParams({action:'tuchoi', yeuCauID:_activeYeuCauID, lyDoTuChoi:lyDoTC}).toString(),
             credentials: 'include'
         }).then(r=>r.json()).then(res=>{
-            if (res.success) { closeModal(); showToast('success', '✓ ' + res.message); }
+            if (res.success) { closeModalYeuCau(); showToast('success', '✓ ' + res.message); }
             else { btn.disabled=false; btn.textContent='✕ Xác nhận từ chối'; showToast('error','✕ ' + res.message); }
         }).catch(()=>{ btn.disabled=false; btn.textContent='✕ Xác nhận từ chối'; showToast('error','✕ Lỗi kết nối'); });
     }
 
-    /* ── Redirect cho họp tổ, lịch họp ── */
+    /* ════════════════════════════════════════════════
+       MODAL 2 — PHẢN ÁNH / KIẾN NGHỊ
+       ════════════════════════════════════════════════ */
+    function openModalPhanAnh(thongBaoID, phanAnhID) {
+        // Reset
+        document.getElementById('mpa_ico').textContent   = '💬';
+        document.getElementById('mpa_ico').className     = 'mico red';
+        document.getElementById('mpa_title').textContent = 'Chi tiết phản ánh';
+        document.getElementById('mpa_sub').textContent   = 'Đang tải...';
+        document.getElementById('mpa_skeleton').style.display = '';
+        document.getElementById('mpa_content').style.display  = 'none';
+        document.getElementById('mpa_footer').innerHTML =
+            '<button class="btn-m btn-cancel" onclick="closeModalPhanAnh()">Đóng</button>';
+        document.getElementById('modalPhanAnh').classList.add('show');
+        document.body.style.overflow = 'hidden';
+
+        // ✅ Ưu tiên dùng phanAnhID nếu có, fallback thongBaoID
+        var url;
+        if (phanAnhID && phanAnhID > 0) {
+            url = ctx + '/hodan/phan-anh?action=chiTiet&id=' + phanAnhID;
+        } else {
+            url = ctx + '/hodan/phan-anh?action=chiTiet-notif&thongBaoID=' + thongBaoID;
+        }
+
+        fetch(url, {credentials: 'include'})
+            .then(r => r.json())
+            .then(function(data) {
+                if (!data || data.error) {
+                    document.getElementById('mpa_skeleton').style.display = 'none';
+                    document.getElementById('mpa_content').style.display  = '';
+                    document.getElementById('mpa_content').innerHTML =
+                        '<div style="text-align:center;padding:32px;color:var(--muted);font-size:13px">📭 Không tìm thấy phản ánh liên quan.</div>';
+                    return;
+                }
+                renderModalPhanAnh(data);
+            })
+            .catch(function(err) {
+                document.getElementById('mpa_skeleton').style.display = 'none';
+                document.getElementById('mpa_content').style.display  = '';
+                document.getElementById('mpa_content').innerHTML =
+                    '<div style="text-align:center;padding:32px;color:var(--danger);font-size:13px">⚠ Lỗi: ' + err.message + '</div>';
+            });
+    }
+
+    function closeModalPhanAnh() {
+        document.getElementById('modalPhanAnh').classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+function renderModalPhanAnh(d) {
+    console.log('PhanAnh data:', d); // ← THÊM VÀO ĐÂY
+    var ok = function(v) { return v && v !== 'null' && v !== 'undefined' && String(v).trim() !== ''; };
+    var fmtDate = function(s) {
+        if (!ok(s)) return '—';
+        try {
+            return new Date(s).toLocaleString('vi-VN', {
+                day:'2-digit', month:'2-digit', year:'numeric',
+                hour:'2-digit', minute:'2-digit', second:'2-digit'
+            });
+        } catch(e) { return s; }
+    };
+    var esc = function(s) {
+        return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    };
+
+   var stMap = {
+    1: { cls:'pending',  icon:'⏳', label:'Chờ xử lý',    meta:'Phản ánh chưa được xử lý' },
+    2: { cls:'pending',  icon:'📋', label:'Đang xử lý',   meta:'Phản ánh đang được xem xét' },
+    3: { cls:'pending',  icon:'📤', label:'Đã chuyển cấp', meta:'Phản ánh đã chuyển lên cán bộ phường' },
+    4: { cls:'approved', icon:'✅', label:'Đã giải quyết', meta:'Phản ánh đã được giải quyết' },
+    5: { cls:'rejected', icon:'❌', label:'Đã đóng',       meta:'Phản ánh đã bị đóng' },
+};
+    var trangThaiID = d.trangThaiID || d.trangThaiPhanAnhID || 1;
+    var st = stMap[trangThaiID] || stMap[1];
+
+    // Cập nhật header modal
+    document.getElementById('mpa_skeleton').style.display = 'none';
+    document.getElementById('mpa_content').style.display  = '';
+    document.getElementById('mpa_title').textContent = ok(d.tieuDe) ? d.tieuDe : 'Chi tiết phản ánh';
+    document.getElementById('mpa_sub').textContent   = (d.tenLoai || 'Phản ánh') + (d.tenMucDo ? ' · ' + d.tenMucDo : '');
+
+    // Icon header theo trạng thái
+    if (st.cls === 'approved') {
+        document.getElementById('mpa_ico').className   = 'mico green';
+        document.getElementById('mpa_ico').textContent = '✅';
+    } else if (st.cls === 'rejected') {
+        document.getElementById('mpa_ico').className   = 'mico red';
+        document.getElementById('mpa_ico').textContent = '❌';
+    } else {
+        document.getElementById('mpa_ico').className   = 'mico warn';
+        document.getElementById('mpa_ico').textContent = '💬';
+    }
+
+    var html = '';
+
+    // ── STATUS BAR ──
+    html += '<div class="yc-status-bar ' + st.cls + '">'
+        + '<span class="yc-status-icon">' + st.icon + '</span>'
+        + '<div class="yc-status-info">'
+        + '<div class="yc-status-label">' + st.label + '</div>'
+        + '<div class="yc-status-meta">'  + st.meta  + '</div>'
+        + '</div></div>';
+
+    // ── THÔNG TIN PHẢN ÁNH (card style) ──
+    html += '<div class="sec-title">Thông tin phản ánh</div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;">';
+
+    var fields = [
+        { label:'LOẠI',           val: d.tenLoai },
+        { label:'MỨC ĐỘ',         val: d.tenMucDo },
+        { label:'NGÀY GỬI',       val: fmtDate(d.ngayTao) },
+        { label:'NGÀY CẬP NHẬT',  val: fmtDate(d.ngayCapNhat) },
+    ];
+    if (ok(d.tenNguoiGui))  fields.push({ label:'NGƯỜI GỬI',   val: d.tenNguoiGui });
+    if (ok(d.tenNguoiXuLy)) fields.push({ label:'NGƯỜI XỬ LÝ', val: d.tenNguoiXuLy });
+    if (ok(d.tenToDanPho))  fields.push({ label:'TỔ DÂN PHỐ',  val: d.tenToDanPho });
+
+    fields.forEach(function(f) {
+        html += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">'
+            + '<div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;">' + f.label + '</div>'
+            + '<div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.4;">' + esc(f.val || '—') + '</div>'
+            + '</div>';
+    });
+    html += '</div>';
+
+    // ── NỘI DUNG ──
+    html += '<div class="sec-title">Nội dung</div>';
+    html += '<div class="note-box left-accent" style="margin-bottom:18px;">' + esc(d.noiDung || '—') + '</div>';
+
+    // ── ẢNH ĐÍNH KÈM ──
+    if (Array.isArray(d.danhSachAnh) && d.danhSachAnh.length > 0) {
+        html += '<div class="sec-title">Ảnh đính kèm</div>';
+        html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;">';
+        d.danhSachAnh.forEach(function(a) {
+            var src = ctx + '/' + a.duongDan;
+            html += '<img src="' + src + '" '
+                + 'style="width:100px;height:100px;object-fit:cover;border-radius:10px;border:1px solid var(--border);cursor:pointer;" '
+                + 'onclick="window.open(\'' + src + '\',\'_blank\')" />';
+        });
+        html += '</div>';
+    }
+
+    // ── KẾT QUẢ XỬ LÝ ──
+    if (ok(d.ketQua)) {
+        html += '<div class="sec-title">Kết quả xử lý</div>';
+        html += '<div class="note-box left-green" style="margin-bottom:18px;">' + esc(d.ketQua) + '</div>';
+    }
+
+    // ── LỊCH SỬ XỬ LÝ ──
+    if (Array.isArray(d.lichSuXuLy) && d.lichSuXuLy.length > 0) {
+        html += '<div class="sec-title">Lịch sử xử lý</div>';
+        html += '<div style="display:flex;flex-direction:column;gap:8px;">';
+        d.lichSuXuLy.forEach(function(ls) {
+            html += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">'
+                + '<div style="display:flex;justify-content:space-between;align-items:center;">'
+                + '<span style="color:var(--accent2);font-size:13px;font-weight:600;">' + esc(ls.hanhDong || 'Cập nhật') + '</span>'
+                + '<span style="font-size:10px;color:var(--muted);">' + fmtDate(ls.thoiGian) + '</span>'
+                + '</div>';
+            if (ok(ls.tenNguoiThucHien)) {
+                html += '<div style="font-size:12px;color:var(--muted);margin-top:4px;">Người thực hiện: <strong style="color:var(--text);">' + esc(ls.tenNguoiThucHien) + '</strong></div>';
+            }
+            if (ok(ls.ghiChu)) {
+                html += '<div style="margin-top:6px;font-size:13px;color:var(--text);">' + esc(ls.ghiChu) + '</div>';
+            }
+            html += '</div>';
+        });
+        html += '</div>';
+    }
+
+    document.getElementById('mpa_content').innerHTML = html;
+
+    // Footer
+    document.getElementById('mpa_footer').innerHTML =
+        '<button class="btn-m btn-cancel" onclick="closeModalPhanAnh()">Đóng</button>'
+        + '<a href="' + ctx + '/hodan/phan-anh" class="btn-m btn-goto">Xem tất cả →</a>';
+}
+    /* ════════════════════════════════════════════════
+       REDIRECT cho họp tổ, lịch họp
+       ════════════════════════════════════════════════ */
     function chuyenTrang(tieuDe, lichHopID, thiepMoiID) {
         const t = (tieuDe || '').toLowerCase();
         if (t.includes('thông báo họp') || t.includes('thiệp') || t.includes('tạm hoãn')
@@ -551,6 +811,9 @@
         }
     }
 
+    /* ════════════════════════════════════════════════
+       MARK ALL READ
+       ════════════════════════════════════════════════ */
     function markAllRead() {
         fetch(ctx + '/thong-bao', {
             method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'},
@@ -571,10 +834,12 @@
     }
 
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeModal();
+        if (e.key === 'Escape') { closeModalYeuCau(); closeModalPhanAnh(); }
     });
 
-    /* ── Helpers ── */
+    /* ════════════════════════════════════════════════
+       HELPERS
+       ════════════════════════════════════════════════ */
     function pillH(id, label) {
         const m = {1:'p-tt',2:'p-tv',3:'p-tm'};
         return '<span class="pill '+(m[id]||'p-tt')+'">'+esc(label||'—')+'</span>';

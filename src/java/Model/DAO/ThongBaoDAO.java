@@ -9,49 +9,38 @@ public class ThongBaoDAO {
     //  GỬI THÔNG BÁO CÁ NHÂN
     // ------------------------------------------------------------------ //
     // THÊM method mới này vào ThongBaoDAO.java
-public boolean guiThongBaoCaNhan(String tieuDe, String noiDung,
-        int nguoiGuiID, int nguoiNhanID, Integer phanAnhID) {
-    String sqlThongBao
-            = "INSERT INTO ThongBao (TieuDe, NoiDung, NguoiGuiID, ToDanPhoID, PhanAnhID) "
-            + "VALUES (?, ?, ?, NULL, ?) RETURNING ThongBaoID";
-    String sqlNguoiNhan
-            = "INSERT INTO NguoiNhanThongBao (ThongBaoID, NguoiDungID) "
-            + "VALUES (?, ?)";
+    public boolean guiThongBaoCaNhan(String tieuDe, String noiDung,
+            int nguoiGuiID, int nguoiNhanID,
+            int yeuCauID, int loaiYeuCau, // loai 1/3 → YeuCauDoiTrangThaiID, loai 2 → YeuCauCapNhatID
+            Connection conn) throws Exception {
 
-    Connection conn = null;
-    try {
-        conn = DBContext.getInstance().getConnection();
-        conn.setAutoCommit(false);
+        String sqlThongBao
+                = "INSERT INTO ThongBao (TieuDe, NoiDung, NguoiGuiID, ToDanPhoID, "
+                + (loaiYeuCau == 2 ? "YeuCauCapNhatID" : "YeuCauDoiTrangThaiID")
+                + ") VALUES (?, ?, ?, NULL, ?) RETURNING ThongBaoID";
+
+        String sqlNguoiNhan
+                = "INSERT INTO NguoiNhanThongBao (ThongBaoID, NguoiDungID) VALUES (?, ?)";
 
         int thongBaoID;
         try (PreparedStatement ps = conn.prepareStatement(sqlThongBao)) {
             ps.setString(1, tieuDe);
             ps.setString(2, noiDung);
             ps.setInt(3, nguoiGuiID);
-            if (phanAnhID != null) ps.setInt(4, phanAnhID);
-            else ps.setNull(4, java.sql.Types.INTEGER);
+            ps.setInt(4, yeuCauID);
             ResultSet keys = ps.executeQuery();
-            if (!keys.next()) { conn.rollback(); return false; }
+            if (!keys.next()) {
+                return false;
+            }
             thongBaoID = keys.getInt(1);
         }
-
         try (PreparedStatement ps = conn.prepareStatement(sqlNguoiNhan)) {
             ps.setInt(1, thongBaoID);
             ps.setInt(2, nguoiNhanID);
             ps.executeUpdate();
         }
-
-        conn.commit();
         return true;
-    } catch (Exception e) {
-        e.printStackTrace();
-        try { if (conn != null) conn.rollback(); } catch (Exception ignored) {}
-        return false;
-    } finally {
-        try { if (conn != null) conn.setAutoCommit(true); } catch (Exception ignored) {}
-        try { if (conn != null) conn.close(); } catch (Exception ignored) {}
     }
-}
 
     // ------------------------------------------------------------------ //
     //  GỬI THÔNG BÁO THEO VAI TRÒ
@@ -79,7 +68,10 @@ public boolean guiThongBaoCaNhan(String tieuDe, String noiDung,
                 ps.setString(2, noiDung);
                 ps.setInt(3, nguoiGuiID);
                 ResultSet keys = ps.executeQuery();
-                if (!keys.next()) { conn.rollback(); return false; }
+                if (!keys.next()) {
+                    conn.rollback();
+                    return false;
+                }
                 thongBaoID = keys.getInt(1);
             }
 
@@ -87,10 +79,15 @@ public boolean guiThongBaoCaNhan(String tieuDe, String noiDung,
             try (PreparedStatement ps = conn.prepareStatement(sqlLayNguoiNhan)) {
                 ps.setString(1, tenVaiTro);
                 ResultSet rs = ps.executeQuery();
-                while (rs.next()) danhSachNguoiNhan.add(rs.getInt("NguoiDungID"));
+                while (rs.next()) {
+                    danhSachNguoiNhan.add(rs.getInt("NguoiDungID"));
+                }
             }
 
-            if (danhSachNguoiNhan.isEmpty()) { conn.rollback(); return false; }
+            if (danhSachNguoiNhan.isEmpty()) {
+                conn.rollback();
+                return false;
+            }
 
             try (PreparedStatement ps = conn.prepareStatement(sqlNguoiNhan)) {
                 for (int nguoiNhanID : danhSachNguoiNhan) {
@@ -105,11 +102,26 @@ public boolean guiThongBaoCaNhan(String tieuDe, String noiDung,
             return true;
         } catch (Exception e) {
             e.printStackTrace();
-            try { if (conn != null) conn.rollback(); } catch (Exception ignored) {}
+            try {
+                if (conn != null) {
+                    conn.rollback();
+                }
+            } catch (Exception ignored) {
+            }
             return false;
         } finally {
-            try { if (conn != null) conn.setAutoCommit(true); } catch (Exception ignored) {}
-            try { if (conn != null) conn.close(); } catch (Exception ignored) {}
+            try {
+                if (conn != null) {
+                    conn.setAutoCommit(true);
+                }
+            } catch (Exception ignored) {
+            }
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception ignored) {
+            }
         }
     }
 
@@ -139,7 +151,10 @@ public boolean guiThongBaoCaNhan(String tieuDe, String noiDung,
                 ps.setInt(3, nguoiGuiID);
                 ps.setInt(4, toDanPhoID);
                 ResultSet keys = ps.executeQuery();
-                if (!keys.next()) { conn.rollback(); return false; }
+                if (!keys.next()) {
+                    conn.rollback();
+                    return false;
+                }
                 thongBaoID = keys.getInt(1);
             }
 
@@ -147,10 +162,15 @@ public boolean guiThongBaoCaNhan(String tieuDe, String noiDung,
             try (PreparedStatement ps = conn.prepareStatement(sqlLayNguoiNhan)) {
                 ps.setInt(1, toDanPhoID);
                 ResultSet rs = ps.executeQuery();
-                while (rs.next()) danhSachNguoiNhan.add(rs.getInt("NguoiDungID"));
+                while (rs.next()) {
+                    danhSachNguoiNhan.add(rs.getInt("NguoiDungID"));
+                }
             }
 
-            if (danhSachNguoiNhan.isEmpty()) { conn.rollback(); return false; }
+            if (danhSachNguoiNhan.isEmpty()) {
+                conn.rollback();
+                return false;
+            }
 
             try (PreparedStatement ps = conn.prepareStatement(sqlNguoiNhan)) {
                 for (int nguoiNhanID : danhSachNguoiNhan) {
@@ -165,11 +185,26 @@ public boolean guiThongBaoCaNhan(String tieuDe, String noiDung,
             return true;
         } catch (Exception e) {
             e.printStackTrace();
-            try { if (conn != null) conn.rollback(); } catch (Exception ignored) {}
+            try {
+                if (conn != null) {
+                    conn.rollback();
+                }
+            } catch (Exception ignored) {
+            }
             return false;
         } finally {
-            try { if (conn != null) conn.setAutoCommit(true); } catch (Exception ignored) {}
-            try { if (conn != null) conn.close(); } catch (Exception ignored) {}
+            try {
+                if (conn != null) {
+                    conn.setAutoCommit(true);
+                }
+            } catch (Exception ignored) {
+            }
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception ignored) {
+            }
         }
     }
 
@@ -179,7 +214,7 @@ public boolean guiThongBaoCaNhan(String tieuDe, String noiDung,
     public List<Map<String, Object>> layThongBaoCuaNguoiDung(int nguoiDungID) {
         String sql
                 = "SELECT tb.ThongBaoID, tb.TieuDe, tb.NoiDung, tb.NgayGui, "
-                + "       tb.LichHopID, tb.ThiepMoiID, tb.PhanAnhID, "  // ← ĐÃ THÊM PhanAnhID
+                + "       tb.LichHopID, tb.ThiepMoiID, tb.PhanAnhID, " // ← ĐÃ THÊM PhanAnhID
                 + "       nntb.DaDoc, nntb.ThoiGianDoc, "
                 + "       (nd.Ho || ' ' || nd.Ten) AS TenNguoiGui "
                 + "FROM NguoiNhanThongBao nntb "
@@ -189,20 +224,19 @@ public boolean guiThongBaoCaNhan(String tieuDe, String noiDung,
                 + "ORDER BY tb.NgayGui DESC";
 
         List<Map<String, Object>> list = new ArrayList<>();
-        try (Connection conn = DBContext.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, nguoiDungID);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 Map<String, Object> row = new LinkedHashMap<>();
-                row.put("thongBaoID",  rs.getInt("ThongBaoID"));
-                row.put("tieuDe",      rs.getString("TieuDe"));
-                row.put("noiDung",     rs.getString("NoiDung"));
-                row.put("ngayGui",     rs.getString("NgayGui"));
-                row.put("lichHopID",   rs.getObject("LichHopID"));
-                row.put("thiepMoiID",  rs.getObject("ThiepMoiID"));
-                row.put("phanAnhID",   rs.getObject("PhanAnhID"));  // ← ĐÃ THÊM
-                row.put("daDoc",       rs.getBoolean("DaDoc"));
+                row.put("thongBaoID", rs.getInt("ThongBaoID"));
+                row.put("tieuDe", rs.getString("TieuDe"));
+                row.put("noiDung", rs.getString("NoiDung"));
+                row.put("ngayGui", rs.getString("NgayGui"));
+                row.put("lichHopID", rs.getObject("LichHopID"));
+                row.put("thiepMoiID", rs.getObject("ThiepMoiID"));
+                row.put("phanAnhID", rs.getObject("PhanAnhID"));  // ← ĐÃ THÊM
+                row.put("daDoc", rs.getBoolean("DaDoc"));
                 row.put("thoiGianDoc", rs.getString("ThoiGianDoc"));
                 row.put("tenNguoiGui", rs.getString("TenNguoiGui"));
                 list.add(row);
@@ -218,11 +252,12 @@ public boolean guiThongBaoCaNhan(String tieuDe, String noiDung,
     // ------------------------------------------------------------------ //
     public int demChuaDoc(int nguoiDungID) {
         String sql = "SELECT COUNT(1) FROM NguoiNhanThongBao WHERE NguoiDungID = ? AND DaDoc = FALSE";
-        try (Connection conn = DBContext.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, nguoiDungID);
             ResultSet rs = ps.executeQuery();
-            if (rs.next()) return rs.getInt(1);
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -235,8 +270,7 @@ public boolean guiThongBaoCaNhan(String tieuDe, String noiDung,
     public boolean danhDauDaDoc(int thongBaoID, int nguoiDungID) {
         String sql = "UPDATE NguoiNhanThongBao SET DaDoc = TRUE, ThoiGianDoc = NOW() "
                 + "WHERE ThongBaoID = ? AND NguoiDungID = ? AND DaDoc = FALSE";
-        try (Connection conn = DBContext.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, thongBaoID);
             ps.setInt(2, nguoiDungID);
             return ps.executeUpdate() > 0;
@@ -252,8 +286,7 @@ public boolean guiThongBaoCaNhan(String tieuDe, String noiDung,
     public boolean danhDauDocTatCa(int nguoiDungID) {
         String sql = "UPDATE NguoiNhanThongBao SET DaDoc = TRUE, ThoiGianDoc = NOW() "
                 + "WHERE NguoiDungID = ? AND DaDoc = FALSE";
-        try (Connection conn = DBContext.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = DBContext.getInstance().getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, nguoiDungID);
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
@@ -276,7 +309,9 @@ public boolean guiThongBaoCaNhan(String tieuDe, String noiDung,
             ps.setString(2, noiDung);
             ps.setInt(3, nguoiGuiID);
             ResultSet keys = ps.executeQuery();
-            if (!keys.next()) return false;
+            if (!keys.next()) {
+                return false;
+            }
             thongBaoID = keys.getInt(1);
         }
         try (PreparedStatement ps = conn.prepareStatement(sqlNguoiNhan)) {
@@ -301,16 +336,22 @@ public boolean guiThongBaoCaNhan(String tieuDe, String noiDung,
             ps.setString(2, noiDung);
             ps.setInt(3, nguoiGuiID);
             ResultSet keys = ps.executeQuery();
-            if (!keys.next()) return false;
+            if (!keys.next()) {
+                return false;
+            }
             thongBaoID = keys.getInt(1);
         }
         List<Integer> danhSach = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement(sqlLayNguoiNhan)) {
             ps.setString(1, tenVaiTro);
             ResultSet rs = ps.executeQuery();
-            while (rs.next()) danhSach.add(rs.getInt("NguoiDungID"));
+            while (rs.next()) {
+                danhSach.add(rs.getInt("NguoiDungID"));
+            }
         }
-        if (danhSach.isEmpty()) return false;
+        if (danhSach.isEmpty()) {
+            return false;
+        }
         try (PreparedStatement ps = conn.prepareStatement(sqlNguoiNhan)) {
             for (int id : danhSach) {
                 ps.setInt(1, thongBaoID);
