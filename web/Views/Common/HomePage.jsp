@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Hộ dân – Hà Nội</title>
+    <title>Quản lý Thông Tin Hộ dân</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Be+Vietnam+Pro:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -315,7 +315,7 @@
 <nav class="navbar">
     <div class="nav-logo">
         <div class="emblem">H</div>
-        Quản lý Hộ dân
+        Quản lý Thông Tin Hộ dân
     </div>
     <div class="nav-actions">
         <a href="${pageContext.request.contextPath}/login" class="btn btn-ghost">Đăng nhập</a>
@@ -328,7 +328,7 @@
     <div class="hero-bg"></div>
     <div class="hero-grid"></div>
     <div class="hero-content">
-        <div class="hero-eyebrow">Hệ thống quản lý cư dân</div>
+        <div class="hero-eyebrow">Hệ thống quản lý Thông tin hộ dân dân</div>
         <h1>Kết nối<br><span>cộng đồng</span><br>thông minh</h1>
         <p>Nền tảng số hoá quản lý hộ dân – kết nối cư dân, tổ dân phố và chính quyền địa phương một cách hiệu quả và minh bạch.</p>
         <div class="hero-cta">
