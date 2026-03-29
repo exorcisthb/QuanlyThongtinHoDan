@@ -3,9 +3,22 @@ package Model.DAO;
 import Model.Entity.LoaiPhanAnh;
 
 import java.sql.*;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class PhanAnhDAO {
+
+    // ==================== FORMAT TIMEZONE VN ====================
+
+    private static final DateTimeFormatter FMT_VN =
+        DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy")
+                         .withZone(ZoneId.of("Asia/Ho_Chi_Minh"));
+
+    private String fmtVN(Timestamp ts) {
+        if (ts == null) return "—";
+        return FMT_VN.format(ts.toInstant());
+    }
 
     // ==================== HELPER ====================
 
@@ -27,8 +40,8 @@ public class PhanAnhDAO {
         row.put("daChuyenCap",  rs.getBoolean("DaChuyenCap"));
         try { row.put("isSpam", rs.getBoolean("IsSpam")); }
         catch (SQLException ignored) { row.put("isSpam", false); }
-        row.put("ngayTao",      rs.getTimestamp("NgayTao"));
-        row.put("ngayCapNhat",  rs.getTimestamp("NgayCapNhat"));
+        row.put("ngayTao",      fmtVN(rs.getTimestamp("NgayTao")));      // ← FIX
+        row.put("ngayCapNhat",  fmtVN(rs.getTimestamp("NgayCapNhat")));  // ← FIX
         return row;
     }
 
@@ -93,7 +106,6 @@ public class PhanAnhDAO {
         }
     }
 
-    // ── GỬI THÔNG BÁO CÓ LIÊN KẾT PHẢN ÁNH (dùng cho tất cả hành động phản ánh) ──
     private void guiThongBao(Connection conn, int nguoiGuiID, int nguoiNhanID,
                               String tieuDe, String noiDung, int phanAnhID) throws SQLException {
         String sqlTB =
@@ -118,7 +130,6 @@ public class PhanAnhDAO {
         }
     }
 
-    // ── GỬI THÔNG BÁO KHÔNG CÓ PHẢN ÁNH (dùng cho bình luận / phản hồi) ──
     private void guiThongBaoChung(Connection conn, int nguoiGuiID, int nguoiNhanID,
                                    String tieuDe, String noiDung) throws SQLException {
         String sqlTB =
@@ -197,7 +208,7 @@ public class PhanAnhDAO {
                             guiThongBao(conn2, nguoiGuiID, rs.getInt("NguoiDungID"),
                                     "[Phản ánh mới] " + tieuDe,
                                     "Hộ dân vừa gửi phản ánh mới. Vui lòng kiểm tra và xử lý.",
-                                    phanAnhID); // ← ĐÃ THÊM
+                                    phanAnhID);
                         }
                     }
                     conn2.commit();
@@ -277,7 +288,7 @@ public class PhanAnhDAO {
                         guiThongBao(conn, nguoiGuiID, rs.getInt("NguoiDungID"),
                                 "[Cập nhật phản ánh] " + tieuDe,
                                 "Hộ dân vừa chỉnh sửa nội dung phản ánh. Vui lòng xem lại.",
-                                phanAnhID); // ← ĐÃ THÊM
+                                phanAnhID);
                     }
                 }
                 conn.commit();
@@ -329,7 +340,7 @@ public class PhanAnhDAO {
                         guiThongBao(conn, nguoiGuiID, rs.getInt("NguoiDungID"),
                                 "[Hủy phản ánh] " + tieuDe,
                                 "Hộ dân đã hủy phản ánh. Lý do: " + lyDo,
-                                phanAnhID); // ← ĐÃ THÊM
+                                phanAnhID);
                     }
                 }
                 conn.commit();
@@ -403,7 +414,7 @@ public class PhanAnhDAO {
                 guiThongBao(conn, toTruongID, nguoiGuiID,
                         "[Từ chối phản ánh] " + tieuDe,
                         "Phản ánh của bạn đã bị từ chối. Lý do: " + lyDo,
-                        phanAnhID); // ← ĐÃ THÊM
+                        phanAnhID);
                 conn.commit();
                 return true;
             } catch (Exception e) {
@@ -444,7 +455,7 @@ public class PhanAnhDAO {
                 guiThongBao(conn, toTruongID, nguoiGuiID,
                         "[Spam] " + tieuDe,
                         "Phản ánh của bạn đã bị đánh dấu spam. Lý do: " + ghiChu,
-                        phanAnhID); // ← ĐÃ THÊM
+                        phanAnhID);
                 conn.commit();
                 return true;
             } catch (Exception e) {
@@ -483,19 +494,17 @@ public class PhanAnhDAO {
                 }
                 if (rows == 0) { conn.rollback(); return false; }
                 ghiLog(conn, phanAnhID, toTruongID, "CHUYEN_CAP", 1, 3, ghiChu);
-                // Thông báo cho người gửi (hộ dân)
                 guiThongBao(conn, toTruongID, nguoiGuiID,
                         "[Chuyển cấp] " + tieuDe,
                         "Phản ánh của bạn đã được chuyển lên cán bộ phường xử lý.",
-                        phanAnhID); // ← ĐÃ THÊM
-                // Thông báo cho cán bộ phường
+                        phanAnhID);
                 try (PreparedStatement ps = conn.prepareStatement(sqlCanBo)) {
                     ResultSet rs = ps.executeQuery();
                     while (rs.next()) {
                         guiThongBao(conn, toTruongID, rs.getInt("NguoiDungID"),
                                 "[Phản ánh chuyển cấp] " + tieuDe,
                                 "Tổ trưởng đã chuyển phản ánh lên để xử lý. Ghi chú: " + ghiChu,
-                                phanAnhID); // ← ĐÃ THÊM
+                                phanAnhID);
                     }
                 }
                 conn.commit();
@@ -538,7 +547,7 @@ public class PhanAnhDAO {
                 guiThongBao(conn, canBoID, nguoiGuiID,
                         "[Đã giải quyết] " + tieuDe,
                         "Phản ánh của bạn đã được giải quyết. Kết quả: " + ketQua,
-                        phanAnhID); // ← ĐÃ THÊM
+                        phanAnhID);
                 conn.commit();
                 return true;
             } catch (Exception e) {
@@ -650,7 +659,7 @@ public class PhanAnhDAO {
                 Map<String, Object> row = new LinkedHashMap<>();
                 row.put("fileID",     rs.getInt("FileID"));
                 row.put("duongDan",   rs.getString("DuongDan"));
-                row.put("ngayUpload", rs.getTimestamp("NgayUpload"));
+                row.put("ngayUpload", fmtVN(rs.getTimestamp("NgayUpload"))); // ← FIX
                 list.add(row);
             }
         } catch (SQLException e) { e.printStackTrace(); }
@@ -679,7 +688,7 @@ public class PhanAnhDAO {
                 row.put("logID",              rs.getInt("LogID"));
                 row.put("hanhDong",           rs.getString("HanhDong"));
                 row.put("ghiChu",             rs.getString("GhiChu"));
-                row.put("thoiGian",           rs.getTimestamp("ThoiGian"));
+                row.put("thoiGian",           fmtVN(rs.getTimestamp("ThoiGian"))); // ← FIX
                 row.put("tenNguoiThucHien",   rs.getString("TenNguoiThucHien"));
                 row.put("tenTrangThaiCu",     rs.getString("TenTrangThaiCu"));
                 row.put("tenTrangThaiMoi",    rs.getString("TenTrangThaiMoi"));
@@ -741,7 +750,7 @@ public class PhanAnhDAO {
                 guiThongBao(conn, toTruongID, nguoiGuiID,
                         "[Đã giải quyết] " + tieuDe,
                         "Phản ánh của bạn đã được tổ trưởng giải quyết. Kết quả: " + ketQua,
-                        phanAnhID); // ← ĐÃ THÊM
+                        phanAnhID);
                 conn.commit();
                 return true;
             } catch (Exception e) {
@@ -755,7 +764,6 @@ public class PhanAnhDAO {
         }
     }
 
-    // guiPhanHoiToTruong là bình luận thông thường — KHÔNG gắn PhanAnhID vào ThongBao
     public boolean guiPhanHoiToTruong(int phanAnhID, int toTruongID,
                                        int nguoiNhanID, String tieuDe, String noiDung) {
         try (Connection conn = DBContext.getInstance().getConnection()) {

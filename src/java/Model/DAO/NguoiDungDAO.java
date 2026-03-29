@@ -5,11 +5,27 @@ import Model.Entity.NguoiDung;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import org.mindrot.jbcrypt.BCrypt;
 
 public class NguoiDungDAO {
+
+    // ==================== FORMAT TIMEZONE VN ====================
+
+    private static final DateTimeFormatter FMT_VN =
+        DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy")
+                         .withZone(ZoneId.of("Asia/Ho_Chi_Minh"));
+
+    private String fmtVN(Timestamp ts) {
+        if (ts == null) return "—";
+        return FMT_VN.format(ts.toInstant());
+    }
+
+    // ==================== AUTH ====================
 
     public NguoiDung dangNhap(String email, String matKhau) throws Exception {
         String sql = "SELECT nd.*, vt.TenVaiTro, tdp.TenTo "
@@ -61,6 +77,8 @@ public class NguoiDungDAO {
         return false;
     }
 
+    // ==================== KIỂM TRA TỒN TẠI ====================
+
     public boolean isCccdExist(String cccd) {
         String sql = "SELECT COUNT(*) FROM NguoiDung WHERE CCCD = ?";
         try (Connection conn = DBContext.getInstance().getConnection();
@@ -91,11 +109,12 @@ public class NguoiDungDAO {
         return false;
     }
 
+    // ==================== TỔ DÂN PHỐ ====================
+
     public Integer getOrCreateToDanPhoByTen(String tenTo) {
         String sqlFind = "SELECT ToDanPhoID FROM ToDanPho WHERE TenTo = ?";
         try (Connection conn = DBContext.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sqlFind)) {
-            // PostgreSQL: dùng setString thay setNString (không có kiểu NVARCHAR)
             ps.setString(1, tenTo.trim());
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -106,7 +125,6 @@ public class NguoiDungDAO {
             return null;
         }
 
-        // PostgreSQL: dùng RETURNING thay Statement.RETURN_GENERATED_KEYS
         String sqlInsert = "INSERT INTO ToDanPho (TenTo) VALUES (?) RETURNING ToDanPhoID";
         try (Connection conn = DBContext.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sqlInsert)) {
@@ -121,14 +139,16 @@ public class NguoiDungDAO {
         return null;
     }
 
+    // ==================== TẠO TỔ TRƯỞNG ====================
+
     public boolean taoToTruong(NguoiDung nd) {
-        // PostgreSQL: NOW() → NOW(), N'...' literal → dùng tham số thường
+        // NgayTao dùng NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh' để đảm bảo giờ VN
         String sql = "INSERT INTO NguoiDung "
                 + "(CCCD, Ho, Ten, NgaySinh, GioiTinh, Email, SoDienThoai, "
                 + " MatKhauHash, VaiTroID, ToDanPhoID, IsActivated, NgayTao) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, "
                 + "(SELECT VaiTroID FROM VaiTro WHERE TenVaiTro = '" + VaiTroConst.TO_TRUONG + "'), "
-                + "?, TRUE, NOW())";
+                + "?, TRUE, NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')";
         try (Connection conn = DBContext.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, nd.getCccd());
@@ -151,9 +171,10 @@ public class NguoiDungDAO {
         return false;
     }
 
+    // ==================== DANH SÁCH TỔ TRƯỞNG ====================
+
     public List<NguoiDung> getDanhSachToTruong() {
         List<NguoiDung> list = new ArrayList<>();
-        // PostgreSQL: bỏ tiền tố N'' — chuỗi UTF-8 mặc định
         String sql = "SELECT nd.*, vt.TenVaiTro, tdp.TenTo "
                 + "FROM NguoiDung nd "
                 + "JOIN VaiTro vt ON nd.VaiTroID = vt.VaiTroID "
@@ -174,7 +195,6 @@ public class NguoiDungDAO {
 
     public List<NguoiDung> searchToTruong(String keyword) {
         List<NguoiDung> list = new ArrayList<>();
-        // PostgreSQL: || thay +, bỏ N''
         String sql = "SELECT nd.*, vt.TenVaiTro, tdp.TenTo "
                 + "FROM NguoiDung nd "
                 + "JOIN VaiTro vt ON nd.VaiTroID = vt.VaiTroID "
@@ -202,6 +222,8 @@ public class NguoiDungDAO {
         return list;
     }
 
+    // ==================== TRẠNG THÁI ====================
+
     public boolean setActivated(int nguoiDungID, boolean activated) {
         String sql = "UPDATE NguoiDung SET IsActivated = ? WHERE NguoiDungID = ?";
         try (Connection conn = DBContext.getInstance().getConnection();
@@ -216,7 +238,6 @@ public class NguoiDungDAO {
     }
 
     public boolean updateTrangThaiNhanSu(int nguoiDungID, int trangThaiNhanSu) {
-        // PostgreSQL: CASE WHEN dùng TRUE/FALSE thay 1/0 cho cột boolean
         String sql = "UPDATE NguoiDung "
                 + "SET TrangThaiNhanSu = ?, "
                 + "    IsActivated = CASE WHEN ? = 1 THEN TRUE ELSE FALSE END "
@@ -246,35 +267,16 @@ public class NguoiDungDAO {
         return false;
     }
 
-    private NguoiDung mapRow(ResultSet rs) throws Exception {
-        NguoiDung nd = new NguoiDung();
-        nd.setNguoiDungID(rs.getInt("NguoiDungID"));
-        nd.setCccd(rs.getString("CCCD"));
-        nd.setHo(rs.getString("Ho"));
-        nd.setTen(rs.getString("Ten"));
-        nd.setNgaySinh(rs.getDate("NgaySinh"));
-        nd.setGioiTinh(rs.getString("GioiTinh"));
-        nd.setEmail(rs.getString("Email"));
-        nd.setSoDienThoai(rs.getString("SoDienThoai"));
-        nd.setVaiTroID(rs.getInt("VaiTroID"));
-        nd.setToDanPhoID((Integer) rs.getObject("ToDanPhoID"));
-        nd.setIsActivated(rs.getBoolean("IsActivated"));
-        nd.setNgayTao(rs.getDate("NgayTao"));
-        nd.setTenVaiTro(rs.getString("TenVaiTro"));
-        nd.setTrangThaiNhanSu(rs.getInt("TrangThaiNhanSu"));
-        nd.setAvatarPath(rs.getString("AvatarPath"));
-        nd.setTenTo(rs.getString("TenTo"));
-        return nd;
-    }
+    // ==================== TẠO CÁN BỘ PHƯỜNG ====================
 
     public boolean taoCanBoPhuong(NguoiDung nd) {
-        // PostgreSQL: NOW() → NOW(), bỏ N'', literal 1 → TRUE
+        // NgayTao dùng NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh' để đảm bảo giờ VN
         String sql = "INSERT INTO NguoiDung "
                 + "(Ho, Ten, NgaySinh, GioiTinh, Email, SoDienThoai, "
                 + " MatKhauHash, VaiTroID, ToDanPhoID, IsActivated, NgayTao) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, "
                 + "(SELECT VaiTroID FROM VaiTro WHERE TenVaiTro = '" + VaiTroConst.CAN_BO_PHUONG + "'), "
-                + "NULL, TRUE, NOW())";
+                + "NULL, TRUE, NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')";
         try (Connection conn = DBContext.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, nd.getHo());
@@ -290,6 +292,8 @@ public class NguoiDungDAO {
         }
         return false;
     }
+
+    // ==================== DANH SÁCH CÁN BỘ PHƯỜNG ====================
 
     public List<NguoiDung> getDanhSachCanBoPhuong() {
         List<NguoiDung> list = new ArrayList<>();
@@ -313,7 +317,6 @@ public class NguoiDungDAO {
 
     public List<NguoiDung> searchCanBoPhuong(String keyword) {
         List<NguoiDung> list = new ArrayList<>();
-        // PostgreSQL: || thay +, bỏ N''
         String sql = "SELECT nd.*, vt.TenVaiTro, tdp.TenTo "
                 + "FROM NguoiDung nd "
                 + "JOIN VaiTro vt ON nd.VaiTroID = vt.VaiTroID "
@@ -339,8 +342,9 @@ public class NguoiDungDAO {
         return list;
     }
 
+    // ==================== KÍCH HOẠT TÀI KHOẢN ====================
+
     public NguoiDung findChuaKichHoatByCCCD(String cccd) {
-        // PostgreSQL: IsActivated = FALSE thay = 0
         String sql = "SELECT nd.*, vt.TenVaiTro, tdp.TenTo "
                 + "FROM NguoiDung nd "
                 + "LEFT JOIN VaiTro vt ON nd.VaiTroID = vt.VaiTroID "
@@ -360,7 +364,6 @@ public class NguoiDungDAO {
     }
 
     public boolean kichHoatTaiKhoan(int nguoiDungID, String email, String matKhauHash) {
-        // PostgreSQL: IsActivated = TRUE thay = 1
         String sql = "UPDATE NguoiDung "
                 + "SET Email = ?, MatKhauHash = ?, IsActivated = TRUE "
                 + "WHERE NguoiDungID = ? AND IsActivated = FALSE";
@@ -375,6 +378,8 @@ public class NguoiDungDAO {
         }
         return false;
     }
+
+    // ==================== TÌM THEO ID ====================
 
     public NguoiDung layTheoID(int nguoiDungID) {
         String sql = "SELECT nd.*, vt.TenVaiTro, tdp.TenTo "
@@ -394,26 +399,30 @@ public class NguoiDungDAO {
         }
         return null;
     }
+
     public NguoiDung layTheoThanhVienID(int thanhVienID) {
-    String sql = "SELECT nd.*, vt.TenVaiTro, tdp.TenTo "
-            + "FROM NguoiDung nd "
-            + "LEFT JOIN VaiTro vt ON nd.VaiTroID = vt.VaiTroID "
-            + "LEFT JOIN ToDanPho tdp ON nd.ToDanPhoID = tdp.ToDanPhoID "
-            + "JOIN ThanhVienHo tv ON tv.NguoiDungID = nd.NguoiDungID "
-            + "WHERE tv.ThanhVienID = ?";
-    try (Connection conn = DBContext.getInstance().getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql)) {
-        ps.setInt(1, thanhVienID);
-        ResultSet rs = ps.executeQuery();
-        if (rs.next()) {
-            return mapRow(rs);
+        String sql = "SELECT nd.*, vt.TenVaiTro, tdp.TenTo "
+                + "FROM NguoiDung nd "
+                + "LEFT JOIN VaiTro vt ON nd.VaiTroID = vt.VaiTroID "
+                + "LEFT JOIN ToDanPho tdp ON nd.ToDanPhoID = tdp.ToDanPhoID "
+                + "JOIN ThanhVienHo tv ON tv.NguoiDungID = nd.NguoiDungID "
+                + "WHERE tv.ThanhVienID = ?";
+        try (Connection conn = DBContext.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, thanhVienID);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapRow(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    } catch (Exception e) {
-        e.printStackTrace();
+        return null;
     }
-    return null;
-}
-      public boolean coToTruongDangCongTac(int toDanPhoID) {
+
+    // ==================== KIỂM TRA TỔ TRƯỞNG ====================
+
+    public boolean coToTruongDangCongTac(int toDanPhoID) {
         String sql = "SELECT COUNT(*) FROM NguoiDung nd "
                 + "JOIN VaiTro vt ON nd.VaiTroID = vt.VaiTroID "
                 + "WHERE nd.ToDanPhoID = ? "
@@ -429,14 +438,7 @@ public class NguoiDungDAO {
         }
         return false;
     }
- 
-    /**
-     * Lấy trạng thái nhân sự hiện tại của một người dùng.
-     * Dùng để kiểm tra trước khi update — chặn revert từ trạng thái 3.
-     *
-     * @param nguoiDungID  ID người dùng cần kiểm tra
-     * @return trangThaiNhanSu hiện tại (1/2/3), hoặc -1 nếu không tìm thấy
-     */
+
     public int getTrangThaiNhanSu(int nguoiDungID) {
         String sql = "SELECT TrangThaiNhanSu FROM NguoiDung WHERE NguoiDungID = ?";
         try (Connection conn = DBContext.getInstance().getConnection();
@@ -448,5 +450,28 @@ public class NguoiDungDAO {
             e.printStackTrace();
         }
         return -1;
+    }
+
+    // ==================== MAP ROW ====================
+
+    private NguoiDung mapRow(ResultSet rs) throws Exception {
+        NguoiDung nd = new NguoiDung();
+        nd.setNguoiDungID(rs.getInt("NguoiDungID"));
+        nd.setCccd(rs.getString("CCCD"));
+        nd.setHo(rs.getString("Ho"));
+        nd.setTen(rs.getString("Ten"));
+        nd.setNgaySinh(rs.getDate("NgaySinh"));
+        nd.setGioiTinh(rs.getString("GioiTinh"));
+        nd.setEmail(rs.getString("Email"));
+        nd.setSoDienThoai(rs.getString("SoDienThoai"));
+        nd.setVaiTroID(rs.getInt("VaiTroID"));
+        nd.setToDanPhoID((Integer) rs.getObject("ToDanPhoID"));
+        nd.setIsActivated(rs.getBoolean("IsActivated"));
+        nd.setNgayTao(rs.getDate("NgayTao"));
+        nd.setTenVaiTro(rs.getString("TenVaiTro"));
+        nd.setTrangThaiNhanSu(rs.getInt("TrangThaiNhanSu"));
+        nd.setAvatarPath(rs.getString("AvatarPath"));
+        nd.setTenTo(rs.getString("TenTo"));
+        return nd;
     }
 }

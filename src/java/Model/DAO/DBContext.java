@@ -63,11 +63,11 @@
 //        }
 //    }
 //}
-
 package Model.DAO;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public class DBContext {
     private static final String URL = "jdbc:postgresql://ep-super-cell-a15cus9i-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require";
@@ -82,12 +82,15 @@ public class DBContext {
         }
     }
 
-    // Mỗi lần gọi tạo connection MỚI — không dùng singleton connection
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASSWORD);
+        Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+        // FIX: Set timezone Việt Nam cho mọi connection → NOW() luôn đúng giờ VN
+        try (Statement st = conn.createStatement()) {
+            st.execute("SET TIME ZONE 'Asia/Ho_Chi_Minh'");
+        }
+        return conn;
     }
 
-    // Giữ getInstance() để không phải sửa các DAO cũ
     public static DBContext getInstance() {
         return new DBContext();
     }

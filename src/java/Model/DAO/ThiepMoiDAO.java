@@ -2,12 +2,36 @@ package Model.DAO;
 
 import Model.Entity.ThiepMoi;
 import java.sql.*;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class ThiepMoiDAO {
 
     public static final int TRANG_THAI_SAP_DIEN_RA = 5;
     public static final int TRANG_THAI_TAM_HOAN    = 8;
+
+    // ==================== FORMAT TIMEZONE VN ====================
+    private static final ZoneId ZONE_VN = ZoneId.of("Asia/Ho_Chi_Minh");
+    private static final DateTimeFormatter FMT_VN =
+        DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy")
+                         .withZone(ZONE_VN);
+
+    private String fmtVN(Timestamp ts) {
+        if (ts == null) return "—";
+        return FMT_VN.format(ts.toInstant());
+    }
+
+    // Dùng cho buildJsonSnapshot — đảm bảo chuỗi thời gian luôn theo giờ VN
+    private String fmtVN_Json(Timestamp ts) {
+        if (ts == null) return "";
+        return FMT_VN.format(ts.toInstant());
+    }
+
+    // ==================== NOW theo giờ VN để so sánh ====================
+    // System.currentTimeMillis() là UTC epoch — dùng trực tiếp để so sánh
+    // với Timestamp từ DB là hoàn toàn đúng (cả hai đều là epoch ms).
+    // KHÔNG cần điều chỉnh ở đây.
 
     // PostgreSQL: || thay +, bỏ N''
     private static final String BASE_SELECT =
@@ -26,6 +50,7 @@ public class ThiepMoiDAO {
         if (trangThaiHienTai == 4 || trangThaiHienTai == TRANG_THAI_TAM_HOAN)
             return trangThaiHienTai;
         if (batDau == null) return TRANG_THAI_SAP_DIEN_RA;
+        // System.currentTimeMillis() là epoch ms — so sánh đúng với Timestamp.getTime()
         long now = System.currentTimeMillis();
         if (now < batDau.getTime())                      return TRANG_THAI_SAP_DIEN_RA;
         if (ketThuc == null || now <= ketThuc.getTime()) return 6;
@@ -121,7 +146,6 @@ public class ThiepMoiDAO {
     //  TẠO THIỆP MỚI
     // ------------------------------------------------------------------ //
     public boolean taoThiepMoi(ThiepMoi t, int nguoiTaoID) {
-        // PostgreSQL: RETURNING thay RETURN_GENERATED_KEYS, bỏ N''
         String sqlThiep =
             "INSERT INTO ThiepMoi (TieuDe, NoiDung, DiaDiem, ThoiGianBatDau, ThoiGianKetThuc, " +
             "                      ToDanPhoID, NguoiTaoID, TrangThaiID, LichHopID) " +
@@ -201,7 +225,6 @@ public class ThiepMoiDAO {
     public boolean suaThiepMoi(ThiepMoi t, int nguoiSuaID) {
         String sqlCheck   = "SELECT DaIn, ToDanPhoID FROM ThiepMoi WHERE ThiepMoiID = ?";
         String sqlOldSnap = "SELECT TieuDe, NoiDung, DiaDiem, ThoiGianBatDau FROM ThiepMoi WHERE ThiepMoiID = ?";
-        // PostgreSQL: SYSDATETIME() → NOW()
         String sqlUpdate  =
             "UPDATE ThiepMoi SET TieuDe=?, NoiDung=?, DiaDiem=?, " +
             "ThoiGianBatDau=?, ThoiGianKetThuc=? " +
@@ -233,7 +256,11 @@ public class ThiepMoiDAO {
             String oldSnap;
             try (PreparedStatement ps = conn.prepareStatement(sqlOldSnap)) {
                 ps.setInt(1, t.getThiepMoiID()); ResultSet rs = ps.executeQuery(); rs.next();
-                oldSnap = "{\"TieuDe\":\"" + rs.getString("TieuDe") + "\",\"DiaDiem\":\"" + rs.getString("DiaDiem") + "\"}";
+                // FIX: dùng fmtVN_Json thay vì .toString() để đảm bảo đúng giờ VN
+                String oldTgbd = fmtVN_Json(rs.getTimestamp("ThoiGianBatDau"));
+                oldSnap = "{\"TieuDe\":\"" + rs.getString("TieuDe") +
+                          "\",\"DiaDiem\":\"" + rs.getString("DiaDiem") +
+                          "\",\"ThoiGianBatDau\":\"" + oldTgbd + "\"}";
             }
 
             try (PreparedStatement ps = conn.prepareStatement(sqlUpdate)) {
@@ -358,7 +385,6 @@ public class ThiepMoiDAO {
     // ------------------------------------------------------------------ //
     public boolean inThiepMoi(int thiepMoiID, int nguoiInID) {
         String sqlCheck  = "SELECT DaIn FROM ThiepMoi WHERE ThiepMoiID = ?";
-        // PostgreSQL: NOW() → NOW(), DaIn=1 → TRUE
         String sqlUpdate = "UPDATE ThiepMoi SET DaIn=TRUE, TrangThaiID=3, ThoiGianIn=NOW(), NguoiInID=? WHERE ThiepMoiID=?";
         String sqlLog    = "INSERT INTO LichSuThiepMoi (ThiepMoiID, NguoiThucHienID, HanhDong, GhiChu) VALUES (?, ?, 'IN', 'Thiệp đã in — khóa chỉnh sửa và xóa')";
 
@@ -391,14 +417,11 @@ public class ThiepMoiDAO {
     //  TẠM HOÃN
     // ------------------------------------------------------------------ //
     public boolean tamHoanThiepMoi(int thiepMoiID, int nguoiThucHienID, String ghiChuHoan) {
-        // PostgreSQL: DaIn=0 → FALSE
         String sqlUpdate =
             "UPDATE ThiepMoi SET TrangThaiID = ?, GhiChuHoan = ? WHERE ThiepMoiID = ? AND DaIn = FALSE";
-        // PostgreSQL: SYSDATETIME() → NOW(), bỏ N''
         String sqlLog =
             "INSERT INTO LichSuThiepMoi (ThiepMoiID, NguoiThucHienID, HanhDong, GhiChu, ThoiGian) " +
             "VALUES (?, ?, 'TAM_HOAN', ?, NOW())";
-        // PostgreSQL: || thay +, bỏ N'', RETURNING thay RETURN_GENERATED_KEYS
         String sqlThongBao =
             "INSERT INTO ThongBao (TieuDe, NoiDung, NguoiGuiID, ToDanPhoID, ThiepMoiID) " +
             "SELECT '[TẠM HOÃN] ' || TieuDe, " +
@@ -467,16 +490,13 @@ public class ThiepMoiDAO {
         if (thoiGianBatDau == null || thoiGianBatDau.getTime() <= System.currentTimeMillis())
             return false;
 
-        // PostgreSQL: DaIn=0 → FALSE
         String sqlUpdate =
             "UPDATE ThiepMoi SET TrangThaiID = ?, GhiChuHoan = NULL, " +
             "ThoiGianBatDau = ?, ThoiGianKetThuc = ?, NoiDung = ?, DiaDiem = ? " +
             "WHERE ThiepMoiID = ? AND TrangThaiID = ? AND DaIn = FALSE";
-        // PostgreSQL: SYSDATETIME() → NOW(), bỏ N''
         String sqlLog =
             "INSERT INTO LichSuThiepMoi (ThiepMoiID, NguoiThucHienID, HanhDong, GhiChu, ThoiGian) " +
             "VALUES (?, ?, 'MO_LAI', 'Mở lại thiệp — đã cập nhật thời gian mới', NOW())";
-        // PostgreSQL: || thay +, bỏ N'', RETURNING
         String sqlThongBao =
             "INSERT INTO ThongBao (TieuDe, NoiDung, NguoiGuiID, ToDanPhoID, ThiepMoiID) " +
             "SELECT '[MỞ LẠI] ' || TieuDe, " +
@@ -540,14 +560,16 @@ public class ThiepMoiDAO {
         }
     }
 
+    // ------------------------------------------------------------------ //
+    //  HELPER: JSON snapshot — dùng fmtVN_Json để đảm bảo giờ VN
+    // ------------------------------------------------------------------ //
     private String buildJsonSnapshot(ThiepMoi t) {
         return "{\"TieuDe\":\"" + t.getTieuDe() + "\"," +
                "\"DiaDiem\":\"" + t.getDiaDiem() + "\"," +
-               "\"ThoiGianBatDau\":\"" + t.getThoiGianBatDau() + "\"}";
+               "\"ThoiGianBatDau\":\"" + fmtVN_Json(t.getThoiGianBatDau()) + "\"}";
     }
 
     public Map<String, Integer> thongKe_ThiepMoiTheoThang(int toDanPhoID, int nam) {
-        // PostgreSQL: MONTH() → EXTRACT(MONTH FROM ...), YEAR() → EXTRACT(YEAR FROM ...)
         String sql = "SELECT EXTRACT(MONTH FROM NgayTao)::int AS Thang, COUNT(*) AS SoLuong "
                    + "FROM ThiepMoi "
                    + "WHERE ToDanPhoID = ? AND EXTRACT(YEAR FROM NgayTao) = ? "

@@ -3,19 +3,33 @@ package Model.DAO;
 import Model.Entity.LichHop;
 import Model.Entity.LichSuSuaLichHop;
 import java.sql.*;
-import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class LichHopDAO {
+
+    // ==================== FORMAT TIMEZONE VN ====================
+
+    private static final DateTimeFormatter FMT_VN =
+        DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy")
+                         .withZone(ZoneId.of("Asia/Ho_Chi_Minh"));
+
+    private String fmtVN(Timestamp ts) {
+        if (ts == null) return "—";
+        return FMT_VN.format(ts.toInstant());
+    }
 
     // ==================== HELPER ====================
 
     private int tinhTrangThai(Timestamp batDau, Timestamp ketThuc, int trangThaiHienTai) {
         if (trangThaiHienTai == 4) return 4;
         if (batDau == null) return 1;
-        LocalDateTime now   = LocalDateTime.now();
-        LocalDateTime bdLdt = batDau.toLocalDateTime();
-        LocalDateTime ktLdt = ketThuc != null ? ketThuc.toLocalDateTime() : null;
+        java.time.LocalDateTime now   = java.time.LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")); // ← FIX
+        java.time.LocalDateTime bdLdt = batDau.toInstant().atZone(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDateTime();
+        java.time.LocalDateTime ktLdt = ketThuc != null
+                ? ketThuc.toInstant().atZone(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDateTime()
+                : null;
         if (now.isBefore(bdLdt))                  return 1;
         if (ktLdt == null || now.isBefore(ktLdt)) return 2;
         return 3;
@@ -30,10 +44,10 @@ public class LichHopDAO {
         row.put("tieuDe",          rs.getString("TieuDe"));
         row.put("noiDung",         rs.getString("NoiDung"));
         row.put("diaDiem",         rs.getString("DiaDiem"));
-        row.put("thoiGianBatDau",  batDau);
-        row.put("thoiGianKetThuc", ketThuc);
+        row.put("thoiGianBatDau",  fmtVN(batDau));   // ← FIX
+        row.put("thoiGianKetThuc", fmtVN(ketThuc));  // ← FIX
         row.put("trangThai",       tinhTrangThai(batDau, ketThuc, ttHienTai));
-        row.put("ngayTao",         rs.getTimestamp("NgayTao"));
+        row.put("ngayTao",         fmtVN(rs.getTimestamp("NgayTao"))); // ← FIX
         row.put("mucDo",           rs.getInt("MucDo"));
         row.put("doiTuong",        rs.getString("DoiTuong"));
         row.put("nguoiTao",        rs.getString("NguoiTao"));
@@ -43,7 +57,6 @@ public class LichHopDAO {
     // ==================== LỊCH HỌP ====================
 
     public int taoLichHop(LichHop lh) {
-        // PostgreSQL: dùng RETURNING thay cho Statement.RETURN_GENERATED_KEYS
         String sql =
             "INSERT INTO LichHop (TieuDe, NoiDung, DiaDiem, ThoiGianBatDau, " +
             "ThoiGianKetThuc, ToDanPhoID, NguoiTaoID, TrangThai, MucDo, DoiTuong) " +
@@ -60,7 +73,6 @@ public class LichHopDAO {
             ps.setInt(7, lh.getNguoiTaoID());
             ps.setInt(8, lh.getMucDo());
             ps.setString(9, lh.getDoiTuong());
-            // PostgreSQL RETURNING được đọc qua executeQuery()
             ResultSet rs = ps.executeQuery();
             if (rs.next()) return rs.getInt(1);
         } catch (Exception e) {
@@ -96,7 +108,6 @@ public class LichHopDAO {
 
     public List<Map<String, Object>> getLichHopByToDanPho(int toDanPhoID) {
         List<Map<String, Object>> list = new ArrayList<>();
-        // PostgreSQL: dùng || thay cho + để nối chuỗi
         String sql =
             "SELECT lh.LichHopID, lh.TieuDe, lh.NoiDung, lh.DiaDiem, " +
             "       lh.ThoiGianBatDau, lh.ThoiGianKetThuc, lh.TrangThai, lh.NgayTao, " +
@@ -141,10 +152,10 @@ public class LichHopDAO {
                 row.put("tieuDe",          rs.getString("TieuDe"));
                 row.put("noiDung",         rs.getString("NoiDung"));
                 row.put("diaDiem",         rs.getString("DiaDiem"));
-                row.put("thoiGianBatDau",  batDau);
-                row.put("thoiGianKetThuc", ketThuc);
+                row.put("thoiGianBatDau",  fmtVN(batDau));   // ← FIX
+                row.put("thoiGianKetThuc", fmtVN(ketThuc));  // ← FIX
                 row.put("trangThai",       tinhTrangThai(batDau, ketThuc, ttHienTai));
-                row.put("ngayTao",         rs.getTimestamp("NgayTao"));
+                row.put("ngayTao",         fmtVN(rs.getTimestamp("NgayTao"))); // ← FIX
                 row.put("toDanPhoID",      rs.getInt("ToDanPhoID"));
                 row.put("nguoiTaoID",      rs.getInt("NguoiTaoID"));
                 row.put("mucDo",           rs.getInt("MucDo"));
@@ -166,7 +177,6 @@ public class LichHopDAO {
                                                          Timestamp tuNgay,
                                                          Timestamp denNgay) {
         List<Map<String, Object>> list = new ArrayList<>();
-
         StringBuilder sql = new StringBuilder(
             "SELECT lh.LichHopID, lh.TieuDe, lh.NoiDung, lh.DiaDiem, " +
             "       lh.ThoiGianBatDau, lh.ThoiGianKetThuc, lh.TrangThai, lh.NgayTao, " +
@@ -176,7 +186,6 @@ public class LichHopDAO {
             "JOIN NguoiDung nd ON lh.NguoiTaoID = nd.NguoiDungID " +
             "WHERE lh.ToDanPhoID = ? "
         );
-
         if (trangThai != null) sql.append("AND lh.TrangThai = ? ");
         if (tuNgay    != null) sql.append("AND lh.ThoiGianBatDau >= ? ");
         if (denNgay   != null) sql.append("AND lh.ThoiGianBatDau <= ? ");
@@ -184,16 +193,13 @@ public class LichHopDAO {
 
         try (Connection conn = DBContext.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-
             int idx = 1;
             ps.setInt(idx++, toDanPhoID);
             if (trangThai != null) ps.setInt(idx++, trangThai);
             if (tuNgay    != null) ps.setTimestamp(idx++, tuNgay);
             if (denNgay   != null) ps.setTimestamp(idx++, denNgay);
-
             ResultSet rs = ps.executeQuery();
             while (rs.next()) list.add(mapRowDanhSach(rs));
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -211,10 +217,8 @@ public class LichHopDAO {
             "JOIN NguoiDung nd ON lh.NguoiTaoID = nd.NguoiDungID " +
             "JOIN ToDanPho  td ON lh.ToDanPhoID  = td.ToDanPhoID " +
             "WHERE lh.LichHopID = ? AND lh.ToDanPhoID = ?";
-
         try (Connection conn = DBContext.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setInt(1, lichHopID);
             ps.setInt(2, toDanPhoID);
             ResultSet rs = ps.executeQuery();
@@ -227,10 +231,10 @@ public class LichHopDAO {
                 row.put("tieuDe",          rs.getString("TieuDe"));
                 row.put("noiDung",         rs.getString("NoiDung"));
                 row.put("diaDiem",         rs.getString("DiaDiem"));
-                row.put("thoiGianBatDau",  batDau);
-                row.put("thoiGianKetThuc", ketThuc);
+                row.put("thoiGianBatDau",  fmtVN(batDau));   // ← FIX
+                row.put("thoiGianKetThuc", fmtVN(ketThuc));  // ← FIX
                 row.put("trangThai",       tinhTrangThai(batDau, ketThuc, ttHienTai));
-                row.put("ngayTao",         rs.getTimestamp("NgayTao"));
+                row.put("ngayTao",         fmtVN(rs.getTimestamp("NgayTao"))); // ← FIX
                 row.put("toDanPhoID",      rs.getInt("ToDanPhoID"));
                 row.put("mucDo",           rs.getInt("MucDo"));
                 row.put("doiTuong",        rs.getString("DoiTuong"));
@@ -280,7 +284,7 @@ public class LichHopDAO {
                 Map<String, Object> row = new LinkedHashMap<>();
                 row.put("suaID",          rs.getInt("SuaID"));
                 row.put("nguoiSua",       rs.getString("NguoiSua"));
-                row.put("thoiGianSua",    rs.getTimestamp("ThoiGianSua"));
+                row.put("thoiGianSua",    fmtVN(rs.getTimestamp("ThoiGianSua"))); // ← FIX
                 row.put("noiDungThayDoi", rs.getString("NoiDungThayDoi"));
                 row.put("lyDoSua",        rs.getString("LyDoSua"));
                 list.add(row);
@@ -296,7 +300,6 @@ public class LichHopDAO {
     public boolean guiThongBaoDenChuHo(int lichHopID, int toDanPhoID,
                                         int nguoiGuiID, String tieuDe,
                                         String noiDung) {
-        // PostgreSQL: dùng RETURNING để lấy ID vừa insert
         String sqlThongBao =
             "INSERT INTO ThongBao (TieuDe, NoiDung, NguoiGuiID, ToDanPhoID, LichHopID) " +
             "VALUES (?, ?, ?, ?, ?) RETURNING ThongBaoID";
@@ -314,7 +317,6 @@ public class LichHopDAO {
                 ps.setInt(3, nguoiGuiID);
                 ps.setInt(4, toDanPhoID);
                 ps.setInt(5, lichHopID);
-                // PostgreSQL RETURNING đọc qua executeQuery()
                 ResultSet rs = ps.executeQuery();
                 if (rs.next()) thongBaoID = rs.getInt(1);
             }
@@ -351,7 +353,7 @@ public class LichHopDAO {
                 row.put("chuHo",       rs.getString("ChuHo"));
                 row.put("soDienThoai", rs.getString("SoDienThoai"));
                 row.put("daDoc",       rs.getBoolean("DaDoc"));
-                row.put("thoiGianDoc", rs.getTimestamp("ThoiGianDoc"));
+                row.put("thoiGianDoc", fmtVN(rs.getTimestamp("ThoiGianDoc"))); // ← FIX
                 list.add(row);
             }
         } catch (Exception e) {

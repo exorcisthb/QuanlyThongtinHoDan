@@ -2,9 +2,21 @@ package Model.DAO;
 
 import Model.Entity.YeuCauDoiTrangThai;
 import java.sql.*;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class YeuCauDoiTrangThaiDAO {
+
+    // ==================== FORMAT TIMEZONE VN ====================
+    private static final DateTimeFormatter FMT_VN =
+        DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy")
+                         .withZone(ZoneId.of("Asia/Ho_Chi_Minh"));
+
+    private String fmtVN(Timestamp ts) {
+        if (ts == null) return "—";
+        return FMT_VN.format(ts.toInstant());
+    }
 
     private static final String BASE_SELECT
             = "SELECT "
@@ -16,41 +28,32 @@ public class YeuCauDoiTrangThaiDAO {
             + "    (nd_chu.Ho || ' ' || nd_chu.Ten) AS TenChuHo, "
             + "    tt_cu.TenTrangThai  AS TenTrangThaiCu, "
             + "    tt_moi.TenTrangThai AS TenTrangThaiMoi, "
-            // TenTo: loại 1 → hd→tdp_hd, loại 3 → NhanKhauID→tdp_nk, loại 2 → NguoiDungCapNhatID→tdp_l2
             + "    COALESCE(tdp_hd.TenTo, tdp_nk.TenTo, tdp_l2.TenTo) AS TenTo, "
             + "    (nd_yc.Ho || ' ' || nd_yc.Ten) AS TenNguoiYeuCau, "
             + "    (nd_dt.Ho  || ' ' || nd_dt.Ten) AS TenNguoiDuyet, "
             + "    ttyc.TenTrangThai AS TenTrangThaiYeuCau, "
             + "    yc.NguoiDungCapNhatID, "
-            // MaNhanKhau: loại 3 → qua NhanKhauID, loại 2 → qua NguoiDungCapNhatID
             + "    COALESCE(hd_nk.MaHoKhau, hd_l2.MaHoKhau) AS MaNhanKhau, "
-            // QuanHeVoiChuHo: loại 3 → qua NhanKhauID, loại 2 → qua NguoiDungCapNhatID
             + "    COALESCE(qhg_nk.TenQuanHe, qhg_l2.TenQuanHe) AS QuanHeVoiChuHo, "
             + "    yc.Ho_Cu,  yc.Ten_Cu,  yc.NgaySinh_Cu,  yc.GioiTinh_Cu, "
             + "    yc.Email_Cu,  yc.SDT_Cu,  yc.CCCD_Cu,  yc.Avatar_Cu, "
             + "    yc.Ho_Moi, yc.Ten_Moi, yc.NgaySinh_Moi, yc.GioiTinh_Moi, "
             + "    yc.Email_Moi, yc.SDT_Moi, yc.CCCD_Moi, yc.Avatar_Moi "
             + "FROM YeuCauDoiTrangThai yc "
-            // Người gửi yêu cầu
             + "JOIN  NguoiDung       nd_yc    ON nd_yc.NguoiDungID   = yc.NguoiYeuCauID "
-            // Trạng thái yêu cầu
             + "JOIN  TrangThaiYeuCau ttyc     ON ttyc.TrangThaiID    = yc.TrangThaiYeuCauID "
-            // ── Loại 1: hộ ──
             + "LEFT JOIN HoDan           hd       ON hd.HoDanID          = yc.HoDanID "
             + "LEFT JOIN TrangThaiHoKhau tt_cu    ON tt_cu.TrangThaiID   = yc.TrangThaiCuID "
             + "LEFT JOIN TrangThaiHoKhau tt_moi   ON tt_moi.TrangThaiID  = yc.TrangThaiMoiID "
             + "LEFT JOIN ToDanPho        tdp_hd   ON tdp_hd.ToDanPhoID   = hd.ToDanPhoID "
             + "LEFT JOIN NguoiDung       nd_chu   ON nd_chu.NguoiDungID  = hd.ChuHoID "
-            // Người duyệt
             + "LEFT JOIN NguoiDung       nd_dt    ON nd_dt.NguoiDungID   = yc.NguoiDuyetID "
-            // ── Loại 3: nhân khẩu (NhanKhauID) ──
             + "LEFT JOIN NguoiDung       nd_nk    ON nd_nk.NguoiDungID   = yc.NhanKhauID "
             + "LEFT JOIN ToDanPho        tdp_nk   ON tdp_nk.ToDanPhoID   = nd_nk.ToDanPhoID "
             + "LEFT JOIN ThanhVienHo     tvh_nk   ON tvh_nk.NguoiDungID  = yc.NhanKhauID "
             + "                                   AND tvh_nk.NgayRa IS NULL "
             + "LEFT JOIN HoDan           hd_nk    ON hd_nk.HoDanID       = tvh_nk.HoDanID "
             + "LEFT JOIN QuanHeHoGia     qhg_nk   ON qhg_nk.QuanHeID     = tvh_nk.QuanHeID "
-            // ── Loại 2: cá nhân (NguoiDungCapNhatID) ──
             + "LEFT JOIN NguoiDung       nd_l2    ON nd_l2.NguoiDungID   = yc.NguoiDungCapNhatID "
             + "LEFT JOIN ToDanPho        tdp_l2   ON tdp_l2.ToDanPhoID   = nd_l2.ToDanPhoID "
             + "LEFT JOIN ThanhVienHo     tvh_l2   ON tvh_l2.NguoiDungID  = yc.NguoiDungCapNhatID "
@@ -74,9 +77,10 @@ public class YeuCauDoiTrangThaiDAO {
         row.put("trangThaiYeuCauID",  rs.getInt("TrangThaiYeuCauID"));
         int nguoiDuyetID = rs.getInt("NguoiDuyetID");
         row.put("nguoiDuyetID",       rs.wasNull() ? null : nguoiDuyetID);
-        row.put("ngayDuyet",          rs.getString("NgayDuyet"));
+        // FIX: dùng getTimestamp + fmtVN thay vì getString để đảm bảo đúng giờ VN
+        row.put("ngayDuyet",          fmtVN(rs.getTimestamp("NgayDuyet")));
         row.put("ghiChuDuyet",        rs.getString("GhiChuDuyet"));
-        row.put("ngayTao",            rs.getString("NgayTao"));
+        row.put("ngayTao",            fmtVN(rs.getTimestamp("NgayTao")));
         row.put("maHoKhau",           rs.getString("MaHoKhau"));
         row.put("maNhanKhau",         rs.getString("MaNhanKhau"));
         row.put("diaChiHo",           rs.getString("DiaChiHo"));
@@ -107,7 +111,6 @@ public class YeuCauDoiTrangThaiDAO {
         row.put("cCCD_Moi",           rs.getString("CCCD_Moi"));
         row.put("avatar_Moi",         rs.getString("Avatar_Moi"));
 
-        // tenNhanKhau tổng hợp từ snapshot Ho_Cu + Ten_Cu (loại 2 & 3)
         String ho  = rs.getString("Ho_Cu");
         String ten = rs.getString("Ten_Cu");
         if (ho != null && ten != null) {
@@ -299,10 +302,9 @@ public class YeuCauDoiTrangThaiDAO {
     }
 
     // ------------------------------------------------------------------ //
-    //  layChiTietTheoThongBao — JOIN đúng cột DB thực tế
+    //  layChiTietTheoThongBao
     // ------------------------------------------------------------------ //
     public Map<String, Object> layChiTietTheoThongBao(int thongBaoID) {
-        // thongbao có: yeucaudoitrangthaiid (loại 1 & 3), yeucaucapnhatid (loại 2)
         String sql = BASE_SELECT
                 + "JOIN ThongBao tb ON ("
                 + "    tb.YeuCauDoiTrangThaiID = yc.YeuCauID "
@@ -435,7 +437,6 @@ public class YeuCauDoiTrangThaiDAO {
     }
 
     public List<Map<String, Object>> layDanhSachTheoTo(int toDanPhoID) {
-        // Loại 2 lọc qua tdp_l2, loại 3 qua tdp_nk, loại 1 qua tdp_hd
         String sql = BASE_SELECT
                 + "WHERE (tdp_hd.ToDanPhoID = ? OR tdp_nk.ToDanPhoID = ? OR tdp_l2.ToDanPhoID = ?) "
                 + "ORDER BY yc.NgayTao DESC";

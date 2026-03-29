@@ -3,9 +3,24 @@ package Model.DAO;
 import Model.Entity.HoDan;
 import Model.Entity.NguoiDung;
 import java.sql.*;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class HoDanDAO {
+
+    // ==================== FORMAT TIMEZONE VN ====================
+
+    private static final DateTimeFormatter FMT_VN =
+        DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy")
+                         .withZone(ZoneId.of("Asia/Ho_Chi_Minh"));
+
+    private String fmtVN(Timestamp ts) {
+        if (ts == null) return "—";
+        return FMT_VN.format(ts.toInstant());
+    }
+
+    // ==================== DANH SÁCH HỘ DÂN ====================
 
     public List<HoDan> getDanhSachHoDan(int toDanPhoID, String keyword) {
         List<HoDan> list = new ArrayList<>();
@@ -112,59 +127,57 @@ public class HoDanDAO {
         return h;
     }
 
-  private int getOrCreateToDanPhoID(Connection conn, String diaChi) throws Exception {
-    if (diaChi == null || diaChi.isEmpty()) return 0;
+    private int getOrCreateToDanPhoID(Connection conn, String diaChi) throws Exception {
+        if (diaChi == null || diaChi.isEmpty()) return 0;
 
-    String tenTo = null;
-    String upper = diaChi.toUpperCase();
+        String tenTo = null;
+        String upper = diaChi.toUpperCase();
 
-    int idx = upper.indexOf("TỔ DÂN PHỐ ");
-    if (idx >= 0) tenTo = diaChi.substring(idx + 11).trim();
+        int idx = upper.indexOf("TỔ DÂN PHỐ ");
+        if (idx >= 0) tenTo = diaChi.substring(idx + 11).trim();
 
-    if (tenTo == null) { idx = upper.indexOf("TO DAN PHO "); if (idx >= 0) tenTo = diaChi.substring(idx + 11).trim(); }
-    if (tenTo == null) { idx = upper.indexOf("TDP ");        if (idx >= 0) tenTo = diaChi.substring(idx + 4).trim(); }
+        if (tenTo == null) { idx = upper.indexOf("TO DAN PHO "); if (idx >= 0) tenTo = diaChi.substring(idx + 11).trim(); }
+        if (tenTo == null) { idx = upper.indexOf("TDP ");        if (idx >= 0) tenTo = diaChi.substring(idx + 4).trim(); }
 
-    if (tenTo != null && tenTo.contains(",")) tenTo = tenTo.substring(0, tenTo.indexOf(",")).trim();
-    if (tenTo == null || tenTo.isEmpty()) return 0;
+        if (tenTo != null && tenTo.contains(",")) tenTo = tenTo.substring(0, tenTo.indexOf(",")).trim();
+        if (tenTo == null || tenTo.isEmpty()) return 0;
 
-    // ✅ Proper case thay vì UPPERCASE
-    tenTo = toProperCase(tenTo);
+        tenTo = toProperCase(tenTo);
 
-    try (PreparedStatement ps = conn.prepareStatement(
-            "SELECT ToDanPhoID FROM ToDanPho WHERE LOWER(TenTo) = LOWER(?)")) {
-        ps.setString(1, tenTo);
-        ResultSet rs = ps.executeQuery();
-        if (rs.next()) return rs.getInt(1);
-    }
-
-    try (PreparedStatement ps = conn.prepareStatement(
-            "INSERT INTO ToDanPho (TenTo) VALUES (?) RETURNING ToDanPhoID")) {
-        ps.setString(1, tenTo);
-        ResultSet rs = ps.executeQuery();
-        if (rs.next()) return rs.getInt(1);
-    }
-
-    return 0;
-}
-
-// ✅ Thêm hàm helper này vào cùng class
-private String toProperCase(String str) {
-    if (str == null || str.isEmpty()) return str;
-    StringBuilder result = new StringBuilder();
-    boolean nextUpper = true;
-    for (char c : str.toCharArray()) {
-        if (Character.isWhitespace(c)) {
-            result.append(c);
-            nextUpper = true;
-        } else if (nextUpper) {
-            result.append(Character.toUpperCase(c));
-            nextUpper = false;
-        } else {
-            result.append(Character.toLowerCase(c));
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT ToDanPhoID FROM ToDanPho WHERE LOWER(TenTo) = LOWER(?)")) {
+            ps.setString(1, tenTo);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt(1);
         }
+
+        try (PreparedStatement ps = conn.prepareStatement(
+                "INSERT INTO ToDanPho (TenTo) VALUES (?) RETURNING ToDanPhoID")) {
+            ps.setString(1, tenTo);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        }
+
+        return 0;
     }
-    return result.toString();
-}
+
+    private String toProperCase(String str) {
+        if (str == null || str.isEmpty()) return str;
+        StringBuilder result = new StringBuilder();
+        boolean nextUpper = true;
+        for (char c : str.toCharArray()) {
+            if (Character.isWhitespace(c)) {
+                result.append(c);
+                nextUpper = true;
+            } else if (nextUpper) {
+                result.append(Character.toUpperCase(c));
+                nextUpper = false;
+            } else {
+                result.append(Character.toLowerCase(c));
+            }
+        }
+        return result.toString();
+    }
 
     public HoDan getHoDanByNguoiDungID(int nguoiDungID) throws Exception {
         String sql = "SELECT h.HoDanID, h.MaHoKhau, h.DiaChi, h.ToDanPhoID, "
@@ -276,242 +289,219 @@ private String toProperCase(String str) {
         return getOrCreateQRToken(hoDanID);
     }
 
-  public List<String> importHoDanVaNguoiDung(List<Map<String, Object>> danhSach, int toDanPhoID) {
-    List<String> errors = new ArrayList<>();
+    public List<String> importHoDanVaNguoiDung(List<Map<String, Object>> danhSach, int toDanPhoID) {
+        List<String> errors = new ArrayList<>();
 
-    // ✅ FIX: tìm hộ theo MaHoKhau + DiaChi để phân biệt "Số nhà 12 Hòa Bình" vs "Số nhà 12 Vị Hoàng"
-    String findHoDanSql   = "SELECT HoDanID, ChuHoID FROM HoDan WHERE MaHoKhau = ? AND DiaChi = ? AND ToDanPhoID = ?";
-    String insertHoDanSql = "INSERT INTO HoDan (MaHoKhau,DiaChi,ToDanPhoID,TrangThaiID,NgayTao) VALUES (?,?,?,1,NOW()) RETURNING HoDanID";
-    String checkCccdSql   = "SELECT COUNT(*) FROM NguoiDung WHERE CCCD = ?";
-    String insertNguoiDungSql =
-            "INSERT INTO NguoiDung (CCCD,Ho,Ten,NgaySinh,GioiTinh,SoDienThoai,Email,VaiTroID,ToDanPhoID,IsActivated,NgayTao) "
-          + "VALUES (?,?,?,?,?,?,?,(SELECT VaiTroID FROM VaiTro WHERE TenVaiTro='HoDan'),?,false,NOW()) RETURNING NguoiDungID";
-    String setChuHoSql        = "UPDATE HoDan SET ChuHoID=? WHERE HoDanID=?";
-    String getQuanHeSql       = "SELECT QuanHeID FROM QuanHeHoGia WHERE TenQuanHe = ?";
-    String insertQuanHeSql    = "INSERT INTO QuanHeHoGia (TenQuanHe) VALUES (?) RETURNING QuanHeID";
-    String insertThanhVienSql = "INSERT INTO ThanhVienHo (HoDanID,NguoiDungID,QuanHeID,NgayVao) VALUES (?,?,?,NOW())";
-    String checkThanhVienSql  = "SELECT COUNT(*) FROM ThanhVienHo WHERE HoDanID=? AND NguoiDungID=? AND NgayRa IS NULL";
+        String findHoDanSql   = "SELECT HoDanID, ChuHoID FROM HoDan WHERE MaHoKhau = ? AND DiaChi = ? AND ToDanPhoID = ?";
+        // NgayTao dùng NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh' để đảm bảo giờ VN
+        String insertHoDanSql = "INSERT INTO HoDan (MaHoKhau,DiaChi,ToDanPhoID,TrangThaiID,NgayTao) "
+                              + "VALUES (?,?,?,1,NOW()) RETURNING HoDanID";
+        String checkCccdSql   = "SELECT COUNT(*) FROM NguoiDung WHERE CCCD = ?";
+        // NgayTao dùng NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh' để đảm bảo giờ VN
+        String insertNguoiDungSql =
+                "INSERT INTO NguoiDung (CCCD,Ho,Ten,NgaySinh,GioiTinh,SoDienThoai,Email,VaiTroID,ToDanPhoID,IsActivated,NgayTao) "
+              + "VALUES (?,?,?,?,?,?,?,(SELECT VaiTroID FROM VaiTro WHERE TenVaiTro='HoDan'),?,false,"
+              + "NOW()) RETURNING NguoiDungID";
+        String setChuHoSql        = "UPDATE HoDan SET ChuHoID=? WHERE HoDanID=?";
+        String getQuanHeSql       = "SELECT QuanHeID FROM QuanHeHoGia WHERE TenQuanHe = ?";
+        String insertQuanHeSql    = "INSERT INTO QuanHeHoGia (TenQuanHe) VALUES (?) RETURNING QuanHeID";
+        String insertThanhVienSql = "INSERT INTO ThanhVienHo (HoDanID,NguoiDungID,QuanHeID,NgayVao) VALUES (?,?,?,NOW())";
+        String checkThanhVienSql  = "SELECT COUNT(*) FROM ThanhVienHo WHERE HoDanID=? AND NguoiDungID=? AND NgayRa IS NULL";
 
-    // ✅ FIX CHÍNH: Group theo tenHoDan + "|" + diaChi
-    // "Số nhà 12" ở Hòa Bình và "Số nhà 12" ở Vị Hoàng → 2 group khác nhau
-    Map<String, List<Map<String, Object>>> grouped = new LinkedHashMap<>();
-    for (Map<String, Object> row : danhSach) {
-        String tenHoDan = ((String) row.get("tenHoDan")).trim().toUpperCase();
-        String diaChi   = row.get("diaChi") != null ? ((String) row.get("diaChi")).trim().toUpperCase() : "";
-        String key = tenHoDan + "|" + diaChi;
-        grouped.computeIfAbsent(key, k -> new ArrayList<>()).add(row);
-    }
+        Map<String, List<Map<String, Object>>> grouped = new LinkedHashMap<>();
+        for (Map<String, Object> row : danhSach) {
+            String tenHoDan = ((String) row.get("tenHoDan")).trim().toUpperCase();
+            String diaChi   = row.get("diaChi") != null ? ((String) row.get("diaChi")).trim().toUpperCase() : "";
+            String key = tenHoDan + "|" + diaChi;
+            grouped.computeIfAbsent(key, k -> new ArrayList<>()).add(row);
+        }
 
-    try (Connection conn = DBContext.getInstance().getConnection()) {
-        conn.setAutoCommit(false);
-        try {
-            for (Map.Entry<String, List<Map<String, Object>>> entry : grouped.entrySet()) {
-                List<Map<String, Object>> members = entry.getValue();
-                Map<String, Object> firstRow = members.get(0);
-                String tenHoDan = (String) firstRow.get("tenHoDan");
-                String diaChi   = (String) firstRow.get("diaChi");
-                int rowNum      = (int)    firstRow.get("rowNum");
+        try (Connection conn = DBContext.getInstance().getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                for (Map.Entry<String, List<Map<String, Object>>> entry : grouped.entrySet()) {
+                    List<Map<String, Object>> members = entry.getValue();
+                    Map<String, Object> firstRow = members.get(0);
+                    String tenHoDan = (String) firstRow.get("tenHoDan");
+                    String diaChi   = (String) firstRow.get("diaChi");
+                    int rowNum      = (int)    firstRow.get("rowNum");
 
-                // ════════════════════════════════════════════════════
-                // BƯỚC 1: Tìm hộ theo tenHoDan + diaChi + toDanPhoID
-                // ════════════════════════════════════════════════════
-                int hoDanID  = 0;
-                boolean hoaDaDCoTrongDB    = false;
-                boolean hoDaDCoChuHoTrongDB = false;
+                    int hoDanID  = 0;
+                    boolean hoaDaDCoTrongDB     = false;
+                    boolean hoDaDCoChuHoTrongDB = false;
 
-                try (PreparedStatement ps = conn.prepareStatement(findHoDanSql)) {
-                    ps.setString(1, tenHoDan);
-                    ps.setString(2, diaChi);
-                    ps.setInt(3, toDanPhoID);
-                    ResultSet rs = ps.executeQuery();
-                    if (rs.next()) {
-                        hoDanID           = rs.getInt("HoDanID");
-                        hoaDaDCoTrongDB    = true;
-                        hoDaDCoChuHoTrongDB = rs.getObject("ChuHoID") != null;
-                        System.out.println(">> Hộ '" + tenHoDan + "' tại '" + diaChi
-                                + "' đã tồn tại, HoDanID=" + hoDanID
-                                + ", đã có chủ hộ=" + hoDaDCoChuHoTrongDB);
-                    }
-                }
-
-                // ════════════════════════════════════════════════════
-                // BƯỚC 2: Nếu hộ chưa tồn tại → tạo mới
-                // ════════════════════════════════════════════════════
-                if (!hoaDaDCoTrongDB) {
-                    try (PreparedStatement ps = conn.prepareStatement(insertHoDanSql)) {
+                    try (PreparedStatement ps = conn.prepareStatement(findHoDanSql)) {
                         ps.setString(1, tenHoDan);
                         ps.setString(2, diaChi);
                         ps.setInt(3, toDanPhoID);
                         ResultSet rs = ps.executeQuery();
-                        if (rs.next()) hoDanID = rs.getInt(1);
-                    } catch (Exception e) {
-                        System.err.println("=== LỖI INSERT HODAN dòng " + rowNum + " ===");
-                        System.err.println("tenHoDan=" + tenHoDan + " | diaChi=" + diaChi);
-                        System.err.println("Message: " + e.getMessage());
-                        errors.add("Dòng " + rowNum + ": Lỗi tạo hộ - " + e.getMessage());
-                        continue;
-                    }
-                    System.out.println(">> Tạo hộ mới '" + tenHoDan + "' tại '" + diaChi + "', HoDanID=" + hoDanID);
-                }
-
-                if (hoDanID == 0) {
-                    errors.add("Dòng " + rowNum + ": Không lấy được HoDanID");
-                    continue;
-                }
-
-                // ════════════════════════════════════════════════════
-                // BƯỚC 3: Xử lý từng thành viên trong group
-                // ════════════════════════════════════════════════════
-                for (Map<String, Object> member : members) {
-                    int    mRowNum   = (int)    member.get("rowNum");
-                    String cccd      = (String) member.get("cccd");
-                    String ho        = (String) member.get("ho");
-                    String ten       = (String) member.get("ten");
-                    java.sql.Date ngaySinh = (java.sql.Date) member.get("ngaySinh");
-                    String gioiTinh  = (String) member.get("gioiTinh");
-                    String sdt       = (String) member.get("soDienThoai");
-                    String email     = (String) member.get("email");
-                    String quanHeTen = (String) member.get("quanHe");
-
-                    boolean laChuHo = quanHeTen != null
-                            && (quanHeTen.trim().equalsIgnoreCase("Chủ hộ")
-                             || quanHeTen.trim().equalsIgnoreCase("Chu ho"));
-
-                    // ════════════════════════════════════════════════
-                    // ✅ Hộ đã có trong DB + người này là Chủ hộ
-                    //    → BÁO LỖI, không thêm (1 hộ chỉ 1 chủ hộ)
-                    // ════════════════════════════════════════════════
-                    if (hoaDaDCoTrongDB && laChuHo && hoDaDCoChuHoTrongDB) {
-                        errors.add("Dòng " + mRowNum + ": Hộ '" + tenHoDan
-                                + "' tại địa chỉ '" + diaChi
-                                + "' đã tồn tại và đã có Chủ hộ — không thể thêm Chủ hộ mới");
-                        continue;
+                        if (rs.next()) {
+                            hoDanID              = rs.getInt("HoDanID");
+                            hoaDaDCoTrongDB      = true;
+                            hoDaDCoChuHoTrongDB  = rs.getObject("ChuHoID") != null;
+                            System.out.println(">> Hộ '" + tenHoDan + "' tại '" + diaChi
+                                    + "' đã tồn tại, HoDanID=" + hoDanID
+                                    + ", đã có chủ hộ=" + hoDaDCoChuHoTrongDB);
+                        }
                     }
 
-                    // ════════════════════════════════════════════════
-                    // ✅ Validate cơ bản
-                    // ════════════════════════════════════════════════
-                    if (cccd == null || !cccd.matches("\\d{12}"))
-                        { errors.add("Dòng " + mRowNum + ": CCCD không hợp lệ"); continue; }
-                    if (ho == null || ho.isEmpty())
-                        { errors.add("Dòng " + mRowNum + ": Họ không được trống"); continue; }
-                    if (ten == null || ten.isEmpty())
-                        { errors.add("Dòng " + mRowNum + ": Tên không được trống"); continue; }
-                    if (ngaySinh == null)
-                        { errors.add("Dòng " + mRowNum + ": Ngày sinh không được trống"); continue; }
-                    if (gioiTinh == null || (!gioiTinh.equals("Nam") && !gioiTinh.equals("Nữ") && !gioiTinh.equals("Khác")))
-                        { errors.add("Dòng " + mRowNum + ": Giới tính phải là Nam/Nữ/Khác"); continue; }
-                    if (quanHeTen == null || quanHeTen.isEmpty())
-                        { errors.add("Dòng " + mRowNum + ": Quan hệ không được trống"); continue; }
-
-                    // ✅ Check trùng CCCD trong DB
-                    try (PreparedStatement ps = conn.prepareStatement(checkCccdSql)) {
-                        ps.setString(1, cccd);
-                        ResultSet rs = ps.executeQuery();
-                        if (rs.next() && rs.getInt(1) > 0) {
-                            errors.add("Dòng " + mRowNum + ": CCCD '" + cccd + "' đã tồn tại trong hệ thống");
+                    if (!hoaDaDCoTrongDB) {
+                        try (PreparedStatement ps = conn.prepareStatement(insertHoDanSql)) {
+                            ps.setString(1, tenHoDan);
+                            ps.setString(2, diaChi);
+                            ps.setInt(3, toDanPhoID);
+                            ResultSet rs = ps.executeQuery();
+                            if (rs.next()) hoDanID = rs.getInt(1);
+                        } catch (Exception e) {
+                            System.err.println("=== LỖI INSERT HODAN dòng " + rowNum + " ===");
+                            System.err.println("tenHoDan=" + tenHoDan + " | diaChi=" + diaChi);
+                            System.err.println("Message: " + e.getMessage());
+                            errors.add("Dòng " + rowNum + ": Lỗi tạo hộ - " + e.getMessage());
                             continue;
                         }
+                        System.out.println(">> Tạo hộ mới '" + tenHoDan + "' tại '" + diaChi + "', HoDanID=" + hoDanID);
                     }
 
-                    // ✅ Insert NguoiDung
-                    int nguoiDungID = 0;
-                    try (PreparedStatement ps = conn.prepareStatement(insertNguoiDungSql)) {
-                        ps.setString(1, cccd);
-                        ps.setString(2, ho);
-                        ps.setString(3, ten);
-                        ps.setDate(4, ngaySinh);
-                        ps.setString(5, gioiTinh);
-                        ps.setString(6, sdt != null && !sdt.isEmpty() ? sdt : null);
-                        ps.setString(7, email != null && !email.isEmpty() ? email : null);
-                        ps.setInt(8, toDanPhoID); // ✅ dùng toDanPhoID truyền vào, không đoán từ diaChi
-                        ResultSet rs = ps.executeQuery();
-                        if (rs.next()) nguoiDungID = rs.getInt(1);
-                    } catch (Exception e) {
-                        System.err.println("=== LỖI INSERT NGUOIDUNG dòng " + mRowNum + " ===");
-                        System.err.println("cccd=" + cccd + " | ho=" + ho + " | ten=" + ten);
-                        System.err.println("Message: " + e.getMessage());
-                        errors.add("Dòng " + mRowNum + ": Lỗi lưu người dùng - " + e.getMessage());
+                    if (hoDanID == 0) {
+                        errors.add("Dòng " + rowNum + ": Không lấy được HoDanID");
                         continue;
                     }
 
-                    if (nguoiDungID == 0) {
-                        errors.add("Dòng " + mRowNum + ": Không lấy được NguoiDungID");
-                        continue;
-                    }
+                    for (Map<String, Object> member : members) {
+                        int    mRowNum   = (int)    member.get("rowNum");
+                        String cccd      = (String) member.get("cccd");
+                        String ho        = (String) member.get("ho");
+                        String ten       = (String) member.get("ten");
+                        java.sql.Date ngaySinh = (java.sql.Date) member.get("ngaySinh");
+                        String gioiTinh  = (String) member.get("gioiTinh");
+                        String sdt       = (String) member.get("soDienThoai");
+                        String email     = (String) member.get("email");
+                        String quanHeTen = (String) member.get("quanHe");
 
-                    // ════════════════════════════════════════════════
-                    // ✅ Nếu là Chủ hộ → set ChuHoID cho hộ
-                    // ════════════════════════════════════════════════
-                    if (laChuHo) {
-                        try (PreparedStatement upd = conn.prepareStatement(setChuHoSql)) {
-                            upd.setInt(1, nguoiDungID);
-                            upd.setInt(2, hoDanID);
-                            upd.executeUpdate();
+                        boolean laChuHo = quanHeTen != null
+                                && (quanHeTen.trim().equalsIgnoreCase("Chủ hộ")
+                                 || quanHeTen.trim().equalsIgnoreCase("Chu ho"));
+
+                        if (hoaDaDCoTrongDB && laChuHo && hoDaDCoChuHoTrongDB) {
+                            errors.add("Dòng " + mRowNum + ": Hộ '" + tenHoDan
+                                    + "' tại địa chỉ '" + diaChi
+                                    + "' đã tồn tại và đã có Chủ hộ — không thể thêm Chủ hộ mới");
+                            continue;
                         }
-                        hoDaDCoChuHoTrongDB = true; // cập nhật flag cho các member sau
-                    }
 
-                    // ✅ Lấy hoặc tạo QuanHeID
-                    int quanHeID = 0;
-                    try (PreparedStatement ps = conn.prepareStatement(getQuanHeSql)) {
-                        ps.setString(1, quanHeTen);
-                        ResultSet rs = ps.executeQuery();
-                        if (rs.next()) {
-                            quanHeID = rs.getInt(1);
-                        } else {
-                            try (PreparedStatement ins = conn.prepareStatement(insertQuanHeSql)) {
-                                ins.setString(1, quanHeTen);
-                                ResultSet gen = ins.executeQuery();
-                                if (gen.next()) quanHeID = gen.getInt(1);
+                        if (cccd == null || !cccd.matches("\\d{12}"))
+                            { errors.add("Dòng " + mRowNum + ": CCCD không hợp lệ"); continue; }
+                        if (ho == null || ho.isEmpty())
+                            { errors.add("Dòng " + mRowNum + ": Họ không được trống"); continue; }
+                        if (ten == null || ten.isEmpty())
+                            { errors.add("Dòng " + mRowNum + ": Tên không được trống"); continue; }
+                        if (ngaySinh == null)
+                            { errors.add("Dòng " + mRowNum + ": Ngày sinh không được trống"); continue; }
+                        if (gioiTinh == null || (!gioiTinh.equals("Nam") && !gioiTinh.equals("Nữ") && !gioiTinh.equals("Khác")))
+                            { errors.add("Dòng " + mRowNum + ": Giới tính phải là Nam/Nữ/Khác"); continue; }
+                        if (quanHeTen == null || quanHeTen.isEmpty())
+                            { errors.add("Dòng " + mRowNum + ": Quan hệ không được trống"); continue; }
+
+                        try (PreparedStatement ps = conn.prepareStatement(checkCccdSql)) {
+                            ps.setString(1, cccd);
+                            ResultSet rs = ps.executeQuery();
+                            if (rs.next() && rs.getInt(1) > 0) {
+                                errors.add("Dòng " + mRowNum + ": CCCD '" + cccd + "' đã tồn tại trong hệ thống");
+                                continue;
                             }
                         }
-                    }
 
-                    // ✅ Check người này đã là thành viên hộ này chưa
-                    try (PreparedStatement ps = conn.prepareStatement(checkThanhVienSql)) {
-                        ps.setInt(1, hoDanID);
-                        ps.setInt(2, nguoiDungID);
-                        ResultSet rs = ps.executeQuery();
-                        if (rs.next() && rs.getInt(1) > 0) {
-                            errors.add("Dòng " + mRowNum + ": Người dùng đã là thành viên của hộ này");
+                        int nguoiDungID = 0;
+                        try (PreparedStatement ps = conn.prepareStatement(insertNguoiDungSql)) {
+                            ps.setString(1, cccd);
+                            ps.setString(2, ho);
+                            ps.setString(3, ten);
+                            ps.setDate(4, ngaySinh);
+                            ps.setString(5, gioiTinh);
+                            ps.setString(6, sdt != null && !sdt.isEmpty() ? sdt : null);
+                            ps.setString(7, email != null && !email.isEmpty() ? email : null);
+                            ps.setInt(8, toDanPhoID);
+                            ResultSet rs = ps.executeQuery();
+                            if (rs.next()) nguoiDungID = rs.getInt(1);
+                        } catch (Exception e) {
+                            System.err.println("=== LỖI INSERT NGUOIDUNG dòng " + mRowNum + " ===");
+                            System.err.println("cccd=" + cccd + " | ho=" + ho + " | ten=" + ten);
+                            System.err.println("Message: " + e.getMessage());
+                            errors.add("Dòng " + mRowNum + ": Lỗi lưu người dùng - " + e.getMessage());
                             continue;
                         }
-                    }
 
-                    // ✅ Insert ThanhVienHo
-                    try (PreparedStatement ps = conn.prepareStatement(insertThanhVienSql)) {
-                        ps.setInt(1, hoDanID);
-                        ps.setInt(2, nguoiDungID);
-                        ps.setInt(3, quanHeID);
-                        ps.executeUpdate();
-                    } catch (Exception e) {
-                        System.err.println("=== LỖI INSERT THANHVIENHO dòng " + mRowNum + " ===");
-                        System.err.println("Message: " + e.getMessage());
-                        errors.add("Dòng " + mRowNum + ": Lỗi lưu thành viên - " + e.getMessage());
+                        if (nguoiDungID == 0) {
+                            errors.add("Dòng " + mRowNum + ": Không lấy được NguoiDungID");
+                            continue;
+                        }
+
+                        if (laChuHo) {
+                            try (PreparedStatement upd = conn.prepareStatement(setChuHoSql)) {
+                                upd.setInt(1, nguoiDungID);
+                                upd.setInt(2, hoDanID);
+                                upd.executeUpdate();
+                            }
+                            hoDaDCoChuHoTrongDB = true;
+                        }
+
+                        int quanHeID = 0;
+                        try (PreparedStatement ps = conn.prepareStatement(getQuanHeSql)) {
+                            ps.setString(1, quanHeTen);
+                            ResultSet rs = ps.executeQuery();
+                            if (rs.next()) {
+                                quanHeID = rs.getInt(1);
+                            } else {
+                                try (PreparedStatement ins = conn.prepareStatement(insertQuanHeSql)) {
+                                    ins.setString(1, quanHeTen);
+                                    ResultSet gen = ins.executeQuery();
+                                    if (gen.next()) quanHeID = gen.getInt(1);
+                                }
+                            }
+                        }
+
+                        try (PreparedStatement ps = conn.prepareStatement(checkThanhVienSql)) {
+                            ps.setInt(1, hoDanID);
+                            ps.setInt(2, nguoiDungID);
+                            ResultSet rs = ps.executeQuery();
+                            if (rs.next() && rs.getInt(1) > 0) {
+                                errors.add("Dòng " + mRowNum + ": Người dùng đã là thành viên của hộ này");
+                                continue;
+                            }
+                        }
+
+                        try (PreparedStatement ps = conn.prepareStatement(insertThanhVienSql)) {
+                            ps.setInt(1, hoDanID);
+                            ps.setInt(2, nguoiDungID);
+                            ps.setInt(3, quanHeID);
+                            ps.executeUpdate();
+                        } catch (Exception e) {
+                            System.err.println("=== LỖI INSERT THANHVIENHO dòng " + mRowNum + " ===");
+                            System.err.println("Message: " + e.getMessage());
+                            errors.add("Dòng " + mRowNum + ": Lỗi lưu thành viên - " + e.getMessage());
+                        }
                     }
                 }
+
+                conn.commit();
+
+            } catch (Exception e) {
+                System.err.println("=== LỖI TRANSACTION ===");
+                e.printStackTrace(System.err);
+                conn.rollback();
+                errors.add("Lỗi transaction: " + e.getMessage());
+            } finally {
+                conn.setAutoCommit(true);
             }
 
-            conn.commit();
-
         } catch (Exception e) {
-            System.err.println("=== LỖI TRANSACTION ===");
+            System.err.println("=== LỖI KẾT NỐI ===");
             e.printStackTrace(System.err);
-            conn.rollback();
-            errors.add("Lỗi transaction: " + e.getMessage());
-        } finally {
-            conn.setAutoCommit(true);
+            errors.add("Lỗi kết nối: " + e.getMessage());
         }
 
-    } catch (Exception e) {
-        System.err.println("=== LỖI KẾT NỐI ===");
-        e.printStackTrace(System.err);
-        errors.add("Lỗi kết nối: " + e.getMessage());
+        return errors;
     }
-
-    return errors;
-}
 
     public List<HoDan> getDanhSachHoDan(int toDanPhoID, String keyword,
             Integer tuoiMin, Integer tuoiMax, String vung,
@@ -799,29 +789,30 @@ private String toProperCase(String str) {
             ps.executeUpdate();
         }
     }
-    public boolean isCCCDExists(String cccd) {
-    String sql = "SELECT COUNT(*) FROM nguoidung WHERE cccd = ?";
-    try (Connection conn = DBContext.getInstance().getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql)) {
-        ps.setString(1, cccd);
-        ResultSet rs = ps.executeQuery();
-        if (rs.next()) return rs.getInt(1) > 0;
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-    return false;
-}
 
-public boolean isSDTExists(String sdt) {
-    String sql = "SELECT COUNT(*) FROM nguoidung WHERE sodienthoai = ?";
-    try (Connection conn = DBContext.getInstance().getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql)) {
-        ps.setString(1, sdt);
-        ResultSet rs = ps.executeQuery();
-        if (rs.next()) return rs.getInt(1) > 0;
-    } catch (Exception e) {
-        e.printStackTrace();
+    public boolean isCCCDExists(String cccd) {
+        String sql = "SELECT COUNT(*) FROM nguoidung WHERE cccd = ?";
+        try (Connection conn = DBContext.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, cccd);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt(1) > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
-    return false;
-}
+
+    public boolean isSDTExists(String sdt) {
+        String sql = "SELECT COUNT(*) FROM nguoidung WHERE sodienthoai = ?";
+        try (Connection conn = DBContext.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, sdt);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt(1) > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }
