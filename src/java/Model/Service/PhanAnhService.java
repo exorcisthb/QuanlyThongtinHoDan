@@ -17,11 +17,30 @@ public class PhanAnhService {
 
     private final PhanAnhDAO phanAnhDAO = new PhanAnhDAO();
 
-    private static final String UPLOAD_DIR    = "uploads/phan-anh/";
-    private static final long   MAX_FILE_SIZE = 5 * 1024 * 1024L;
+    private static final String UPLOAD_DIR     = "uploads/phan-anh/";
+    private static final long   MAX_FILE_SIZE  = 5 * 1024 * 1024L;
+    private static final int    MAX_FILE_COUNT = 3; // FIX #3: tối đa 3 ảnh mỗi lần upload
+
     private static final Set<String> ALLOWED_TYPES = Set.of(
             "image/jpeg", "image/png", "image/webp", "image/gif"
     );
+
+    // FIX #2: map content-type → extension chuẩn, không lấy ext từ string content-type
+    private static final Map<String, String> CONTENT_TYPE_TO_EXT = Map.of(
+            "image/jpeg", "jpg",
+            "image/png",  "png",
+            "image/webp", "webp",
+            "image/gif",  "gif"
+    );
+
+    // FIX #1: magic bytes để verify file thực sự là ảnh, không tin content-type của client
+    private static final Map<String, byte[]> MAGIC_BYTES = new LinkedHashMap<>();
+    static {
+        MAGIC_BYTES.put("image/jpeg", new byte[]{(byte)0xFF, (byte)0xD8, (byte)0xFF});
+        MAGIC_BYTES.put("image/png",  new byte[]{(byte)0x89, 0x50, 0x4E, 0x47});
+        MAGIC_BYTES.put("image/gif",  new byte[]{0x47, 0x49, 0x46, 0x38});
+        MAGIC_BYTES.put("image/webp", new byte[]{0x52, 0x49, 0x46, 0x46}); // RIFF header
+    }
 
     // ================================================================== //
     //  HỘ DÂN
@@ -65,7 +84,8 @@ public class PhanAnhService {
             return fail("Bạn không có quyền sửa phản ánh này.");
 
         int ttHienTai = (int) hien.get("trangThaiID");
-        if (ttHienTai == 4 || ttHienTai == 5 || ttHienTai == 6 || ttHienTai == 7)
+        // FIX #5: thêm trạng thái 3 (đã chuyển cấp) vào danh sách không được sửa
+        if (ttHienTai == 3 || ttHienTai == 4 || ttHienTai == 5 || ttHienTai == 6 || ttHienTai == 7)
             return fail("Không thể sửa phản ánh ở trạng thái hiện tại.");
 
         List<String> duongDanAnhMoi = new ArrayList<>();
@@ -170,6 +190,7 @@ public class PhanAnhService {
 
         Map<String, Object> hien = phanAnhDAO.getPhanAnhByID(phanAnhID);
         if (hien == null) return fail("Không tìm thấy phản ánh.");
+        // Chỉ trạng thái 1 (chờ tiếp nhận) mới được chuyển cấp
         if ((int) hien.get("trangThaiID") != 1)
             return fail("Chỉ có thể chuyển cấp khi phản ánh chưa được tiếp nhận.");
 
@@ -243,6 +264,7 @@ public class PhanAnhService {
     public List<LoaiPhanAnh> getDanhSachLoai() {
         return phanAnhDAO.getDanhSachLoai();
     }
+
     // ================================================================== //
     //  UPLOAD ẢNH
     // ================================================================== //
@@ -251,12 +273,21 @@ public class PhanAnhService {
         List<String> result = new ArrayList<>();
         if (parts == null || parts.isEmpty()) return result;
 
+        // Lọc bỏ các part rỗng trước khi đếm
+        List<Part> validParts = new ArrayList<>();
+        for (Part p : parts) {
+            if (p != null && p.getSize() > 0) validParts.add(p);
+        }
+
+        // FIX #3: giới hạn tối đa 3 ảnh
+        if (validParts.size() > MAX_FILE_COUNT)
+            throw new IllegalArgumentException(
+                    "Chỉ được upload tối đa " + MAX_FILE_COUNT + " ảnh mỗi lần.");
+
         String uploadPath = appPath + File.separator + UPLOAD_DIR.replace("/", File.separator);
         Files.createDirectories(Paths.get(uploadPath));
 
-        for (Part part : parts) {
-            if (part == null || part.getSize() == 0) continue;
-
+        for (Part part : validParts) {
             String contentType = part.getContentType();
             if (contentType == null || !ALLOWED_TYPES.contains(contentType.toLowerCase()))
                 throw new IllegalArgumentException(
@@ -265,7 +296,20 @@ public class PhanAnhService {
             if (part.getSize() > MAX_FILE_SIZE)
                 throw new IllegalArgumentException("Ảnh không được vượt quá 5MB.");
 
-            String ext      = contentType.substring(contentType.lastIndexOf('/') + 1);
+            // FIX #1: đọc magic bytes để verify file thực sự là ảnh
+            byte[] magic = MAGIC_BYTES.get(contentType.toLowerCase());
+            if (magic != null) {
+                try (InputStream is = part.getInputStream()) {
+                    byte[] header = new byte[magic.length];
+                    int read = is.read(header);
+                    if (read < magic.length || !Arrays.equals(header, magic))
+                        throw new IllegalArgumentException(
+                                "File không hợp lệ — nội dung không khớp với định dạng khai báo.");
+                }
+            }
+
+            // FIX #2: lấy extension từ map chuẩn thay vì cắt string content-type
+            String ext      = CONTENT_TYPE_TO_EXT.getOrDefault(contentType.toLowerCase(), "jpg");
             String fileName = UUID.randomUUID().toString() + "." + ext;
             String fullPath = uploadPath + File.separator + fileName;
 

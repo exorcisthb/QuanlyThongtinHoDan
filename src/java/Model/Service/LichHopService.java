@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class LichHopService {
@@ -14,10 +16,16 @@ public class LichHopService {
     private final LichHopDAO lichHopDAO = new LichHopDAO();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    // ==================== TIMEZONE VN ====================
+
+    private static final ZoneId ZONE_VN = ZoneId.of("Asia/Ho_Chi_Minh");
+    private static final DateTimeFormatter FMT_THONGBAO =
+            DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+
     // ==================== LỊCH HỌP ====================
 
     public boolean taoLichHop(LichHop lh, int nguoiTaoID) {
-        String loi = validateLichHop(lh);
+        String loi = validateLichHop(lh, true); // true = bắt buộc phải trong tương lai
         if (loi != null) throw new IllegalArgumentException(loi);
 
         lh.setNguoiTaoID(nguoiTaoID);
@@ -49,7 +57,9 @@ public class LichHopService {
             throw new IllegalArgumentException(
                 "Không thể chỉnh sửa lịch họp đã bắt đầu hoặc kết thúc.");
 
-        String loi = validateNoiDung(lhMoi);
+        // FIX #2: khi sửa cũng validate đầy đủ (bao gồm kiểm tra năm hợp lệ),
+        // nhưng KHÔNG bắt buộc phải trong tương lai (cho phép giữ nguyên giờ cũ)
+        String loi = validateLichHop(lhMoi, false);
         if (loi != null) throw new IllegalArgumentException(loi);
 
         lhMoi.setTrangThai(1);
@@ -61,7 +71,7 @@ public class LichHopService {
         LichSuSuaLichHop ls = new LichSuSuaLichHop();
         ls.setLichHopID(lhMoi.getLichHopID());
         ls.setNguoiSuaID(nguoiSuaID);
-        ls.setThoiGianSua(LocalDateTime.now());
+        ls.setThoiGianSua(LocalDateTime.now(ZONE_VN)); // FIX #1: timezone VN
         ls.setNoiDungThayDoi(snapshot);
         ls.setLyDoSua(lyDoSua.trim());
         lichHopDAO.ghiLichSuSua(ls);
@@ -87,40 +97,24 @@ public class LichHopService {
         return lh;
     }
 
-    // ==================== [MỚI] DÀNH CHO NGƯỜI DÂN ====================
+    // ==================== DÀNH CHO NGƯỜI DÂN ====================
 
-    /**
-     * Lấy danh sách lịch họp có lọc — dành cho người dân.
-     *
-     * @param toDanPhoID   lấy từ session (NguoiDung.toDanPhoID)
-     * @param trangThaiStr "1"/"2"/"3"/"4" hoặc null/rỗng = tất cả
-     * @param tuNgayStr    "yyyy-MM-dd" hoặc null/rỗng
-     * @param denNgayStr   "yyyy-MM-dd" hoặc null/rỗng
-     */
     public List<Map<String, Object>> getLichHopNguoiDan(int toDanPhoID,
                                                          String trangThaiStr,
                                                          String tuNgayStr,
                                                          String denNgayStr) {
         if (toDanPhoID <= 0) throw new IllegalArgumentException("Tổ dân phố không hợp lệ.");
 
-        Integer   trangThai = parseIntSafe(trangThaiStr);
-        Timestamp tuNgay    = parseNgayBatDau(tuNgayStr);   // 00:00:00
-        Timestamp denNgay   = parseNgayKetThuc(denNgayStr); // 23:59:59
+        Integer   trangThai = parseIntSafe(trangThaiStr);   // FIX #5: validate trangThai
+        Timestamp tuNgay    = parseNgayBatDau(tuNgayStr);   // FIX #3: ném lỗi nếu sai định dạng
+        Timestamp denNgay   = parseNgayKetThuc(denNgayStr); // FIX #3: ném lỗi nếu sai định dạng
 
-        // Validate khoảng ngày nếu cả hai đều có
         if (tuNgay != null && denNgay != null && tuNgay.after(denNgay))
             throw new IllegalArgumentException("Ngày bắt đầu phải trước ngày kết thúc.");
 
         return lichHopDAO.getLichHopNguoiDan(toDanPhoID, trangThai, tuNgay, denNgay);
     }
 
-    /**
-     * Lấy chi tiết lịch họp — người dân chỉ xem được của đúng tổ mình.
-     *
-     * @param lichHopID         ID lịch họp muốn xem
-     * @param toDanPhoCuaNguoiDan  lấy từ session
-     * @throws IllegalArgumentException nếu không tìm thấy hoặc không có quyền
-     */
     public Map<String, Object> getChiTietLichHopNguoiDan(int lichHopID, int toDanPhoCuaNguoiDan) {
         if (lichHopID <= 0)           throw new IllegalArgumentException("LichHopID không hợp lệ.");
         if (toDanPhoCuaNguoiDan <= 0) throw new IllegalArgumentException("Tổ dân phố không hợp lệ.");
@@ -148,6 +142,10 @@ public class LichHopService {
 
     // ==================== PRIVATE HELPERS ====================
 
+    /**
+     * Validate nội dung cơ bản — dùng cho cả tạo lẫn sửa.
+     * Bao gồm kiểm tra năm hợp lệ (2000–2100) để tránh nhập nhầm năm 20000.
+     */
     private String validateNoiDung(LichHop lh) {
         if (lh.getTieuDe() == null || lh.getTieuDe().trim().isEmpty())
             return "Tiêu đề không được để trống.";
@@ -155,9 +153,20 @@ public class LichHopService {
             return "Địa điểm không được để trống.";
         if (lh.getThoiGianBatDau() == null)
             return "Thời gian bắt đầu không được để trống.";
-        if (lh.getThoiGianKetThuc() != null &&
-            !lh.getThoiGianKetThuc().isAfter(lh.getThoiGianBatDau()))
-            return "Thời gian kết thúc phải sau thời gian bắt đầu.";
+
+        // FIX #2: kiểm tra năm hợp lệ — tránh nhập năm 20000, 1800, v.v.
+        int namBatDau = lh.getThoiGianBatDau().getYear();
+        if (namBatDau < 2000 || namBatDau > 2100)
+            return "Thời gian bắt đầu không hợp lệ (năm phải từ 2000 đến 2100).";
+
+        if (lh.getThoiGianKetThuc() != null) {
+            if (!lh.getThoiGianKetThuc().isAfter(lh.getThoiGianBatDau()))
+                return "Thời gian kết thúc phải sau thời gian bắt đầu.";
+            int namKetThuc = lh.getThoiGianKetThuc().getYear();
+            if (namKetThuc < 2000 || namKetThuc > 2100)
+                return "Thời gian kết thúc không hợp lệ (năm phải từ 2000 đến 2100).";
+        }
+
         if (lh.getToDanPhoID() <= 0)
             return "Tổ dân phố không hợp lệ.";
         if (lh.getMucDo() < 1 || lh.getMucDo() > 3)
@@ -167,24 +176,45 @@ public class LichHopService {
         return null;
     }
 
-    private String validateLichHop(LichHop lh) {
+    /**
+     * FIX #1 + #2: dùng timezone VN, và tách biệt rõ khi nào cần check tương lai.
+     *
+     * @param checkTuongLai true khi tạo mới (bắt buộc phải sau hiện tại),
+     *                      false khi sửa (chỉ cần năm hợp lệ)
+     */
+    private String validateLichHop(LichHop lh, boolean checkTuongLai) {
         String loi = validateNoiDung(lh);
         if (loi != null) return loi;
-        if (!lh.getThoiGianBatDau().isAfter(LocalDateTime.now()))
-            return "Thời gian bắt đầu phải sau thời điểm hiện tại.";
+
+        if (checkTuongLai) {
+            // FIX #1: dùng ZoneId VN thay vì LocalDateTime.now() không có timezone
+            LocalDateTime nowVN = LocalDateTime.now(ZONE_VN);
+            if (!lh.getThoiGianBatDau().isAfter(nowVN))
+                return "Thời gian bắt đầu phải sau thời điểm hiện tại.";
+        }
+
         return null;
     }
 
+    /**
+     * FIX #4: format thời gian đẹp (HH:mm dd/MM/yyyy) thay vì in LocalDateTime thô.
+     */
     private String buildNoiDungThongBao(LichHop lh, boolean laCauNhat) {
         String[] mucDoLabel = {"", "Bình thường", "Quan trọng", "Khẩn cấp"};
         String mucDo = (lh.getMucDo() >= 1 && lh.getMucDo() <= 3)
                 ? mucDoLabel[lh.getMucDo()] : "";
         String prefix = laCauNhat ? "Lịch họp đã được cập nhật:\n" : "Lịch họp mới:\n";
+
+        // FIX #4: format thời gian cho người dân dễ đọc
+        String thoiGianBD = lh.getThoiGianBatDau() != null
+                ? lh.getThoiGianBatDau().format(FMT_THONGBAO) : "—";
+        String thoiGianKT = lh.getThoiGianKetThuc() != null
+                ? " → " + lh.getThoiGianKetThuc().format(FMT_THONGBAO) : "";
+
         return prefix +
                "• Tiêu đề  : " + lh.getTieuDe() + "\n" +
                "• Địa điểm : " + lh.getDiaDiem() + "\n" +
-               "• Thời gian: " + lh.getThoiGianBatDau() +
-               (lh.getThoiGianKetThuc() != null ? " → " + lh.getThoiGianKetThuc() : "") + "\n" +
+               "• Thời gian: " + thoiGianBD + thoiGianKT + "\n" +
                "• Mức độ   : " + mucDo + "\n" +
                (lh.getNoiDung() != null && !lh.getNoiDung().isEmpty()
                        ? "• Nội dung : " + lh.getNoiDung() : "");
@@ -214,24 +244,45 @@ public class LichHopService {
         }
     }
 
-    // Parse an toàn cho Integer
+    /**
+     * FIX #5: validate trangThai phải là 1–4, không nuốt giá trị rác im lặng.
+     */
     private Integer parseIntSafe(String s) {
         if (s == null || s.trim().isEmpty()) return null;
-        try { return Integer.parseInt(s.trim()); }
-        catch (NumberFormatException e) { return null; }
+        try {
+            int val = Integer.parseInt(s.trim());
+            if (val < 1 || val > 4)
+                throw new IllegalArgumentException(
+                    "Trạng thái không hợp lệ, giá trị phải từ 1 đến 4.");
+            return val;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Trạng thái phải là số nguyên.");
+        }
     }
 
-    // Parse "yyyy-MM-dd" → Timestamp lúc 00:00:00 (dùng cho tuNgay)
+    /**
+     * FIX #3: ném lỗi rõ ràng nếu định dạng ngày sai, không nuốt im lặng trả null.
+     */
     private Timestamp parseNgayBatDau(String s) {
         if (s == null || s.trim().isEmpty()) return null;
-        try { return Timestamp.valueOf(LocalDate.parse(s.trim()).atStartOfDay()); }
-        catch (Exception e) { return null; }
+        try {
+            return Timestamp.valueOf(LocalDate.parse(s.trim()).atStartOfDay());
+        } catch (Exception e) {
+            throw new IllegalArgumentException(
+                "Định dạng ngày bắt đầu không hợp lệ, dùng yyyy-MM-dd (ví dụ: 2026-03-29).");
+        }
     }
 
-    // Parse "yyyy-MM-dd" → Timestamp lúc 23:59:59 (dùng cho denNgay)
+    /**
+     * FIX #3: ném lỗi rõ ràng nếu định dạng ngày sai, không nuốt im lặng trả null.
+     */
     private Timestamp parseNgayKetThuc(String s) {
         if (s == null || s.trim().isEmpty()) return null;
-        try { return Timestamp.valueOf(LocalDate.parse(s.trim()).atTime(23, 59, 59)); }
-        catch (Exception e) { return null; }
+        try {
+            return Timestamp.valueOf(LocalDate.parse(s.trim()).atTime(23, 59, 59));
+        } catch (Exception e) {
+            throw new IllegalArgumentException(
+                "Định dạng ngày kết thúc không hợp lệ, dùng yyyy-MM-dd (ví dụ: 2026-03-29).");
+        }
     }
 }
