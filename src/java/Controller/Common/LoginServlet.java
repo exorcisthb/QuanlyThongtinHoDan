@@ -68,7 +68,6 @@ public class LoginServlet extends HttpServlet {
                 return;
             }
 
-            // ✅ SỬA: kiểm tra trạng thái nhân sự TRƯỚC, message rõ lý do
             if (!nguoiDung.isConHoatDong()) {
                 String lyDo = switch (nguoiDung.getTrangThaiNhanSu()) {
                     case 2 ->
@@ -83,7 +82,6 @@ public class LoginServlet extends HttpServlet {
                 return;
             }
 
-            // ✅ SỬA: kiểm tra IsActivated (bị admin khóa thủ công), message rõ hơn
             if (!nguoiDung.isIsActivated()) {
                 request.setAttribute("error", "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.");
                 request.getRequestDispatcher("/Views/Common/Login.jsp").forward(request, response);
@@ -92,7 +90,8 @@ public class LoginServlet extends HttpServlet {
 
             HttpSession session = request.getSession();
             session.setAttribute("nguoiDung", nguoiDung);
-            session.setAttribute("vaiTro", nguoiDung.getTenVaiTro()); // "ToTruong", "CanBoPhuong"...
+            session.setAttribute("currentUser", nguoiDung); // ← THÊM
+            session.setAttribute("vaiTro", nguoiDung.getTenVaiTro());
 
             switch (nguoiDung.getTenVaiTro()) {
                 case "Admin":

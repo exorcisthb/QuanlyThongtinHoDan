@@ -33,7 +33,7 @@ public class NguoiDungService {
             String ngaySinhStr, String gioiTinh,
             String email, String soDienThoai,
             String matKhau, String tenTo) {
-
+ 
         if (isBlank(cccd) || isBlank(ho) || isBlank(ten)
                 || isBlank(ngaySinhStr) || isBlank(gioiTinh)
                 || isBlank(email) || isBlank(soDienThoai)
@@ -61,21 +61,29 @@ public class NguoiDungService {
         if (nguoiDungDAO.isEmailExist(email.trim())) {
             return "Email này đã tồn tại trong hệ thống.";
         }
-
+ 
         java.sql.Date ngaySinh;
         try {
             ngaySinh = java.sql.Date.valueOf(ngaySinhStr);
         } catch (IllegalArgumentException e) {
             return "Ngày sinh không hợp lệ.";
         }
-
-        Integer toDanPhoID = nguoiDungDAO.getOrCreateToDanPhoByTen(tenTo);
+ 
+        // ✅ RULE 1: Lấy hoặc tạo tổ dân phố, sau đó kiểm tra xung đột
+        Integer toDanPhoID = nguoiDungDAO.getOrCreateToDanPhoByTen(tenTo.trim());
         if (toDanPhoID == null) {
             return "Không thể xác định tổ dân phố, vui lòng thử lại.";
         }
-
+ 
+        // Chặn nếu tổ đã có tổ trưởng đang công tác (trangThaiNhanSu = 1)
+        if (nguoiDungDAO.coToTruongDangCongTac(toDanPhoID)) {
+            return "Tổ \"" + tenTo.trim() + "\" đã có Tổ trưởng đang công tác. "
+                 + "Vui lòng chuyển trạng thái Tổ trưởng cũ sang "
+                 + "\"Không còn tại vị\" hoặc \"Đã mất / Nghỉ hưu\" trước khi tạo mới.";
+        }
+ 
         String matKhauHash = BCrypt.hashpw(matKhau, BCrypt.gensalt(12));
-
+ 
         NguoiDung nd = new NguoiDung();
         nd.setCccd(cccd.trim());
         nd.setHo(ho.trim());
@@ -88,7 +96,7 @@ public class NguoiDungService {
         nd.setVaiTroID(VAI_TRO_TO_TRUONG);
         nd.setToDanPhoID(toDanPhoID);
         nd.setIsActivated(true);
-
+ 
         boolean ok = nguoiDungDAO.taoToTruong(nd);
         return ok ? null : "Tạo tài khoản thất bại, vui lòng thử lại.";
     }
@@ -104,9 +112,22 @@ public class NguoiDungService {
         return nguoiDungDAO.setActivated(nguoiDungID, khoaHayMo);
     }
 
-    public boolean updateTrangThaiNhanSu(int nguoiDungID, int trangThaiNhanSu) {
-        if (trangThaiNhanSu < 1 || trangThaiNhanSu > 3) return false;
-        return nguoiDungDAO.updateTrangThaiNhanSu(nguoiDungID, trangThaiNhanSu);
+   public String updateTrangThaiNhanSu(int nguoiDungID, int trangThaiMoi) {
+        if (trangThaiMoi < 1 || trangThaiMoi > 3) {
+            return "Trạng thái không hợp lệ.";
+        }
+ 
+        // ✅ RULE 2: Lấy trạng thái hiện tại, chặn revert từ trạng thái 3
+        int trangThaiHienTai = nguoiDungDAO.getTrangThaiNhanSu(nguoiDungID);
+        if (trangThaiHienTai == -1) {
+            return "Không tìm thấy người dùng.";
+        }
+        if (trangThaiHienTai == 3) {
+            return "Tài khoản đã ở trạng thái \"Đã mất / Nghỉ hưu\" và không thể thay đổi.";
+        }
+ 
+        boolean ok = nguoiDungDAO.updateTrangThaiNhanSu(nguoiDungID, trangThaiMoi);
+        return ok ? null : "Cập nhật trạng thái thất bại, vui lòng thử lại.";
     }
 
     public String taoCanBoPhuong(String ho, String ten,

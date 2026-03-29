@@ -25,7 +25,7 @@ public class CanBoPhuongList extends HttpServlet {
             return;
         }
 
-        // ✅ Chuyển flash message từ session sang request rồi xóa
+        // Chuyển flash message từ session sang request rồi xóa
         if (session.getAttribute("flashMessage") != null) {
             request.setAttribute("message", session.getAttribute("flashMessage"));
             session.removeAttribute("flashMessage");
@@ -68,11 +68,13 @@ public class CanBoPhuongList extends HttpServlet {
             try {
                 int id           = Integer.parseInt(idStr);
                 int trangThaiMoi = Integer.parseInt(request.getParameter("trangThaiNhanSu"));
-                boolean ok = nguoiDungService.updateTrangThaiNhanSu(id, trangThaiMoi);
-                if (ok) {
+
+                // ✅ Service giờ trả String: null = thành công, có nội dung = lỗi
+                String err = nguoiDungService.updateTrangThaiNhanSu(id, trangThaiMoi);
+                if (err == null) {
                     session.setAttribute("message", "Đã cập nhật trạng thái nhân sự thành công.");
                 } else {
-                    session.setAttribute("error", "Cập nhật trạng thái thất bại, vui lòng thử lại.");
+                    session.setAttribute("error", err);
                 }
             } catch (NumberFormatException e) {
                 session.setAttribute("error", "Dữ liệu không hợp lệ.");

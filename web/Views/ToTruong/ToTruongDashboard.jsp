@@ -260,7 +260,7 @@
             <a class="ud-item" href="${pageContext.request.contextPath}/profile">
                 <span class="ud-icon">👤</span> Thông tin cá nhân
             </a>
-            <a class="ud-item" href="${pageContext.request.contextPath}/change_password">
+            <a class="ud-item" href="${pageContext.request.contextPath}/admin/change_password">
                 <span class="ud-icon">🔑</span> Đổi mật khẩu
             </a>
             <hr class="ud-divider">

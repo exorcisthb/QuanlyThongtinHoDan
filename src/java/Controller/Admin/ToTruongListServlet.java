@@ -25,7 +25,7 @@ public class ToTruongListServlet extends HttpServlet {
             return;
         }
 
-        // ✅ Chuyển flash message từ session sang request rồi xóa
+        // Chuyển flash message từ session sang request rồi xóa
         if (session.getAttribute("flashMessage") != null) {
             request.setAttribute("message", session.getAttribute("flashMessage"));
             session.removeAttribute("flashMessage");
@@ -77,7 +77,8 @@ public class ToTruongListServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
-        if (!isAdmin(request.getSession(false))) {
+        HttpSession session = request.getSession(false);
+        if (!isAdmin(session)) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
@@ -95,16 +96,16 @@ public class ToTruongListServlet extends HttpServlet {
             try {
                 int id           = Integer.parseInt(idStr);
                 int trangThaiMoi = Integer.parseInt(request.getParameter("trangThaiNhanSu"));
-                boolean ok = nguoiDungService.updateTrangThaiNhanSu(id, trangThaiMoi);
-                if (ok) {
-                    request.getSession().setAttribute("message",
-                        "Đã cập nhật trạng thái nhân sự thành công.");
+
+                // ✅ Service giờ trả String: null = thành công, có nội dung = lỗi
+                String err = nguoiDungService.updateTrangThaiNhanSu(id, trangThaiMoi);
+                if (err == null) {
+                    session.setAttribute("message", "Đã cập nhật trạng thái nhân sự thành công.");
                 } else {
-                    request.getSession().setAttribute("error",
-                        "Cập nhật trạng thái thất bại, vui lòng thử lại.");
+                    session.setAttribute("error", err);
                 }
             } catch (NumberFormatException e) {
-                request.getSession().setAttribute("error", "Dữ liệu không hợp lệ.");
+                session.setAttribute("error", "Dữ liệu không hợp lệ.");
             }
         }
 

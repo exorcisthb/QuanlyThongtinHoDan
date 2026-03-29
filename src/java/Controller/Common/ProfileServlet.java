@@ -37,7 +37,6 @@ public class ProfileServlet extends HttpServlet {
             session.removeAttribute("error");
         }
 
-        // ✅ Lấy đúng người đang đăng nhập từ session, forward về 1 JSP duy nhất
         request.setAttribute("profile", nd);
         request.getRequestDispatcher("/Views/Common/Profile.jsp").forward(request, response);
     }
@@ -90,8 +89,12 @@ public class ProfileServlet extends HttpServlet {
 
             if (ok) {
                 nd.setAvatarPath(relativePath);
+                // FIX 1: Cập nhật cả 2 key để JSP dùng được
                 session.setAttribute("nguoiDung", nd);
-                session.setAttribute("message", "Cập nhật ảnh đại diện thành công!");
+                session.setAttribute("currentUser", nd);
+                // FIX 2: Redirect kèm param để JS trigger toast + redirect về dashboard
+                response.sendRedirect(request.getContextPath() + "/profile?avatarUpdated=true");
+                return;
             } else {
                 Files.deleteIfExists(dest);
                 session.setAttribute("error", "Lưu ảnh thất bại, vui lòng thử lại.");
@@ -102,6 +105,7 @@ public class ProfileServlet extends HttpServlet {
             session.setAttribute("error", "Đã xảy ra lỗi khi upload ảnh.");
         }
 
+        // Chỉ chạy tới đây khi có lỗi (success đã return ở trên)
         response.sendRedirect(request.getContextPath() + "/profile");
     }
 

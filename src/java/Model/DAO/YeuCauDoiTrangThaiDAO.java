@@ -14,95 +14,104 @@ public class YeuCauDoiTrangThaiDAO {
             + "    yc.NguoiDuyetID, yc.NgayDuyet, yc.GhiChuDuyet, yc.NgayTao, "
             + "    hd.MaHoKhau, hd.DiaChi AS DiaChiHo, "
             + "    (nd_chu.Ho || ' ' || nd_chu.Ten) AS TenChuHo, "
-            + "    tt_cu.TenTrangThai              AS TenTrangThaiCu, "
-            + "    tt_moi.TenTrangThai             AS TenTrangThaiMoi, "
-            // TenTo: loại 1 lấy từ hd→tdp, loại 2/3 lấy từ nd_nk→tdp_nk
-            + "    COALESCE(tdp.TenTo, tdp_nk.TenTo) AS TenTo, "
-            + "    (nd_yc.Ho || ' ' || nd_yc.Ten)   AS TenNguoiYeuCau, "
-            + "    (nd_dt.Ho  || ' ' || nd_dt.Ten)   AS TenNguoiDuyet, "
-            + "    ttyc.TenTrangThai               AS TenTrangThaiYeuCau, "
+            + "    tt_cu.TenTrangThai  AS TenTrangThaiCu, "
+            + "    tt_moi.TenTrangThai AS TenTrangThaiMoi, "
+            // TenTo: loại 1 → hd→tdp_hd, loại 3 → NhanKhauID→tdp_nk, loại 2 → NguoiDungCapNhatID→tdp_l2
+            + "    COALESCE(tdp_hd.TenTo, tdp_nk.TenTo, tdp_l2.TenTo) AS TenTo, "
+            + "    (nd_yc.Ho || ' ' || nd_yc.Ten) AS TenNguoiYeuCau, "
+            + "    (nd_dt.Ho  || ' ' || nd_dt.Ten) AS TenNguoiDuyet, "
+            + "    ttyc.TenTrangThai AS TenTrangThaiYeuCau, "
             + "    yc.NguoiDungCapNhatID, "
-            // FIX 1: MaNhanKhau lấy qua ThanhVienHo → HoDan (không phải ChuHoID)
-            + "    hd_nk.MaHoKhau AS MaNhanKhau, "
-            // FIX 2: QuanHeVoiChuHo lấy qua ThanhVienHo → QuanHeHoGia
-            + "    qhg.TenQuanHe  AS QuanHeVoiChuHo, "
+            // MaNhanKhau: loại 3 → qua NhanKhauID, loại 2 → qua NguoiDungCapNhatID
+            + "    COALESCE(hd_nk.MaHoKhau, hd_l2.MaHoKhau) AS MaNhanKhau, "
+            // QuanHeVoiChuHo: loại 3 → qua NhanKhauID, loại 2 → qua NguoiDungCapNhatID
+            + "    COALESCE(qhg_nk.TenQuanHe, qhg_l2.TenQuanHe) AS QuanHeVoiChuHo, "
             + "    yc.Ho_Cu,  yc.Ten_Cu,  yc.NgaySinh_Cu,  yc.GioiTinh_Cu, "
             + "    yc.Email_Cu,  yc.SDT_Cu,  yc.CCCD_Cu,  yc.Avatar_Cu, "
             + "    yc.Ho_Moi, yc.Ten_Moi, yc.NgaySinh_Moi, yc.GioiTinh_Moi, "
             + "    yc.Email_Moi, yc.SDT_Moi, yc.CCCD_Moi, yc.Avatar_Moi "
             + "FROM YeuCauDoiTrangThai yc "
-            + "JOIN  NguoiDung       nd_yc   ON nd_yc.NguoiDungID  = yc.NguoiYeuCauID "
-            + "JOIN  TrangThaiYeuCau ttyc    ON ttyc.TrangThaiID   = yc.TrangThaiYeuCauID "
-            + "LEFT JOIN HoDan           hd      ON hd.HoDanID         = yc.HoDanID "
-            + "LEFT JOIN TrangThaiHoKhau tt_cu   ON tt_cu.TrangThaiID  = yc.TrangThaiCuID "
-            + "LEFT JOIN TrangThaiHoKhau tt_moi  ON tt_moi.TrangThaiID = yc.TrangThaiMoiID "
-            + "LEFT JOIN ToDanPho        tdp     ON tdp.ToDanPhoID      = hd.ToDanPhoID "
-            + "LEFT JOIN NguoiDung       nd_chu  ON nd_chu.NguoiDungID = hd.ChuHoID "
-            + "LEFT JOIN NguoiDung       nd_dt   ON nd_dt.NguoiDungID  = yc.NguoiDuyetID "
-            // JOIN cho loại 2/3: lấy tổ của nhân khẩu qua NguoiDung.ToDanPhoID
-            + "LEFT JOIN NguoiDung       nd_nk   ON nd_nk.NguoiDungID  = yc.NhanKhauID "
-            + "LEFT JOIN ToDanPho        tdp_nk  ON tdp_nk.ToDanPhoID  = nd_nk.ToDanPhoID "
-            // FIX 1: JOIN đúng qua ThanhVienHo để lấy MaHoKhau của nhân khẩu
-            + "LEFT JOIN ThanhVienHo     tvh     ON tvh.NguoiDungID    = yc.NhanKhauID "
-            + "LEFT JOIN HoDan           hd_nk   ON hd_nk.HoDanID      = tvh.HoDanID "
-            // FIX 2: JOIN QuanHeHoGia để lấy quan hệ với chủ hộ
-            + "LEFT JOIN QuanHeHoGia     qhg     ON qhg.QuanHeID       = tvh.QuanHeID ";
+            // Người gửi yêu cầu
+            + "JOIN  NguoiDung       nd_yc    ON nd_yc.NguoiDungID   = yc.NguoiYeuCauID "
+            // Trạng thái yêu cầu
+            + "JOIN  TrangThaiYeuCau ttyc     ON ttyc.TrangThaiID    = yc.TrangThaiYeuCauID "
+            // ── Loại 1: hộ ──
+            + "LEFT JOIN HoDan           hd       ON hd.HoDanID          = yc.HoDanID "
+            + "LEFT JOIN TrangThaiHoKhau tt_cu    ON tt_cu.TrangThaiID   = yc.TrangThaiCuID "
+            + "LEFT JOIN TrangThaiHoKhau tt_moi   ON tt_moi.TrangThaiID  = yc.TrangThaiMoiID "
+            + "LEFT JOIN ToDanPho        tdp_hd   ON tdp_hd.ToDanPhoID   = hd.ToDanPhoID "
+            + "LEFT JOIN NguoiDung       nd_chu   ON nd_chu.NguoiDungID  = hd.ChuHoID "
+            // Người duyệt
+            + "LEFT JOIN NguoiDung       nd_dt    ON nd_dt.NguoiDungID   = yc.NguoiDuyetID "
+            // ── Loại 3: nhân khẩu (NhanKhauID) ──
+            + "LEFT JOIN NguoiDung       nd_nk    ON nd_nk.NguoiDungID   = yc.NhanKhauID "
+            + "LEFT JOIN ToDanPho        tdp_nk   ON tdp_nk.ToDanPhoID   = nd_nk.ToDanPhoID "
+            + "LEFT JOIN ThanhVienHo     tvh_nk   ON tvh_nk.NguoiDungID  = yc.NhanKhauID "
+            + "                                   AND tvh_nk.NgayRa IS NULL "
+            + "LEFT JOIN HoDan           hd_nk    ON hd_nk.HoDanID       = tvh_nk.HoDanID "
+            + "LEFT JOIN QuanHeHoGia     qhg_nk   ON qhg_nk.QuanHeID     = tvh_nk.QuanHeID "
+            // ── Loại 2: cá nhân (NguoiDungCapNhatID) ──
+            + "LEFT JOIN NguoiDung       nd_l2    ON nd_l2.NguoiDungID   = yc.NguoiDungCapNhatID "
+            + "LEFT JOIN ToDanPho        tdp_l2   ON tdp_l2.ToDanPhoID   = nd_l2.ToDanPhoID "
+            + "LEFT JOIN ThanhVienHo     tvh_l2   ON tvh_l2.NguoiDungID  = yc.NguoiDungCapNhatID "
+            + "                                   AND tvh_l2.NgayRa IS NULL "
+            + "LEFT JOIN HoDan           hd_l2    ON hd_l2.HoDanID       = tvh_l2.HoDanID "
+            + "LEFT JOIN QuanHeHoGia     qhg_l2   ON qhg_l2.QuanHeID     = tvh_l2.QuanHeID ";
 
     // ------------------------------------------------------------------ //
-    //  mapRow — thêm quanHeVoiChuHo
+    //  mapRow
     // ------------------------------------------------------------------ //
     private Map<String, Object> mapRow(ResultSet rs) throws SQLException {
         Map<String, Object> row = new LinkedHashMap<>();
-        row.put("yeuCauID",            rs.getInt("YeuCauID"));
-        row.put("loaiYeuCau",          rs.getInt("LoaiYeuCau"));
-        row.put("nhanKhauID",          rs.getInt("NhanKhauID"));
-        row.put("hoDanID",             rs.getInt("HoDanID"));
-        row.put("trangThaiCuID",       rs.getInt("TrangThaiCuID"));
-        row.put("trangThaiMoiID",      rs.getInt("TrangThaiMoiID"));
-        row.put("nguoiYeuCauID",       rs.getInt("NguoiYeuCauID"));
-        row.put("lyDoYeuCau",          rs.getString("LyDoYeuCau"));
-        row.put("trangThaiYeuCauID",   rs.getInt("TrangThaiYeuCauID"));
+        row.put("yeuCauID",           rs.getInt("YeuCauID"));
+        row.put("loaiYeuCau",         rs.getInt("LoaiYeuCau"));
+        row.put("nhanKhauID",         rs.getInt("NhanKhauID"));
+        row.put("hoDanID",            rs.getInt("HoDanID"));
+        row.put("trangThaiCuID",      rs.getInt("TrangThaiCuID"));
+        row.put("trangThaiMoiID",     rs.getInt("TrangThaiMoiID"));
+        row.put("nguoiYeuCauID",      rs.getInt("NguoiYeuCauID"));
+        row.put("lyDoYeuCau",         rs.getString("LyDoYeuCau"));
+        row.put("trangThaiYeuCauID",  rs.getInt("TrangThaiYeuCauID"));
         int nguoiDuyetID = rs.getInt("NguoiDuyetID");
-        row.put("nguoiDuyetID",        rs.wasNull() ? null : nguoiDuyetID);
-        row.put("ngayDuyet",           rs.getString("NgayDuyet"));
-        row.put("ghiChuDuyet",         rs.getString("GhiChuDuyet"));
-        row.put("ngayTao",             rs.getString("NgayTao"));
-        row.put("maHoKhau",            rs.getString("MaHoKhau"));
-        row.put("maNhanKhau",          rs.getString("MaNhanKhau"));
-        row.put("diaChiHo",            rs.getString("DiaChiHo"));
-        row.put("tenChuHo",            rs.getString("TenChuHo"));
-        row.put("tenTrangThaiCu",      rs.getString("TenTrangThaiCu"));
-        row.put("tenTrangThaiMoi",     rs.getString("TenTrangThaiMoi"));
-        row.put("tenNguoiYeuCau",      rs.getString("TenNguoiYeuCau"));
-        row.put("tenNguoiDuyet",       rs.getString("TenNguoiDuyet"));
-        row.put("tenTrangThaiYeuCau",  rs.getString("TenTrangThaiYeuCau"));
-        row.put("tenTo",               rs.getString("TenTo"));
+        row.put("nguoiDuyetID",       rs.wasNull() ? null : nguoiDuyetID);
+        row.put("ngayDuyet",          rs.getString("NgayDuyet"));
+        row.put("ghiChuDuyet",        rs.getString("GhiChuDuyet"));
+        row.put("ngayTao",            rs.getString("NgayTao"));
+        row.put("maHoKhau",           rs.getString("MaHoKhau"));
+        row.put("maNhanKhau",         rs.getString("MaNhanKhau"));
+        row.put("diaChiHo",           rs.getString("DiaChiHo"));
+        row.put("tenChuHo",           rs.getString("TenChuHo"));
+        row.put("tenTrangThaiCu",     rs.getString("TenTrangThaiCu"));
+        row.put("tenTrangThaiMoi",    rs.getString("TenTrangThaiMoi"));
+        row.put("tenNguoiYeuCau",     rs.getString("TenNguoiYeuCau"));
+        row.put("tenNguoiDuyet",      rs.getString("TenNguoiDuyet"));
+        row.put("tenTrangThaiYeuCau", rs.getString("TenTrangThaiYeuCau"));
+        row.put("tenTo",              rs.getString("TenTo"));
         int ndCapNhat = rs.getInt("NguoiDungCapNhatID");
-        row.put("nguoiDungCapNhatID",  rs.wasNull() ? null : ndCapNhat);
-        // FIX 2: map quanHeVoiChuHo
-        row.put("quanHeVoiChuHo",      rs.getString("QuanHeVoiChuHo"));
-        row.put("ho_Cu",               rs.getString("Ho_Cu"));
-        row.put("ten_Cu",              rs.getString("Ten_Cu"));
-        row.put("ngaySinh_Cu",         rs.getString("NgaySinh_Cu"));
-        row.put("gioiTinh_Cu",         rs.getString("GioiTinh_Cu"));
-        row.put("email_Cu",            rs.getString("Email_Cu"));
-        row.put("sDT_Cu",              rs.getString("SDT_Cu"));
-        row.put("cCCD_Cu",             rs.getString("CCCD_Cu"));
-        row.put("avatar_Cu",           rs.getString("Avatar_Cu"));
-        row.put("ho_Moi",              rs.getString("Ho_Moi"));
-        row.put("ten_Moi",             rs.getString("Ten_Moi"));
-        row.put("ngaySinh_Moi",        rs.getString("NgaySinh_Moi"));
-        row.put("gioiTinh_Moi",        rs.getString("GioiTinh_Moi"));
-        row.put("email_Moi",           rs.getString("Email_Moi"));
-        row.put("sDT_Moi",             rs.getString("SDT_Moi"));
-        row.put("cCCD_Moi",            rs.getString("CCCD_Moi"));
-        row.put("avatar_Moi",          rs.getString("Avatar_Moi"));
+        row.put("nguoiDungCapNhatID", rs.wasNull() ? null : ndCapNhat);
+        row.put("quanHeVoiChuHo",     rs.getString("QuanHeVoiChuHo"));
+        row.put("ho_Cu",              rs.getString("Ho_Cu"));
+        row.put("ten_Cu",             rs.getString("Ten_Cu"));
+        row.put("ngaySinh_Cu",        rs.getString("NgaySinh_Cu"));
+        row.put("gioiTinh_Cu",        rs.getString("GioiTinh_Cu"));
+        row.put("email_Cu",           rs.getString("Email_Cu"));
+        row.put("sDT_Cu",             rs.getString("SDT_Cu"));
+        row.put("cCCD_Cu",            rs.getString("CCCD_Cu"));
+        row.put("avatar_Cu",          rs.getString("Avatar_Cu"));
+        row.put("ho_Moi",             rs.getString("Ho_Moi"));
+        row.put("ten_Moi",            rs.getString("Ten_Moi"));
+        row.put("ngaySinh_Moi",       rs.getString("NgaySinh_Moi"));
+        row.put("gioiTinh_Moi",       rs.getString("GioiTinh_Moi"));
+        row.put("email_Moi",          rs.getString("Email_Moi"));
+        row.put("sDT_Moi",            rs.getString("SDT_Moi"));
+        row.put("cCCD_Moi",           rs.getString("CCCD_Moi"));
+        row.put("avatar_Moi",         rs.getString("Avatar_Moi"));
 
-        // Tổng hợp tenNhanKhau từ Ho_Cu + Ten_Cu (dùng cho loại 2 và 3)
+        // tenNhanKhau tổng hợp từ snapshot Ho_Cu + Ten_Cu (loại 2 & 3)
         String ho  = rs.getString("Ho_Cu");
         String ten = rs.getString("Ten_Cu");
         if (ho != null && ten != null) {
-            row.put("tenNhanKhau", ho + " " + ten);
+            row.put("tenNhanKhau", ho.trim() + " " + ten.trim());
         } else {
             row.put("tenNhanKhau", rs.getString("TenNguoiYeuCau"));
         }
@@ -242,15 +251,15 @@ public class YeuCauDoiTrangThaiDAO {
 
             int yeuCauID;
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setInt(1,    nguoiDungID);
-                ps.setString(2, yc.getLyDoYeuCau());
-                ps.setInt(3,    nguoiDungID);
-                ps.setString(4, yc.getHo_Cu());
-                ps.setString(5, yc.getTen_Cu());
-                ps.setDate(6,   yc.getNgaySinh_Cu());
-                ps.setString(7, yc.getGioiTinh_Cu());
-                ps.setString(8, yc.getEmail_Cu());
-                ps.setString(9, yc.getSDT_Cu());
+                ps.setInt(1,     nguoiDungID);
+                ps.setString(2,  yc.getLyDoYeuCau());
+                ps.setInt(3,     nguoiDungID);
+                ps.setString(4,  yc.getHo_Cu());
+                ps.setString(5,  yc.getTen_Cu());
+                ps.setDate(6,    yc.getNgaySinh_Cu());
+                ps.setString(7,  yc.getGioiTinh_Cu());
+                ps.setString(8,  yc.getEmail_Cu());
+                ps.setString(9,  yc.getSDT_Cu());
                 ps.setString(10, yc.getCCCD_Cu());
                 ps.setString(11, yc.getAvatar_Cu());
                 ps.setString(12, yc.getHo_Moi());
@@ -290,16 +299,17 @@ public class YeuCauDoiTrangThaiDAO {
     }
 
     // ------------------------------------------------------------------ //
-    //  layChiTietTheoThongBao
+    //  layChiTietTheoThongBao — JOIN đúng cột DB thực tế
     // ------------------------------------------------------------------ //
     public Map<String, Object> layChiTietTheoThongBao(int thongBaoID) {
+        // thongbao có: yeucaudoitrangthaiid (loại 1 & 3), yeucaucapnhatid (loại 2)
         String sql = BASE_SELECT
                 + "JOIN ThongBao tb ON ("
                 + "    tb.YeuCauDoiTrangThaiID = yc.YeuCauID "
-                + "    OR tb.YeuCauCapNhatID   = yc.YeuCauID"
+                + "    OR tb.YeuCauCapNhatID   = yc.YeuCauID "
                 + ") "
                 + "WHERE tb.ThongBaoID = ? "
-                + "ORDER BY yc.YeuCauID DESC "
+                + "ORDER BY yc.NgayTao DESC "
                 + "LIMIT 1";
         try (Connection conn = DBContext.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -332,12 +342,12 @@ public class YeuCauDoiTrangThaiDAO {
     //  Helper: đóng connection
     // ------------------------------------------------------------------ //
     private void closeConn(Connection conn) {
-        try { if (conn != null) { conn.setAutoCommit(true); } } catch (Exception ignored) {}
-        try { if (conn != null) conn.close(); } catch (Exception ignored) {}
+        try { if (conn != null) conn.setAutoCommit(true); } catch (Exception ignored) {}
+        try { if (conn != null) conn.close();             } catch (Exception ignored) {}
     }
 
     // ------------------------------------------------------------------ //
-    //  Các method còn lại
+    //  huyYeuCauCungTruong
     // ------------------------------------------------------------------ //
     private void huyYeuCauCungTruong(int nguoiDungID, YeuCauDoiTrangThai yc,
             Connection conn) throws SQLException {
@@ -354,12 +364,12 @@ public class YeuCauDoiTrangThaiDAO {
                 int id = rs.getInt("YeuCauID");
                 boolean trung = false;
                 if (yc.getHo_Moi()       != null && rs.getString("Ho_Moi")       != null) trung = true;
-                if (yc.getTen_Moi()      != null && rs.getString("Ten_Moi")      != null) trung = true;
-                if (yc.getNgaySinh_Moi() != null && rs.getString("NgaySinh_Moi") != null) trung = true;
-                if (yc.getGioiTinh_Moi() != null && rs.getString("GioiTinh_Moi") != null) trung = true;
-                if (yc.getEmail_Moi()    != null && rs.getString("Email_Moi")    != null) trung = true;
-                if (yc.getSDT_Moi()      != null && rs.getString("SDT_Moi")      != null) trung = true;
-                if (yc.getCCCD_Moi()     != null && rs.getString("CCCD_Moi")     != null) trung = true;
+                if (yc.getTen_Moi()      != null && rs.getString("Ten_Moi")       != null) trung = true;
+                if (yc.getNgaySinh_Moi() != null && rs.getString("NgaySinh_Moi")  != null) trung = true;
+                if (yc.getGioiTinh_Moi() != null && rs.getString("GioiTinh_Moi")  != null) trung = true;
+                if (yc.getEmail_Moi()    != null && rs.getString("Email_Moi")      != null) trung = true;
+                if (yc.getSDT_Moi()      != null && rs.getString("SDT_Moi")        != null) trung = true;
+                if (yc.getCCCD_Moi()     != null && rs.getString("CCCD_Moi")       != null) trung = true;
                 if (trung) {
                     try (PreparedStatement psHuy = conn.prepareStatement(sqlHuy)) {
                         psHuy.setInt(1, id);
@@ -425,14 +435,16 @@ public class YeuCauDoiTrangThaiDAO {
     }
 
     public List<Map<String, Object>> layDanhSachTheoTo(int toDanPhoID) {
+        // Loại 2 lọc qua tdp_l2, loại 3 qua tdp_nk, loại 1 qua tdp_hd
         String sql = BASE_SELECT
-                + "WHERE (hd.ToDanPhoID = ? OR nd_nk.ToDanPhoID = ?) "
+                + "WHERE (tdp_hd.ToDanPhoID = ? OR tdp_nk.ToDanPhoID = ? OR tdp_l2.ToDanPhoID = ?) "
                 + "ORDER BY yc.NgayTao DESC";
         List<Map<String, Object>> list = new ArrayList<>();
         try (Connection conn = DBContext.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, toDanPhoID);
             ps.setInt(2, toDanPhoID);
+            ps.setInt(3, toDanPhoID);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) list.add(mapRow(rs));
         } catch (Exception e) { e.printStackTrace(); }
@@ -500,17 +512,16 @@ public class YeuCauDoiTrangThaiDAO {
                 + "WHERE yc.HoDanID = hd.HoDanID AND yc.YeuCauID = ? AND yc.LoaiYeuCau = 1";
         String sqlND
                 = "UPDATE NguoiDung nd "
-                + "SET Ho           = COALESCE(yc.Ho_Moi,       nd.Ho), "
-                + "    Ten          = COALESCE(yc.Ten_Moi,      nd.Ten), "
-                + "    NgaySinh     = COALESCE(yc.NgaySinh_Moi, nd.NgaySinh), "
-                + "    GioiTinh     = COALESCE(yc.GioiTinh_Moi, nd.GioiTinh), "
-                + "    Email        = COALESCE(yc.Email_Moi,     nd.Email), "
-                + "    SoDienThoai  = COALESCE(yc.SDT_Moi,      nd.SoDienThoai), "
-                + "    CCCD         = COALESCE(yc.CCCD_Moi,     nd.CCCD), "
-                + "    AvatarPath   = COALESCE(yc.Avatar_Moi,   nd.AvatarPath) "
+                + "SET Ho          = COALESCE(yc.Ho_Moi,       nd.Ho), "
+                + "    Ten         = COALESCE(yc.Ten_Moi,      nd.Ten), "
+                + "    NgaySinh    = COALESCE(yc.NgaySinh_Moi, nd.NgaySinh), "
+                + "    GioiTinh    = COALESCE(yc.GioiTinh_Moi, nd.GioiTinh), "
+                + "    Email       = COALESCE(yc.Email_Moi,    nd.Email), "
+                + "    SoDienThoai = COALESCE(yc.SDT_Moi,      nd.SoDienThoai), "
+                + "    CCCD        = COALESCE(yc.CCCD_Moi,     nd.CCCD), "
+                + "    AvatarPath  = COALESCE(yc.Avatar_Moi,   nd.AvatarPath) "
                 + "FROM YeuCauDoiTrangThai yc "
                 + "WHERE yc.NguoiDungCapNhatID = nd.NguoiDungID AND yc.YeuCauID = ? AND yc.LoaiYeuCau = 2";
-        // FIX 3: Sửa sqlNK — không có bảng NhanKhau, dùng NguoiDung + TrangThaiNhanSu
         String sqlNK
                 = "UPDATE NguoiDung nd "
                 + "SET TrangThaiNhanSu = yc.TrangThaiMoiID "

@@ -413,4 +413,40 @@ public class NguoiDungDAO {
     }
     return null;
 }
+      public boolean coToTruongDangCongTac(int toDanPhoID) {
+        String sql = "SELECT COUNT(*) FROM NguoiDung nd "
+                + "JOIN VaiTro vt ON nd.VaiTroID = vt.VaiTroID "
+                + "WHERE nd.ToDanPhoID = ? "
+                + "  AND vt.TenVaiTro = 'totruong' "
+                + "  AND nd.TrangThaiNhanSu = 1";
+        try (Connection conn = DBContext.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, toDanPhoID);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt(1) > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+ 
+    /**
+     * Lấy trạng thái nhân sự hiện tại của một người dùng.
+     * Dùng để kiểm tra trước khi update — chặn revert từ trạng thái 3.
+     *
+     * @param nguoiDungID  ID người dùng cần kiểm tra
+     * @return trangThaiNhanSu hiện tại (1/2/3), hoặc -1 nếu không tìm thấy
+     */
+    public int getTrangThaiNhanSu(int nguoiDungID) {
+        String sql = "SELECT TrangThaiNhanSu FROM NguoiDung WHERE NguoiDungID = ?";
+        try (Connection conn = DBContext.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, nguoiDungID);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
 }

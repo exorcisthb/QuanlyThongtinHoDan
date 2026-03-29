@@ -21,1153 +21,226 @@
                 --muted:     #64748b;
                 --radius:    12px;
             }
-            *, *::before, *::after {
-                box-sizing: border-box;
-                margin: 0;
-                padding: 0;
-            }
-            body {
-                font-family: 'Be Vietnam Pro', sans-serif;
-                background: var(--bg);
-                color: var(--text);
-                min-height: 100vh;
-            }
-            .layout {
-                display: flex;
-                min-height: 100vh;
-            }
-            .sidebar {
-                width: 260px;
-                background: var(--surface);
-                border-right: 1px solid var(--border);
-                display: flex;
-                flex-direction: column;
-                padding: 28px 16px;
-                position: fixed;
-                top: 0;
-                left: 0;
-                bottom: 0;
-                z-index: 100;
-            }
-            .sidebar-logo {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                padding: 0 8px 28px;
-                border-bottom: 1px solid var(--border);
-                margin-bottom: 24px;
-            }
-            .logo-icon {
-                width: 36px;
-                height: 36px;
-                border-radius: 8px;
-                background: linear-gradient(135deg, var(--accent), var(--accent2));
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 18px;
-            }
-            .logo-text {
-                font-size: 15px;
-                font-weight: 700;
-                letter-spacing: -.3px;
-            }
-            .logo-text span {
-                color: var(--accent);
-            }
-            .sidebar-spacer {
-                flex: 1;
-            }
-            .user-bar {
-                position: relative;
-                margin-top: auto;
-                padding-top: 16px;
-                border-top: 1px solid var(--border);
-            }
-            .user-bar-btn {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                width: 100%;
-                padding: 10px;
-                background: none;
-                border: 1px solid transparent;
-                border-radius: 10px;
-                cursor: pointer;
-                transition: all .18s;
-                color: var(--text);
-                font-family: inherit;
-            }
-            .user-bar-btn:hover {
-                background: var(--surface2);
-                border-color: var(--border);
-            }
-            .avatar {
-                width: 36px;
-                height: 36px;
-                border-radius: 50%;
-                background: linear-gradient(135deg, var(--accent), var(--accent2));
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 14px;
-                font-weight: 700;
-                color: #fff;
-                flex-shrink: 0;
-                text-transform: uppercase;
-            }
-            .user-bar-info {
-                flex: 1;
-                text-align: left;
-                overflow: hidden;
-            }
-            .user-bar-name {
-                font-size: 13px;
-                font-weight: 600;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-            .user-bar-role {
-                font-size: 11px;
-                color: var(--muted);
-            }
-            .user-bar-chevron {
-                font-size: 16px;
-                color: var(--muted);
-                transition: transform .2s;
-            }
-            .user-bar-btn.open .user-bar-chevron {
-                transform: rotate(180deg);
-            }
-            .user-popup {
-                position: absolute;
-                bottom: calc(100% + 8px);
-                left: 0;
-                right: 0;
-                background: var(--surface2);
-                border: 1px solid var(--border);
-                border-radius: 12px;
-                padding: 6px;
-                box-shadow: 0 -8px 32px rgba(0,0,0,.4);
-                display: none;
-                z-index: 200;
-            }
-            .user-popup.open {
-                display: block;
-            }
-            .popup-header {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                padding: 10px 10px 12px;
-                border-bottom: 1px solid var(--border);
-                margin-bottom: 6px;
-            }
-            .popup-header .avatar {
-                width: 40px;
-                height: 40px;
-                font-size: 16px;
-            }
-            .popup-full-name {
-                font-size: 13px;
-                font-weight: 700;
-            }
-            .popup-email {
-                font-size: 11px;
-                color: var(--muted);
-            }
-            .badge {
-                display: inline-flex;
-                align-items: center;
-                gap: 5px;
-                font-size: 10px;
-                font-weight: 600;
-                padding: 2px 7px;
-                border-radius: 20px;
-                margin-top: 4px;
-            }
-            .badge.active   {
-                background: rgba(56,217,169,.15);
-                color: var(--accent2);
-            }
-            .badge.inactive {
-                background: rgba(247,92,92,.15);
-                color: var(--danger);
-            }
-            .badge::before  {
-                content: '';
-                width: 5px;
-                height: 5px;
-                border-radius: 50%;
-                background: currentColor;
-            }
-            .popup-item {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                padding: 9px 10px;
-                border-radius: 8px;
-                font-size: 13px;
-                font-weight: 500;
-                color: var(--text);
-                cursor: pointer;
-                transition: background .15s;
-                text-decoration: none;
-            }
-            .popup-item:hover {
-                background: var(--surface);
-            }
-            .popup-item .pi-icon {
-                font-size: 16px;
-                width: 20px;
-                text-align: center;
-            }
-            .popup-item.danger {
-                color: var(--danger);
-            }
-            .popup-item.danger:hover {
-                background: rgba(247,92,92,.1);
-            }
-            .popup-divider {
-                border: none;
-                border-top: 1px solid var(--border);
-                margin: 6px 0;
-            }
-            .nav-section {
-                font-size: 10px;
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 1.2px;
-                color: var(--muted);
-                padding: 0 8px;
-                margin-bottom: 8px;
-            }
-            .nav-item {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                padding: 10px 12px;
-                border-radius: 8px;
-                cursor: pointer;
-                font-size: 14px;
-                font-weight: 500;
-                color: var(--muted);
-                transition: all .18s;
-                margin-bottom: 2px;
-                user-select: none;
-                border: 1px solid transparent;
-                text-decoration: none;
-            }
-            .nav-item:hover {
-                background: var(--surface2);
-                color: var(--text);
-            }
-            .nav-item.active {
-                background: rgba(79,142,247,.12);
-                color: var(--accent);
-                border-color: rgba(79,142,247,.25);
-            }
-            .nav-icon {
-                font-size: 18px;
-                width: 22px;
-                text-align: center;
-            }
-            .main {
-                margin-left: 260px;
-                flex: 1;
-                padding: 36px 40px;
-                max-width: calc(100vw - 260px);
-            }
-            .page-header {
-                margin-bottom: 32px;
-            }
-            .page-header h1 {
-                font-size: 24px;
-                font-weight: 700;
-                margin-bottom: 4px;
-            }
-            .page-header p  {
-                font-size: 14px;
-                color: var(--muted);
-            }
-            .breadcrumb {
-                font-size: 12px;
-                color: var(--muted);
-                margin-bottom: 8px;
-            }
-            .breadcrumb span {
-                color: var(--accent);
-            }
-            .tab-panel {
-                display: none;
-            }
-            .tab-panel.active {
-                display: block;
-                animation: fadeUp .25s ease;
-            }
-            @keyframes fadeUp {
-                from {
-                    opacity: 0;
-                    transform: translateY(10px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-            .card {
-                background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: var(--radius);
-                padding: 28px;
-                margin-bottom: 24px;
-            }
-            .card-header {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                margin-bottom: 24px;
-                padding-bottom: 16px;
-                border-bottom: 1px solid var(--border);
-            }
-            .card-icon {
-                width: 40px;
-                height: 40px;
-                border-radius: 10px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 20px;
-            }
-            .card-icon.blue  {
-                background: rgba(79,142,247,.15);
-            }
-            .card-icon.green {
-                background: rgba(56,217,169,.15);
-            }
-            .card-icon.warn  {
-                background: rgba(251,191,36,.15);
-            }
-            .card-icon.red   {
-                background: rgba(247,92,92,.15);
-            }
-            .card-title {
-                font-size: 16px;
-                font-weight: 700;
-            }
-            .card-sub   {
-                font-size: 12px;
-                color: var(--muted);
-                margin-top: 2px;
-            }
-            .form-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 18px;
-            }
-            .form-group {
-                display: flex;
-                flex-direction: column;
-                gap: 6px;
-            }
-            .form-group.full {
-                grid-column: 1 / -1;
-            }
-            label {
-                font-size: 12px;
-                font-weight: 600;
-                color: var(--muted);
-                text-transform: uppercase;
-                letter-spacing: .6px;
-            }
-            input[type="text"], input[type="email"], input[type="password"], input[type="date"], select {
-                background: var(--surface2);
-                border: 1px solid var(--border);
-                color: var(--text);
-                padding: 10px 14px;
-                border-radius: 8px;
-                font-size: 14px;
-                font-family: inherit;
-                transition: border-color .18s, box-shadow .18s;
-                width: 100%;
-            }
-            input:focus, select:focus {
-                outline: none;
-                border-color: var(--accent);
-                box-shadow: 0 0 0 3px rgba(79,142,247,.18);
-            }
-            select option {
-                background: var(--surface2);
-            }
-            .radio-group {
-                display: flex;
-                gap: 12px;
-                flex-wrap: wrap;
-            }
-            .radio-option {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                background: var(--surface2);
-                border: 1px solid var(--border);
-                border-radius: 8px;
-                padding: 10px 16px;
-                cursor: pointer;
-                font-size: 13px;
-                font-weight: 500;
-                transition: all .15s;
-            }
-            .radio-option input {
-                width: auto;
-            }
-            .btn {
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                padding: 11px 22px;
-                border-radius: 8px;
-                font-size: 14px;
-                font-weight: 600;
-                font-family: inherit;
-                border: none;
-                cursor: pointer;
-                transition: all .18s;
-                text-decoration: none;
-            }
-            .btn-primary   {
-                background: var(--accent);
-                color: #fff;
-            }
-            .btn-primary:hover {
-                background: #3a7de8;
-                box-shadow: 0 4px 16px rgba(79,142,247,.35);
-            }
-            .btn-secondary {
-                background: var(--surface2);
-                color: var(--text);
-                border: 1px solid var(--border);
-            }
-            .btn-secondary:hover {
-                border-color: var(--accent);
-                color: var(--accent);
-            }
-            .btn-danger    {
-                background: rgba(247,92,92,.15);
-                color: var(--danger);
-                border: 1px solid rgba(247,92,92,.3);
-            }
-            .btn-danger:hover  {
-                background: var(--danger);
-                color: #fff;
-            }
-            .btn-warn      {
-                background: rgba(251,191,36,.15);
-                color: var(--warn);
-                border: 1px solid rgba(251,191,36,.3);
-            }
-            .btn-warn:hover    {
-                background: var(--warn);
-                color: #000;
-            }
-            .btn-green     {
-                background: rgba(56,217,169,.15);
-                color: var(--accent2);
-                border: 1px solid rgba(56,217,169,.3);
-            }
-            .btn-green:hover   {
-                background: var(--accent2);
-                color: #000;
-            }
-            .form-actions {
-                display: flex;
-                gap: 10px;
-                margin-top: 24px;
-                padding-top: 20px;
-                border-top: 1px solid var(--border);
-            }
-            .alert {
-                display: flex;
-                align-items: flex-start;
-                gap: 12px;
-                padding: 14px 18px;
-                border-radius: 8px;
-                font-size: 13px;
-                margin-bottom: 24px;
-            }
-            .alert.success {
-                background: rgba(56,217,169,.1);
-                border: 1px solid rgba(56,217,169,.25);
-                color: var(--accent2);
-            }
-            .alert.error   {
-                background: rgba(247,92,92,.1);
-                border: 1px solid rgba(247,92,92,.25);
-                color: var(--danger);
-            }
-            .alert-icon {
-                font-size: 16px;
-            }
-            .maintain-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-                gap: 16px;
-            }
-            .maintain-card {
-                background: var(--surface2);
-                border: 1px solid var(--border);
-                border-radius: var(--radius);
-                padding: 22px;
-                transition: border-color .18s;
-            }
-            .maintain-card:hover {
-                border-color: var(--accent);
-            }
-            .maintain-card .mc-icon {
-                font-size: 28px;
-                margin-bottom: 12px;
-            }
-            .maintain-card h3 {
-                font-size: 14px;
-                font-weight: 700;
-                margin-bottom: 6px;
-            }
-            .maintain-card p  {
-                font-size: 12px;
-                color: var(--muted);
-                margin-bottom: 16px;
-                line-height: 1.6;
-            }
-            .status-list {
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-            }
-            .status-row {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                background: var(--surface2);
-                border: 1px solid var(--border);
-                border-radius: 8px;
-                padding: 12px 16px;
-            }
-            .status-row .sr-label {
-                font-size: 13px;
-                font-weight: 500;
-            }
-            .status-row .sr-val   {
-                font-size: 13px;
-                color: var(--muted);
-            }
-            .pw-bar  {
-                height: 4px;
-                border-radius: 2px;
-                background: var(--border);
-                margin-top: 6px;
-                overflow: hidden;
-            }
-            .pw-fill {
-                height: 100%;
-                border-radius: 2px;
-                width: 0;
-                transition: width .3s, background .3s;
-            }
-            .divider {
-                border: none;
-                border-top: 1px solid var(--border);
-                margin: 24px 0;
-            }
-            .role-selector {
-                display: flex;
-                gap: 10px;
-                margin-bottom: 24px;
-            }
-            .role-btn {
-                flex: 1;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 10px;
-                padding: 14px 20px;
-                border-radius: 10px;
-                border: 2px solid var(--border);
-                background: var(--surface2);
-                color: var(--muted);
-                font-size: 14px;
-                font-weight: 600;
-                font-family: inherit;
-                cursor: pointer;
-                transition: all .2s;
-            }
-            .role-btn:hover {
-                border-color: var(--accent);
-                color: var(--text);
-            }
-            .role-btn.selected-totruong {
-                border-color: var(--accent);
-                background: rgba(79,142,247,.12);
-                color: var(--accent);
-            }
-            .role-btn.selected-canbo   {
-                border-color: var(--accent2);
-                background: rgba(56,217,169,.12);
-                color: var(--accent2);
-            }
-            .role-btn .rb-icon  {
-                font-size: 20px;
-            }
-            .role-btn .rb-label {
-                line-height: 1.2;
-                text-align: left;
-            }
-            .role-btn .rb-sub   {
-                font-size: 11px;
-                font-weight: 400;
-                opacity: .7;
-                display: block;
-            }
-            .ds-toolbar {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                padding: 16px 20px;
-                background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: var(--radius);
-                margin-bottom: 16px;
-            }
-            .ds-search-wrap {
-                position: relative;
-                flex: 1;
-            }
-            .ds-search-icon {
-                position: absolute;
-                left: 12px;
-                top: 50%;
-                transform: translateY(-50%);
-                color: var(--muted);
-                pointer-events: none;
-                display: flex;
-            }
-            .ds-search-wrap input {
-                width: 100%;
-                padding: 10px 14px 10px 38px;
-                background: var(--surface2);
-                border: 1px solid var(--border);
-                border-radius: 8px;
-                color: var(--text);
-                font-size: 13.5px;
-                font-family: inherit;
-                transition: border-color .18s, box-shadow .18s;
-            }
-            .ds-search-wrap input:focus {
-                outline: none;
-                border-color: var(--accent);
-                box-shadow: 0 0 0 3px rgba(79,142,247,.15);
-            }
-            .ds-search-wrap input::placeholder {
-                color: var(--muted);
-            }
-            .filter-wrapper {
-                position: relative;
-            }
-            .btn-filter {
-                display: inline-flex;
-                align-items: center;
-                gap: 7px;
-                padding: 10px 16px;
-                border-radius: 8px;
-                font-size: 13.5px;
-                font-weight: 600;
-                font-family: inherit;
-                background: var(--surface2);
-                color: var(--muted);
-                border: 1px solid var(--border);
-                cursor: pointer;
-                transition: all .18s;
-                white-space: nowrap;
-                user-select: none;
-            }
-            .btn-filter:hover {
-                border-color: var(--accent);
-                color: var(--accent);
-            }
-            .btn-filter.active-filter {
-                border-color: var(--accent);
-                background: rgba(79,142,247,.12);
-                color: var(--accent);
-            }
-            .filter-count {
-                display: none;
-                align-items: center;
-                justify-content: center;
-                min-width: 18px;
-                height: 18px;
-                padding: 0 5px;
-                border-radius: 9px;
-                background: var(--accent);
-                color: #fff;
-                font-size: 10px;
-                font-weight: 700;
-            }
-            .btn-filter.active-filter .filter-count {
-                display: inline-flex;
-            }
-            .filter-dropdown {
-                position: absolute;
-                top: calc(100% + 8px);
-                right: 0;
-                width: 300px;
-                background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: 14px;
-                box-shadow: 0 20px 60px rgba(0,0,0,.6);
-                z-index: 600;
-                display: none;
-                overflow: hidden;
-            }
-            .filter-dropdown.open {
-                display: block;
-                animation: dropIn .18s cubic-bezier(.22,.68,0,1.2);
-            }
-            @keyframes dropIn {
-                from {
-                    opacity: 0;
-                    transform: translateY(-8px) scale(.97);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0) scale(1);
-                }
-            }
-            .fd-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 14px 16px;
-                border-bottom: 1px solid var(--border);
-                background: var(--surface2);
-            }
-            .fd-title {
-                font-size: 13px;
-                font-weight: 700;
-                color: var(--text);
-                display: flex;
-                align-items: center;
-                gap: 7px;
-            }
-            .fd-title svg {
-                color: var(--accent);
-            }
-            .fd-clear-btn {
-                font-size: 11px;
-                font-weight: 600;
-                color: var(--danger);
-                background: none;
-                border: none;
-                cursor: pointer;
-                font-family: inherit;
-                padding: 4px 8px;
-                border-radius: 6px;
-                transition: background .15s;
-            }
-            .fd-clear-btn:hover {
-                background: rgba(247,92,92,.12);
-            }
-            .fd-section {
-                padding: 14px 16px;
-            }
-            .fd-section + .fd-section {
-                border-top: 1px solid var(--border);
-            }
-            .fd-section-label {
-                font-size: 10px;
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                color: var(--muted);
-                margin-bottom: 10px;
-            }
-            .fd-chips {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 7px;
-            }
-            .fd-chip {
-                display: inline-flex;
-                align-items: center;
-                gap: 5px;
-                padding: 5px 12px;
-                border-radius: 20px;
-                font-size: 12px;
-                font-weight: 600;
-                background: var(--surface2);
-                border: 1px solid var(--border);
-                color: var(--muted);
-                cursor: pointer;
-                transition: all .15s;
-                user-select: none;
-            }
-            .fd-chip:hover {
-                border-color: var(--accent);
-                color: var(--text);
-            }
-            .fd-chip-dot {
-                width: 6px;
-                height: 6px;
-                border-radius: 50%;
-                background: currentColor;
-                flex-shrink: 0;
-            }
-            .fd-chip.sel-all    {
-                border-color: var(--accent);
-                background: rgba(79,142,247,.15);
-                color: var(--accent);
-            }
-            .fd-chip.sel-active {
-                border-color: var(--accent2);
-                background: rgba(56,217,169,.15);
-                color: var(--accent2);
-            }
-            .fd-chip.sel-locked {
-                border-color: var(--danger);
-                background: rgba(247,92,92,.15);
-                color: var(--danger);
-            }
-            .fd-chip.sel-to     {
-                border-color: var(--accent);
-                background: rgba(79,142,247,.15);
-                color: var(--accent);
-            }
-            .fd-footer {
-                display: flex;
-                gap: 8px;
-                padding: 12px 16px;
-                border-top: 1px solid var(--border);
-                background: var(--surface2);
-            }
-            .fd-footer .btn {
-                flex: 1;
-                justify-content: center;
-                padding: 9px 12px;
-                font-size: 13px;
-            }
-            .ds-stats {
-                display: flex;
-                gap: 12px;
-                margin-bottom: 16px;
-            }
-            .ds-stat {
-                flex: 1;
-                background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: 10px;
-                padding: 14px 18px;
-                display: flex;
-                align-items: center;
-                gap: 12px;
-            }
-            .ds-stat-icon {
-                width: 36px;
-                height: 36px;
-                border-radius: 8px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 17px;
-                flex-shrink: 0;
-            }
-            .ds-stat-icon.blue  {
-                background: rgba(79,142,247,.15);
-            }
-            .ds-stat-icon.green {
-                background: rgba(56,217,169,.15);
-            }
-            .ds-stat-icon.red   {
-                background: rgba(247,92,92,.15);
-            }
-            .ds-stat-val {
-                font-size: 22px;
-                font-weight: 700;
-                line-height: 1;
-                margin-bottom: 2px;
-            }
-            .ds-stat-lbl {
-                font-size: 11px;
-                color: var(--muted);
-                font-weight: 500;
-            }
+            *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+            body { font-family: 'Be Vietnam Pro', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+            .layout { display: flex; min-height: 100vh; }
+            .sidebar { width: 260px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 28px 16px; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+            .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 8px 28px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+            .logo-icon { width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+            .logo-text { font-size: 15px; font-weight: 700; letter-spacing: -.3px; }
+            .logo-text span { color: var(--accent); }
+            .sidebar-spacer { flex: 1; }
+            .user-bar { position: relative; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); }
+            .user-bar-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px; background: none; border: 1px solid transparent; border-radius: 10px; cursor: pointer; transition: all .18s; color: var(--text); font-family: inherit; }
+            .user-bar-btn:hover { background: var(--surface2); border-color: var(--border); }
+            .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0; text-transform: uppercase; }
+            .user-bar-info { flex: 1; text-align: left; overflow: hidden; }
+            .user-bar-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .user-bar-role { font-size: 11px; color: var(--muted); }
+            .user-bar-chevron { font-size: 16px; color: var(--muted); transition: transform .2s; }
+            .user-bar-btn.open .user-bar-chevron { transform: rotate(180deg); }
+            .user-popup { position: absolute; bottom: calc(100% + 8px); left: 0; right: 0; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 6px; box-shadow: 0 -8px 32px rgba(0,0,0,.4); display: none; z-index: 200; }
+            .user-popup.open { display: block; }
+            .popup-header { display: flex; align-items: center; gap: 10px; padding: 10px 10px 12px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+            .popup-header .avatar { width: 40px; height: 40px; font-size: 16px; }
+            .popup-full-name { font-size: 13px; font-weight: 700; }
+            .popup-email { font-size: 11px; color: var(--muted); }
+            .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; margin-top: 4px; }
+            .badge.active { background: rgba(56,217,169,.15); color: var(--accent2); }
+            .badge.inactive { background: rgba(247,92,92,.15); color: var(--danger); }
+            .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+            .popup-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--text); cursor: pointer; transition: background .15s; text-decoration: none; }
+            .popup-item:hover { background: var(--surface); }
+            .popup-item .pi-icon { font-size: 16px; width: 20px; text-align: center; }
+            .popup-item.danger { color: var(--danger); }
+            .popup-item.danger:hover { background: rgba(247,92,92,.1); }
+            .popup-divider { border: none; border-top: 1px solid var(--border); margin: 6px 0; }
+            .nav-section { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); padding: 0 8px; margin-bottom: 8px; }
+            .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--muted); transition: all .18s; margin-bottom: 2px; user-select: none; border: 1px solid transparent; text-decoration: none; }
+            .nav-item:hover { background: var(--surface2); color: var(--text); }
+            .nav-item.active { background: rgba(79,142,247,.12); color: var(--accent); border-color: rgba(79,142,247,.25); }
+            .nav-icon { font-size: 18px; width: 22px; text-align: center; }
+            .main { margin-left: 260px; flex: 1; padding: 36px 40px; max-width: calc(100vw - 260px); }
+            .page-header { margin-bottom: 32px; }
+            .page-header h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+            .page-header p { font-size: 14px; color: var(--muted); }
+            .breadcrumb { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+            .breadcrumb span { color: var(--accent); }
+            .tab-panel { display: none; }
+            .tab-panel.active { display: block; animation: fadeUp .25s ease; }
+            @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+            .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; margin-bottom: 24px; }
+            .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+            .card-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+            .card-icon.blue { background: rgba(79,142,247,.15); }
+            .card-icon.green { background: rgba(56,217,169,.15); }
+            .card-icon.warn { background: rgba(251,191,36,.15); }
+            .card-icon.red { background: rgba(247,92,92,.15); }
+            .card-title { font-size: 16px; font-weight: 700; }
+            .card-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+            .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+            .form-group { display: flex; flex-direction: column; gap: 6px; }
+            .form-group.full { grid-column: 1 / -1; }
+            label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
+            input[type="text"], input[type="email"], input[type="password"], input[type="date"], select { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 14px; font-family: inherit; transition: border-color .18s, box-shadow .18s; width: 100%; }
+            input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,142,247,.18); }
+            select option { background: var(--surface2); }
+            .radio-group { display: flex; gap: 12px; flex-wrap: wrap; }
+            .radio-option { display: flex; align-items: center; gap: 8px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all .15s; }
+            .radio-option input { width: auto; }
+            .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 22px; border-radius: 8px; font-size: 14px; font-weight: 600; font-family: inherit; border: none; cursor: pointer; transition: all .18s; text-decoration: none; }
+            .btn-primary { background: var(--accent); color: #fff; }
+            .btn-primary:hover { background: #3a7de8; box-shadow: 0 4px 16px rgba(79,142,247,.35); }
+            .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+            .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+            .btn-danger { background: rgba(247,92,92,.15); color: var(--danger); border: 1px solid rgba(247,92,92,.3); }
+            .btn-danger:hover { background: var(--danger); color: #fff; }
+            .btn-warn { background: rgba(251,191,36,.15); color: var(--warn); border: 1px solid rgba(251,191,36,.3); }
+            .btn-warn:hover { background: var(--warn); color: #000; }
+            .btn-green { background: rgba(56,217,169,.15); color: var(--accent2); border: 1px solid rgba(56,217,169,.3); }
+            .btn-green:hover { background: var(--accent2); color: #000; }
+            .form-actions { display: flex; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+            .alert { display: flex; align-items: flex-start; gap: 12px; padding: 14px 18px; border-radius: 8px; font-size: 13px; margin-bottom: 24px; }
+            .alert.success { background: rgba(56,217,169,.1); border: 1px solid rgba(56,217,169,.25); color: var(--accent2); }
+            .alert.error { background: rgba(247,92,92,.1); border: 1px solid rgba(247,92,92,.25); color: var(--danger); }
+            .alert-icon { font-size: 16px; }
+            .maintain-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+            .maintain-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; transition: border-color .18s; }
+            .maintain-card:hover { border-color: var(--accent); }
+            .maintain-card .mc-icon { font-size: 28px; margin-bottom: 12px; }
+            .maintain-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+            .maintain-card p { font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.6; }
+            .status-list { display: flex; flex-direction: column; gap: 10px; }
+            .status-row { display: flex; align-items: center; justify-content: space-between; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; }
+            .status-row .sr-label { font-size: 13px; font-weight: 500; }
+            .status-row .sr-val { font-size: 13px; color: var(--muted); }
+            .pw-bar { height: 4px; border-radius: 2px; background: var(--border); margin-top: 6px; overflow: hidden; }
+            .pw-fill { height: 100%; border-radius: 2px; width: 0; transition: width .3s, background .3s; }
+            .divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+            .role-selector { display: flex; gap: 10px; margin-bottom: 24px; }
+            .role-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 20px; border-radius: 10px; border: 2px solid var(--border); background: var(--surface2); color: var(--muted); font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all .2s; }
+            .role-btn:hover { border-color: var(--accent); color: var(--text); }
+            .role-btn.selected-totruong { border-color: var(--accent); background: rgba(79,142,247,.12); color: var(--accent); }
+            .role-btn.selected-canbo { border-color: var(--accent2); background: rgba(56,217,169,.12); color: var(--accent2); }
+            .role-btn .rb-icon { font-size: 20px; }
+            .role-btn .rb-label { line-height: 1.2; text-align: left; }
+            .role-btn .rb-sub { font-size: 11px; font-weight: 400; opacity: .7; display: block; }
+            .ds-toolbar { display: flex; align-items: center; gap: 10px; padding: 16px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; }
+            .ds-search-wrap { position: relative; flex: 1; }
+            .ds-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; display: flex; }
+            .ds-search-wrap input { width: 100%; padding: 10px 14px 10px 38px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13.5px; font-family: inherit; transition: border-color .18s, box-shadow .18s; }
+            .ds-search-wrap input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,142,247,.15); }
+            .ds-search-wrap input::placeholder { color: var(--muted); }
+            .filter-wrapper { position: relative; }
+            .btn-filter { display: inline-flex; align-items: center; gap: 7px; padding: 10px 16px; border-radius: 8px; font-size: 13.5px; font-weight: 600; font-family: inherit; background: var(--surface2); color: var(--muted); border: 1px solid var(--border); cursor: pointer; transition: all .18s; white-space: nowrap; user-select: none; }
+            .btn-filter:hover { border-color: var(--accent); color: var(--accent); }
+            .btn-filter.active-filter { border-color: var(--accent); background: rgba(79,142,247,.12); color: var(--accent); }
+            .filter-count { display: none; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; }
+            .btn-filter.active-filter .filter-count { display: inline-flex; }
+            .filter-dropdown { position: absolute; top: calc(100% + 8px); right: 0; width: 300px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.6); z-index: 600; display: none; overflow: hidden; }
+            .filter-dropdown.open { display: block; animation: dropIn .18s cubic-bezier(.22,.68,0,1.2); }
+            @keyframes dropIn { from { opacity: 0; transform: translateY(-8px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+            .fd-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); background: var(--surface2); }
+            .fd-title { font-size: 13px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 7px; }
+            .fd-title svg { color: var(--accent); }
+            .fd-clear-btn { font-size: 11px; font-weight: 600; color: var(--danger); background: none; border: none; cursor: pointer; font-family: inherit; padding: 4px 8px; border-radius: 6px; transition: background .15s; }
+            .fd-clear-btn:hover { background: rgba(247,92,92,.12); }
+            .fd-section { padding: 14px 16px; }
+            .fd-section + .fd-section { border-top: 1px solid var(--border); }
+            .fd-section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 10px; }
+            .fd-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+            .fd-chip { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); cursor: pointer; transition: all .15s; user-select: none; }
+            .fd-chip:hover { border-color: var(--accent); color: var(--text); }
+            .fd-chip-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+            .fd-chip.sel-all { border-color: var(--accent); background: rgba(79,142,247,.15); color: var(--accent); }
+            .fd-chip.sel-active { border-color: var(--accent2); background: rgba(56,217,169,.15); color: var(--accent2); }
+            .fd-chip.sel-locked { border-color: var(--danger); background: rgba(247,92,92,.15); color: var(--danger); }
+            .fd-chip.sel-to { border-color: var(--accent); background: rgba(79,142,247,.15); color: var(--accent); }
+            .fd-footer { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--surface2); }
+            .fd-footer .btn { flex: 1; justify-content: center; padding: 9px 12px; font-size: 13px; }
+            .ds-stats { display: flex; gap: 12px; margin-bottom: 16px; }
+            .ds-stat { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; gap: 12px; }
+            .ds-stat-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+            .ds-stat-icon.blue { background: rgba(79,142,247,.15); }
+            .ds-stat-icon.green { background: rgba(56,217,169,.15); }
+            .ds-stat-icon.red { background: rgba(247,92,92,.15); }
+            .ds-stat-val { font-size: 22px; font-weight: 700; line-height: 1; margin-bottom: 2px; }
+            .ds-stat-lbl { font-size: 11px; color: var(--muted); font-weight: 500; }
+
+            /* ══ FIX: bỏ overflow:hidden để dropdown ts-menu không bị clip ══ */
             .ds-table-wrap {
                 background: var(--surface);
                 border: 1px solid var(--border);
                 border-radius: var(--radius);
-                overflow: hidden;
-            }
-            .ds-table {
-                width: 100%;
-                border-collapse: collapse;
-                font-size: 13px;
-            }
-            .ds-table thead tr {
-                background: var(--surface2);
-            }
-            .ds-table th {
-                padding: 12px 16px;
-                text-align: left;
-                color: var(--muted);
-                font-weight: 600;
-                font-size: 11px;
-                text-transform: uppercase;
-                letter-spacing: .5px;
-                border-bottom: 1px solid var(--border);
-                white-space: nowrap;
-            }
-            .ds-table th.center, .ds-table td.center {
-                text-align: center;
-            }
-            .ds-table tbody tr {
-                border-bottom: 1px solid var(--border);
-                transition: background .12s;
-            }
-            .ds-table tbody tr:last-child {
-                border-bottom: none;
-            }
-            .ds-table tbody tr:hover {
-                background: rgba(79,142,247,.04);
-            }
-            .ds-table td {
-                padding: 13px 16px;
-                vertical-align: middle;
-            }
-            .tt-cell {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
-            .tt-avatar {
-                width: 34px;
-                height: 34px;
-                border-radius: 50%;
-                background: linear-gradient(135deg, var(--accent), var(--accent2));
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 13px;
-                font-weight: 700;
-                color: #fff;
-                flex-shrink: 0;
-                text-transform: uppercase;
-            }
-            .tt-name {
-                font-weight: 600;
-                font-size: 13px;
-            }
-            .tt-sub  {
-                font-size: 11px;
-                color: var(--muted);
-                margin-top: 1px;
-            }
-            .mono {
-                font-family: 'Courier New', monospace;
-                font-size: 12px;
-                color: var(--muted);
-                letter-spacing: .3px;
-            }
-            .to-badge {
-                display: inline-flex;
-                align-items: center;
-                gap: 5px;
-                background: rgba(79,142,247,.12);
-                color: var(--accent);
-                border: 1px solid rgba(79,142,247,.25);
-                padding: 3px 10px;
-                border-radius: 20px;
-                font-size: 11px;
-                font-weight: 600;
-            }
-            .pill {
-                font-size: 11px;
-                font-weight: 600;
-                padding: 4px 11px;
-                border-radius: 20px;
-                display: inline-flex;
-                align-items: center;
-                gap: 5px;
-            }
-            .pill::before {
-                content: '';
-                width: 5px;
-                height: 5px;
-                border-radius: 50%;
-                background: currentColor;
-            }
-            .pill.ok   {
-                background: rgba(56,217,169,.12);
-                color: var(--accent2);
-                border: 1px solid rgba(56,217,169,.25);
-            }
-            .pill.err  {
-                background: rgba(247,92,92,.12);
-                color: var(--danger);
-                border: 1px solid rgba(247,92,92,.25);
-            }
-            .pill.warn {
-                background: rgba(251,191,36,.12);
-                color: var(--warn);
-                border: 1px solid rgba(251,191,36,.25);
-            }
-            .ds-footer {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 12px 18px;
-                background: var(--surface2);
-                border-top: 1px solid var(--border);
-                font-size: 12px;
-                color: var(--muted);
-            }
-            .ds-footer strong {
-                color: var(--text);
-            }
-            .active-filters {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                flex-wrap: wrap;
-                margin-bottom: 12px;
-            }
-            .af-label {
-                font-size: 11px;
-                color: var(--muted);
-                font-weight: 600;
-            }
-            .af-chip {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                padding: 4px 10px;
-                border-radius: 20px;
-                font-size: 11px;
-                font-weight: 600;
-                background: rgba(79,142,247,.12);
-                color: var(--accent);
-                border: 1px solid rgba(79,142,247,.25);
-            }
-            .af-chip a {
-                color: inherit;
-                text-decoration: none;
-                opacity: .7;
-                margin-left: 2px;
-                transition: opacity .15s;
-            }
-            .af-chip a:hover {
-                opacity: 1;
-            }
-            .empty-state {
-                text-align: center;
-                padding: 60px 20px;
-                color: var(--muted);
-            }
-            .empty-state .es-icon {
-                font-size: 44px;
-                margin-bottom: 14px;
-            }
-            .empty-state p {
-                font-size: 14px;
-                margin-bottom: 16px;
+                overflow: visible;          /* ← SỬA: hidden → visible */
+                position: relative;
             }
 
+            .ds-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+            .ds-table thead tr { background: var(--surface2); }
+            /* Bo góc cho header row vì không còn dựa vào overflow:hidden của wrapper */
+            .ds-table thead tr th:first-child { border-top-left-radius: var(--radius); }
+            .ds-table thead tr th:last-child  { border-top-right-radius: var(--radius); }
+            .ds-table th { padding: 12px 16px; text-align: left; color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+            .ds-table th.center, .ds-table td.center { text-align: center; }
+            .ds-table tbody tr { border-bottom: 1px solid var(--border); transition: background .12s; }
+            .ds-table tbody tr:last-child { border-bottom: none; }
+            .ds-table tbody tr:hover { background: rgba(79,142,247,.04); }
+            .ds-table td { padding: 13px 16px; vertical-align: middle; }
+            .tt-cell { display: flex; align-items: center; gap: 10px; }
+            .tt-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; text-transform: uppercase; }
+            .tt-name { font-weight: 600; font-size: 13px; }
+            .tt-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+            .mono { font-family: 'Courier New', monospace; font-size: 12px; color: var(--muted); letter-spacing: .3px; }
+            .to-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(79,142,247,.12); color: var(--accent); border: 1px solid rgba(79,142,247,.25); padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+            .pill { font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px; }
+            .pill::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+            .pill.ok { background: rgba(56,217,169,.12); color: var(--accent2); border: 1px solid rgba(56,217,169,.25); }
+            .pill.err { background: rgba(247,92,92,.12); color: var(--danger); border: 1px solid rgba(247,92,92,.25); }
+            .pill.warn { background: rgba(251,191,36,.12); color: var(--warn); border: 1px solid rgba(251,191,36,.25); }
+            .ds-footer { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--surface2); border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); border-bottom-left-radius: var(--radius); border-bottom-right-radius: var(--radius); }
+            .ds-footer strong { color: var(--text); }
+            .active-filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+            .af-label { font-size: 11px; color: var(--muted); font-weight: 600; }
+            .af-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; background: rgba(79,142,247,.12); color: var(--accent); border: 1px solid rgba(79,142,247,.25); }
+            .af-chip a { color: inherit; text-decoration: none; opacity: .7; margin-left: 2px; transition: opacity .15s; }
+            .af-chip a:hover { opacity: 1; }
+            .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+            .empty-state .es-icon { font-size: 44px; margin-bottom: 14px; }
+            .empty-state p { font-size: 14px; margin-bottom: 16px; }
+
             /* ══ DROPDOWN TRẠNG THÁI NHÂN SỰ INLINE ══ */
-            .ts-wrap {
-                position: relative;
-                display: inline-block;
-            }
+            .ts-wrap { position: relative; display: inline-block; }
             .ts-btn {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                padding: 6px 12px;
-                border-radius: 20px;
-                font-size: 11px;
-                font-weight: 600;
-                font-family: inherit;
-                border: 1px solid;
-                cursor: pointer;
-                transition: all .15s;
-                white-space: nowrap;
-                user-select: none;
+                display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px;
+                border-radius: 20px; font-size: 11px; font-weight: 600; font-family: inherit;
+                border: 1px solid; cursor: pointer; transition: all .15s; white-space: nowrap; user-select: none;
             }
-            .ts-btn:hover {
-                filter: brightness(1.18);
-            }
-            .ts-s1 {
-                background: rgba(56,217,169,.12);
-                color: var(--accent2);
-                border-color: rgba(56,217,169,.35);
-            }
-            .ts-s2 {
-                background: rgba(251,191,36,.12);
-                color: var(--warn);
-                border-color: rgba(251,191,36,.35);
-            }
-            .ts-s3 {
-                background: rgba(247,92,92,.12);
-                color: var(--danger);
-                border-color: rgba(247,92,92,.35);
-            }
-            .ts-chevron {
-                font-size: 9px;
-                opacity: .65;
-                transition: transform .18s;
-                margin-left: 2px;
-            }
-            .ts-btn.open .ts-chevron {
-                transform: rotate(180deg);
-            }
+            .ts-btn:hover { filter: brightness(1.18); }
+            .ts-s1 { background: rgba(56,217,169,.12); color: var(--accent2); border-color: rgba(56,217,169,.35); }
+            .ts-s2 { background: rgba(251,191,36,.12); color: var(--warn); border-color: rgba(251,191,36,.35); }
+            .ts-s3 { background: rgba(247,92,92,.12); color: var(--danger); border-color: rgba(247,92,92,.35); }
+            .ts-s3.ts-final { cursor: not-allowed; opacity: .8; }
+            .ts-s3.ts-final:hover { filter: none; }
+            .ts-chevron { font-size: 9px; opacity: .65; transition: transform .18s; margin-left: 2px; }
+            .ts-btn.open .ts-chevron { transform: rotate(180deg); }
+
+            /* ══ FIX: ts-menu dùng position:fixed để thoát khỏi mọi overflow ══ */
             .ts-menu {
-                position: absolute;
-                top: calc(100% + 6px);
-                left: 50%;
-                transform: translateX(-50%);
+                position: fixed;           /* ← SỬA: absolute → fixed */
                 background: var(--surface);
                 border: 1px solid var(--border);
                 border-radius: 10px;
                 padding: 5px;
                 min-width: 200px;
                 box-shadow: 0 16px 48px rgba(0,0,0,.55);
-                z-index: 800;
+                z-index: 9000;             /* ← z-index rất cao để luôn nổi trên */
                 animation: dropIn .15s ease;
             }
-            .ts-item {
-                display: flex;
-                align-items: center;
-                gap: 9px;
-                width: 100%;
-                padding: 9px 12px;
-                border-radius: 7px;
-                font-size: 12px;
-                font-weight: 600;
-                font-family: inherit;
-                background: none;
-                border: none;
-                cursor: pointer;
-                color: var(--text);
-                transition: background .12s;
-                text-align: left;
-            }
-            .ts-item-1:hover {
-                background: rgba(56,217,169,.12);
-                color: var(--accent2);
-            }
-            .ts-item-2:hover {
-                background: rgba(251,191,36,.12);
-                color: var(--warn);
-            }
-            .ts-item-3:hover {
-                background: rgba(247,92,92,.12);
-                color: var(--danger);
-            }
+            .ts-item { display: flex; align-items: center; gap: 9px; width: 100%; padding: 9px 12px; border-radius: 7px; font-size: 12px; font-weight: 600; font-family: inherit; background: none; border: none; cursor: pointer; color: var(--text); transition: background .12s; text-align: left; }
+            .ts-item-1:hover { background: rgba(56,217,169,.12); color: var(--accent2); }
+            .ts-item-2:hover { background: rgba(251,191,36,.12); color: var(--warn); }
+            .ts-item-3:hover { background: rgba(247,92,92,.12); color: var(--danger); }
 
             /* ══ MODAL ĐĂNG XUẤT ══ */
             .logout-overlay { display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.7); backdrop-filter:blur(6px); align-items:center; justify-content:center; }
@@ -1186,26 +259,12 @@
             .btn-logout-confirm:hover { opacity:.85; }
 
             @media (max-width: 768px) {
-                .sidebar {
-                    transform: translateX(-100%);
-                }
-                .main {
-                    margin-left: 0;
-                    padding: 20px 16px;
-                    max-width: 100vw;
-                }
-                .form-grid {
-                    grid-template-columns: 1fr;
-                }
-                .filter-dropdown {
-                    width: 280px;
-                }
-                .ds-stats {
-                    flex-direction: column;
-                }
-                .role-selector {
-                    flex-direction: column;
-                }
+                .sidebar { transform: translateX(-100%); }
+                .main { margin-left: 0; padding: 20px 16px; max-width: 100vw; }
+                .form-grid { grid-template-columns: 1fr; }
+                .filter-dropdown { width: 280px; }
+                .ds-stats { flex-direction: column; }
+                .role-selector { flex-direction: column; }
             }
         </style>
     </head>
@@ -1254,7 +313,6 @@
                             <span class="pi-icon">🔑</span> Đổi mật khẩu
                         </a>
                         <hr class="popup-divider">
-                        <%-- ✅ MODAL thay vì confirm() --%>
                         <div class="popup-item danger" onclick="showLogoutModal()">
                             <span class="pi-icon">🚪</span> Đăng xuất
                         </div>
@@ -1279,7 +337,7 @@
                     <div class="alert error"><span class="alert-icon">⚠️</span><span>${error}</span></div>
                 </c:if>
                 <c:if test="${not empty debugInfo}">
-                    <div class="alert" style="background:rgba(251,191,36,.1); border:1px solid rgba(251,191,36,.3); color:#fbbf24; font-family:monospace; font-size:12px; word-break:break-all;">
+                    <div class="alert" style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);color:#fbbf24;font-family:monospace;font-size:12px;word-break:break-all;">
                         <span>🔍 DEBUG: ${debugInfo}</span>
                     </div>
                 </c:if>
@@ -1590,52 +648,67 @@
                                                     </span>
                                                 </td>
                                                 <td style="color:var(--muted);font-size:12px;white-space:nowrap;">${tt.ngayTao}</td>
-                                                <%-- ✅ Cột Trạng thái: dropdown inline --%>
+
+                                                <%-- ✅ CỘT TRẠNG THÁI TỔ TRƯỞNG --%>
                                                 <td class="center">
-                                                    <div class="ts-wrap">
-                                                        <button type="button"
-                                                                class="ts-btn ts-s${tt.trangThaiNhanSu}"
-                                                                id="btn-tt-${tt.nguoiDungID}"
-                                                                onclick="toggleMenu('tt-${tt.nguoiDungID}', event)">
-                                                            <c:choose>
-                                                                <c:when test="${tt.trangThaiNhanSu == 1}">✅ Đang công tác</c:when>
-                                                                <c:when test="${tt.trangThaiNhanSu == 2}">🚫 Không còn tại vị</c:when>
-                                                                <c:otherwise>🪦 Đã mất / Nghỉ hưu</c:otherwise>
-                                                            </c:choose>
-                                                            <span class="ts-chevron">▾</span>
-                                                        </button>
-                                                        <div class="ts-menu" id="menu-tt-${tt.nguoiDungID}" style="display:none;">
-                                                            <c:if test="${tt.trangThaiNhanSu != 1}">
-                                                                <form action="${pageContext.request.contextPath}/admin/ds_totruong" method="post">
-                                                                    <input type="hidden" name="action" value="toggleTrangThai">
-                                                                    <input type="hidden" name="nguoiDungID" value="${tt.nguoiDungID}">
-                                                                    <input type="hidden" name="trangThaiNhanSu" value="1">
-                                                                    <c:if test="${not empty keyword}"><input type="hidden" name="keyword" value="${keyword}"></c:if>
-                                                                        <button type="submit" class="ts-item ts-item-1">✅ Đang công tác</button>
-                                                                    </form>
-                                                            </c:if>
-                                                            <c:if test="${tt.trangThaiNhanSu != 2}">
-                                                                <form action="${pageContext.request.contextPath}/admin/ds_totruong" method="post"
-                                                                      onsubmit="return confirm('Chuyển sang Không còn tại vị?\nTài khoản sẽ bị chặn đăng nhập.')">
-                                                                    <input type="hidden" name="action" value="toggleTrangThai">
-                                                                    <input type="hidden" name="nguoiDungID" value="${tt.nguoiDungID}">
-                                                                    <input type="hidden" name="trangThaiNhanSu" value="2">
-                                                                    <c:if test="${not empty keyword}"><input type="hidden" name="keyword" value="${keyword}"></c:if>
-                                                                        <button type="submit" class="ts-item ts-item-2">🚫 Không còn tại vị</button>
-                                                                    </form>
-                                                            </c:if>
-                                                            <c:if test="${tt.trangThaiNhanSu != 3}">
-                                                                <form action="${pageContext.request.contextPath}/admin/ds_totruong" method="post"
-                                                                      onsubmit="return confirm('Chuyển sang Đã mất / Nghỉ hưu?\nTài khoản sẽ bị đóng vĩnh viễn.')">
-                                                                    <input type="hidden" name="action" value="toggleTrangThai">
-                                                                    <input type="hidden" name="nguoiDungID" value="${tt.nguoiDungID}">
-                                                                    <input type="hidden" name="trangThaiNhanSu" value="3">
-                                                                    <c:if test="${not empty keyword}"><input type="hidden" name="keyword" value="${keyword}"></c:if>
+                                                    <c:choose>
+                                                        <c:when test="${tt.trangThaiNhanSu == 3}">
+                                                            <span class="ts-btn ts-s3 ts-final"
+                                                                  title="Tài khoản đã đóng vĩnh viễn, không thể thay đổi">
+                                                                🪦 Đã mất / Nghỉ hưu
+                                                            </span>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <div class="ts-wrap">
+                                                                <button type="button"
+                                                                        class="ts-btn ts-s${tt.trangThaiNhanSu}"
+                                                                        id="btn-tt-${tt.nguoiDungID}"
+                                                                        onclick="toggleMenu('tt-${tt.nguoiDungID}', event)">
+                                                                    <c:choose>
+                                                                        <c:when test="${tt.trangThaiNhanSu == 1}">✅ Đang công tác</c:when>
+                                                                        <c:otherwise>🚫 Không còn tại vị</c:otherwise>
+                                                                    </c:choose>
+                                                                    <span class="ts-chevron">▾</span>
+                                                                </button>
+                                                                <div class="ts-menu" id="menu-tt-${tt.nguoiDungID}" style="display:none;">
+
+                                                                    <%-- Option 1: chỉ hiện khi đang ở trạng thái 2 --%>
+                                                                    <c:if test="${tt.trangThaiNhanSu != 1}">
+                                                                        <form action="${pageContext.request.contextPath}/admin/ds_totruong" method="post">
+                                                                            <input type="hidden" name="action" value="toggleTrangThai">
+                                                                            <input type="hidden" name="nguoiDungID" value="${tt.nguoiDungID}">
+                                                                            <input type="hidden" name="trangThaiNhanSu" value="1">
+                                                                            <c:if test="${not empty keyword}"><input type="hidden" name="keyword" value="${keyword}"></c:if>
+                                                                            <button type="submit" class="ts-item ts-item-1">✅ Đang công tác</button>
+                                                                        </form>
+                                                                    </c:if>
+
+                                                                    <%-- Option 2: chỉ hiện khi đang ở trạng thái 1 --%>
+                                                                    <c:if test="${tt.trangThaiNhanSu != 2}">
+                                                                        <form action="${pageContext.request.contextPath}/admin/ds_totruong" method="post"
+                                                                              onsubmit="return confirm('Chuyển sang Không còn tại vị?\nTài khoản sẽ bị chặn đăng nhập.')">
+                                                                            <input type="hidden" name="action" value="toggleTrangThai">
+                                                                            <input type="hidden" name="nguoiDungID" value="${tt.nguoiDungID}">
+                                                                            <input type="hidden" name="trangThaiNhanSu" value="2">
+                                                                            <c:if test="${not empty keyword}"><input type="hidden" name="keyword" value="${keyword}"></c:if>
+                                                                            <button type="submit" class="ts-item ts-item-2">🚫 Không còn tại vị</button>
+                                                                        </form>
+                                                                    </c:if>
+
+                                                                    <%-- Option 3: LUÔN HIỆN — khóa vĩnh viễn --%>
+                                                                    <form action="${pageContext.request.contextPath}/admin/ds_totruong" method="post"
+                                                                          onsubmit="return confirm('Chuyển sang Đã mất / Nghỉ hưu?\nTài khoản sẽ bị đóng VĨNH VIỄN và không thể khôi phục!')">
+                                                                        <input type="hidden" name="action" value="toggleTrangThai">
+                                                                        <input type="hidden" name="nguoiDungID" value="${tt.nguoiDungID}">
+                                                                        <input type="hidden" name="trangThaiNhanSu" value="3">
+                                                                        <c:if test="${not empty keyword}"><input type="hidden" name="keyword" value="${keyword}"></c:if>
                                                                         <button type="submit" class="ts-item ts-item-3">🪦 Đã mất / Nghỉ hưu</button>
                                                                     </form>
-                                                            </c:if>
-                                                        </div>
-                                                    </div>
+
+                                                                </div>
+                                                            </div>
+                                                        </c:otherwise>
+                                                    </c:choose>
                                                 </td>
                                             </tr>
                                         </c:forEach>
@@ -1644,9 +717,9 @@
                                 <div class="ds-footer">
                                     <span>Tổng cộng <strong>${danhSachToTruong.size()} Tổ trưởng</strong>
                                         <c:if test="${not empty keyword}"> — kết quả cho "<strong style="color:var(--accent);">${keyword}</strong>"</c:if>
-                                        </span>
-                                        <span style="font-size:11px;">Cập nhật lần cuối: hôm nay</span>
-                                    </div>
+                                    </span>
+                                    <span style="font-size:11px;">Cập nhật lần cuối: hôm nay</span>
+                                </div>
                             </c:when>
                             <c:otherwise>
                                 <div class="empty-state">
@@ -1716,52 +789,67 @@
                                                 <td style="font-size:12.5px;">${cb.email}</td>
                                                 <td style="font-size:12.5px;">${cb.soDienThoai}</td>
                                                 <td style="color:var(--muted);font-size:12px;white-space:nowrap;">${cb.ngayTao}</td>
-                                                <%-- ✅ Cột Trạng thái: dropdown inline --%>
+
+                                                <%-- ✅ CỘT TRẠNG THÁI CÁN BỘ PHƯỜNG --%>
                                                 <td class="center">
-                                                    <div class="ts-wrap">
-                                                        <button type="button"
-                                                                class="ts-btn ts-s${cb.trangThaiNhanSu}"
-                                                                id="btn-cb-${cb.nguoiDungID}"
-                                                                onclick="toggleMenu('cb-${cb.nguoiDungID}', event)">
-                                                            <c:choose>
-                                                                <c:when test="${cb.trangThaiNhanSu == 1}">✅ Đang công tác</c:when>
-                                                                <c:when test="${cb.trangThaiNhanSu == 2}">🚫 Không còn tại vị</c:when>
-                                                                <c:otherwise>🪦 Đã mất / Nghỉ hưu</c:otherwise>
-                                                            </c:choose>
-                                                            <span class="ts-chevron">▾</span>
-                                                        </button>
-                                                        <div class="ts-menu" id="menu-cb-${cb.nguoiDungID}" style="display:none;">
-                                                            <c:if test="${cb.trangThaiNhanSu != 1}">
-                                                                <form action="${pageContext.request.contextPath}/admin/ds_canbophuong" method="post">
-                                                                    <input type="hidden" name="action" value="toggleTrangThai">
-                                                                    <input type="hidden" name="nguoiDungID" value="${cb.nguoiDungID}">
-                                                                    <input type="hidden" name="trangThaiNhanSu" value="1">
-                                                                    <c:if test="${not empty keyword}"><input type="hidden" name="keyword" value="${keyword}"></c:if>
-                                                                        <button type="submit" class="ts-item ts-item-1">✅ Đang công tác</button>
-                                                                    </form>
-                                                            </c:if>
-                                                            <c:if test="${cb.trangThaiNhanSu != 2}">
-                                                                <form action="${pageContext.request.contextPath}/admin/ds_canbophuong" method="post"
-                                                                      onsubmit="return confirm('Chuyển sang Không còn tại vị?\nTài khoản sẽ bị chặn đăng nhập.')">
-                                                                    <input type="hidden" name="action" value="toggleTrangThai">
-                                                                    <input type="hidden" name="nguoiDungID" value="${cb.nguoiDungID}">
-                                                                    <input type="hidden" name="trangThaiNhanSu" value="2">
-                                                                    <c:if test="${not empty keyword}"><input type="hidden" name="keyword" value="${keyword}"></c:if>
-                                                                        <button type="submit" class="ts-item ts-item-2">🚫 Không còn tại vị</button>
-                                                                    </form>
-                                                            </c:if>
-                                                            <c:if test="${cb.trangThaiNhanSu != 3}">
-                                                                <form action="${pageContext.request.contextPath}/admin/ds_canbophuong" method="post"
-                                                                      onsubmit="return confirm('Chuyển sang Đã mất / Nghỉ hưu?\nTài khoản sẽ bị đóng vĩnh viễn.')">
-                                                                    <input type="hidden" name="action" value="toggleTrangThai">
-                                                                    <input type="hidden" name="nguoiDungID" value="${cb.nguoiDungID}">
-                                                                    <input type="hidden" name="trangThaiNhanSu" value="3">
-                                                                    <c:if test="${not empty keyword}"><input type="hidden" name="keyword" value="${keyword}"></c:if>
+                                                    <c:choose>
+                                                        <c:when test="${cb.trangThaiNhanSu == 3}">
+                                                            <span class="ts-btn ts-s3 ts-final"
+                                                                  title="Tài khoản đã đóng vĩnh viễn, không thể thay đổi">
+                                                                🪦 Đã mất / Nghỉ hưu
+                                                            </span>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <div class="ts-wrap">
+                                                                <button type="button"
+                                                                        class="ts-btn ts-s${cb.trangThaiNhanSu}"
+                                                                        id="btn-cb-${cb.nguoiDungID}"
+                                                                        onclick="toggleMenu('cb-${cb.nguoiDungID}', event)">
+                                                                    <c:choose>
+                                                                        <c:when test="${cb.trangThaiNhanSu == 1}">✅ Đang công tác</c:when>
+                                                                        <c:otherwise>🚫 Không còn tại vị</c:otherwise>
+                                                                    </c:choose>
+                                                                    <span class="ts-chevron">▾</span>
+                                                                </button>
+                                                                <div class="ts-menu" id="menu-cb-${cb.nguoiDungID}" style="display:none;">
+
+                                                                    <%-- Option 1: chỉ hiện khi đang ở trạng thái 2 --%>
+                                                                    <c:if test="${cb.trangThaiNhanSu != 1}">
+                                                                        <form action="${pageContext.request.contextPath}/admin/ds_canbophuong" method="post">
+                                                                            <input type="hidden" name="action" value="toggleTrangThai">
+                                                                            <input type="hidden" name="nguoiDungID" value="${cb.nguoiDungID}">
+                                                                            <input type="hidden" name="trangThaiNhanSu" value="1">
+                                                                            <c:if test="${not empty keyword}"><input type="hidden" name="keyword" value="${keyword}"></c:if>
+                                                                            <button type="submit" class="ts-item ts-item-1">✅ Đang công tác</button>
+                                                                        </form>
+                                                                    </c:if>
+
+                                                                    <%-- Option 2: chỉ hiện khi đang ở trạng thái 1 --%>
+                                                                    <c:if test="${cb.trangThaiNhanSu != 2}">
+                                                                        <form action="${pageContext.request.contextPath}/admin/ds_canbophuong" method="post"
+                                                                              onsubmit="return confirm('Chuyển sang Không còn tại vị?\nTài khoản sẽ bị chặn đăng nhập.')">
+                                                                            <input type="hidden" name="action" value="toggleTrangThai">
+                                                                            <input type="hidden" name="nguoiDungID" value="${cb.nguoiDungID}">
+                                                                            <input type="hidden" name="trangThaiNhanSu" value="2">
+                                                                            <c:if test="${not empty keyword}"><input type="hidden" name="keyword" value="${keyword}"></c:if>
+                                                                            <button type="submit" class="ts-item ts-item-2">🚫 Không còn tại vị</button>
+                                                                        </form>
+                                                                    </c:if>
+
+                                                                    <%-- Option 3: LUÔN HIỆN — khóa vĩnh viễn --%>
+                                                                    <form action="${pageContext.request.contextPath}/admin/ds_canbophuong" method="post"
+                                                                          onsubmit="return confirm('Chuyển sang Đã mất / Nghỉ hưu?\nTài khoản sẽ bị đóng VĨNH VIỄN và không thể khôi phục!')">
+                                                                        <input type="hidden" name="action" value="toggleTrangThai">
+                                                                        <input type="hidden" name="nguoiDungID" value="${cb.nguoiDungID}">
+                                                                        <input type="hidden" name="trangThaiNhanSu" value="3">
+                                                                        <c:if test="${not empty keyword}"><input type="hidden" name="keyword" value="${keyword}"></c:if>
                                                                         <button type="submit" class="ts-item ts-item-3">🪦 Đã mất / Nghỉ hưu</button>
                                                                     </form>
-                                                            </c:if>
-                                                        </div>
-                                                    </div>
+
+                                                                </div>
+                                                            </div>
+                                                        </c:otherwise>
+                                                    </c:choose>
                                                 </td>
                                             </tr>
                                         </c:forEach>
@@ -1770,9 +858,9 @@
                                 <div class="ds-footer">
                                     <span>Tổng cộng <strong>${danhSachCanBo.size()} Cán bộ phường</strong>
                                         <c:if test="${not empty keyword}"> — kết quả cho "<strong style="color:var(--accent);">${keyword}</strong>"</c:if>
-                                        </span>
-                                        <span style="font-size:11px;">Cập nhật lần cuối: hôm nay</span>
-                                    </div>
+                                    </span>
+                                    <span style="font-size:11px;">Cập nhật lần cuối: hôm nay</span>
+                                </div>
                             </c:when>
                             <c:otherwise>
                                 <div class="empty-state">
@@ -1789,7 +877,7 @@
             </main>
         </div>
 
-        <!-- ✅ MODAL ĐĂNG XUẤT -->
+        <!-- MODAL ĐĂNG XUẤT -->
         <div class="logout-overlay" id="logoutModal" onclick="if(event.target===this)hideLogoutModal()">
             <div class="logout-box">
                 <div class="logout-body">
@@ -1816,7 +904,7 @@
             /* ─── User menu ─── */
             function toggleUserMenu() {
                 const popup = document.getElementById('userPopup');
-                const btn = document.getElementById('userBarBtn');
+                const btn   = document.getElementById('userBarBtn');
                 popup.classList.toggle('open');
                 btn.classList.toggle('open', popup.classList.contains('open'));
             }
@@ -1838,12 +926,12 @@
 
             /* ─── Role switch ─── */
             function switchRole(role) {
-                const btnTT = document.getElementById('btnToTruong');
-                const btnCB = document.getElementById('btnCanBo');
-                const formTT = document.getElementById('formToTruong');
-                const formCB = document.getElementById('formCanBo');
+                const btnTT    = document.getElementById('btnToTruong');
+                const btnCB    = document.getElementById('btnCanBo');
+                const formTT   = document.getElementById('formToTruong');
+                const formCB   = document.getElementById('formCanBo');
                 const breadcrumb = document.getElementById('breadcrumbRole');
-                const title = document.getElementById('pageTitle');
+                const title    = document.getElementById('pageTitle');
                 const subtitle = document.getElementById('pageSubtitle');
                 if (role === 'totruong') {
                     btnTT.className = 'role-btn selected-totruong';
@@ -1851,46 +939,40 @@
                     formTT.style.display = 'block';
                     formCB.style.display = 'none';
                     breadcrumb.textContent = '/ Tạo tài khoản Tổ trưởng';
-                    title.textContent = 'Tạo tài khoản Tổ trưởng';
-                    subtitle.textContent = 'Điền đầy đủ thông tin để tạo tài khoản cho Tổ trưởng mới';
+                    title.textContent      = 'Tạo tài khoản Tổ trưởng';
+                    subtitle.textContent   = 'Điền đầy đủ thông tin để tạo tài khoản cho Tổ trưởng mới';
                 } else {
                     btnTT.className = 'role-btn';
                     btnCB.className = 'role-btn selected-canbo';
                     formTT.style.display = 'none';
                     formCB.style.display = 'block';
                     breadcrumb.textContent = '/ Tạo tài khoản Cán bộ phường';
-                    title.textContent = 'Tạo tài khoản Cán bộ phường';
-                    subtitle.textContent = 'Điền đầy đủ thông tin để tạo tài khoản cho Cán bộ phường mới';
+                    title.textContent      = 'Tạo tài khoản Cán bộ phường';
+                    subtitle.textContent   = 'Điền đầy đủ thông tin để tạo tài khoản cho Cán bộ phường mới';
                 }
             }
 
             /* ─── Password strength ─── */
             function checkPw(val, fillId) {
                 const fill = document.getElementById(fillId);
-                if (!fill)
-                    return;
+                if (!fill) return;
                 let score = 0;
-                if (val.length >= 8)
-                    score++;
-                if (/[A-Z]/.test(val))
-                    score++;
-                if (/[0-9]/.test(val))
-                    score++;
-                if (/[^A-Za-z0-9]/.test(val))
-                    score++;
-                const pct = ['0%', '30%', '55%', '80%', '100%'][score];
-                const color = ['#f75c5c', '#fbbf24', '#fbbf24', '#4f8ef7', '#38d9a9'][score];
-                fill.style.width = pct;
+                if (val.length >= 8)            score++;
+                if (/[A-Z]/.test(val))          score++;
+                if (/[0-9]/.test(val))          score++;
+                if (/[^A-Za-z0-9]/.test(val))  score++;
+                const pct   = ['0%','30%','55%','80%','100%'][score];
+                const color = ['#f75c5c','#fbbf24','#fbbf24','#4f8ef7','#38d9a9'][score];
+                fill.style.width      = pct;
                 fill.style.background = color;
             }
 
             /* ─── Maintain confirm ─── */
             document.querySelectorAll('.maintain-card form').forEach(form => {
                 form.addEventListener('submit', function (e) {
-                    const type = this.querySelector('[name=maintainType]').value;
-                    const labels = {backup: 'Backup cơ sở dữ liệu', repair: 'Sửa chữa hệ thống', update: 'Cập nhật cấu hình', clearCache: 'Xóa cache hệ thống'};
-                    if (!confirm('Xác nhận thực hiện: ' + labels[type] + '?'))
-                        e.preventDefault();
+                    const type   = this.querySelector('[name=maintainType]').value;
+                    const labels = { backup:'Backup cơ sở dữ liệu', repair:'Sửa chữa hệ thống', update:'Cập nhật cấu hình', clearCache:'Xóa cache hệ thống' };
+                    if (!confirm('Xác nhận thực hiện: ' + labels[type] + '?')) e.preventDefault();
                 });
             });
 
@@ -1898,55 +980,42 @@
             (function calcStats() {
                 let active = 0, inactive = 0;
                 document.querySelectorAll('#tab-danhsach .ts-btn').forEach(btn => {
-                    if (btn.classList.contains('ts-s1'))
-                        active++;
-                    else
-                        inactive++;
+                    if (btn.classList.contains('ts-s1')) active++; else inactive++;
                 });
                 const sa = document.getElementById('statActive');
                 const sl = document.getElementById('statLocked');
-                if (sa)
-                    sa.textContent = active;
-                if (sl)
-                    sl.textContent = inactive;
+                if (sa) sa.textContent = active;
+                if (sl) sl.textContent = inactive;
             })();
 
             /* ─── Stat counters Cán bộ phường ─── */
             (function calcStatsCB() {
                 let active = 0, inactive = 0;
                 document.querySelectorAll('#tab-danhsach-canbo .ts-btn').forEach(btn => {
-                    if (btn.classList.contains('ts-s1'))
-                        active++;
-                    else
-                        inactive++;
+                    if (btn.classList.contains('ts-s1')) active++; else inactive++;
                 });
                 const sa = document.getElementById('statActiveCB');
                 const sl = document.getElementById('statLockedCB');
-                if (sa)
-                    sa.textContent = active;
-                if (sl)
-                    sl.textContent = inactive;
+                if (sa) sa.textContent = active;
+                if (sl) sl.textContent = inactive;
             })();
 
             /* ─── Bộ lọc ─── */
             let selTrangThai = '${param.trangThai}';
-            let selToSo = '${param.toSo}';
+            let selToSo      = '${param.toSo}';
 
             (function buildToChips() {
-                const seen = new Set();
+                const seen      = new Set();
                 const container = document.getElementById('toChips');
-                if (!container)
-                    return;
+                if (!container) return;
                 document.querySelectorAll('.to-badge').forEach(badge => {
-                    const num = badge.textContent.trim().replace(/\s+/g, ' ').replace(/^Tổ\s*/, '').trim();
+                    const num = badge.textContent.trim().replace(/\s+/g,' ').replace(/^Tổ\s*/,'').trim();
                     if (num && !seen.has(num)) {
                         seen.add(num);
                         const chip = document.createElement('div');
                         chip.className = 'fd-chip';
-                        chip.id = 'chip-to-' + num;
-                        chip.onclick = function () {
-                            pickToSo(num);
-                        };
+                        chip.id        = 'chip-to-' + num;
+                        chip.onclick   = function () { pickToSo(num); };
                         chip.innerHTML = '<span class="fd-chip-dot"></span>Tổ ' + num;
                         container.appendChild(chip);
                     }
@@ -1954,81 +1023,78 @@
                 refreshChipUI();
             })();
 
-            function toggleFilter(e) {
-                e.stopPropagation();
-                document.getElementById('filterDropdown').classList.toggle('open');
-            }
-            function closeFilter() {
-                document.getElementById('filterDropdown').classList.remove('open');
-            }
+            function toggleFilter(e) { e.stopPropagation(); document.getElementById('filterDropdown').classList.toggle('open'); }
+            function closeFilter()   { document.getElementById('filterDropdown').classList.remove('open'); }
             document.addEventListener('click', function (e) {
                 const w = document.querySelector('.filter-wrapper');
-                if (w && !w.contains(e.target))
-                    closeFilter();
+                if (w && !w.contains(e.target)) closeFilter();
             });
-            function pickTrangThai(val) {
-                selTrangThai = val;
-                refreshChipUI();
-            }
-            function pickToSo(val) {
-                selToSo = val;
-                refreshChipUI();
-            }
-            function resetFilters() {
-                selTrangThai = '';
-                selToSo = '';
-                refreshChipUI();
-            }
+            function pickTrangThai(val) { selTrangThai = val; refreshChipUI(); }
+            function pickToSo(val)      { selToSo = val;      refreshChipUI(); }
+            function resetFilters()     { selTrangThai = ''; selToSo = ''; refreshChipUI(); }
             function refreshChipUI() {
-                const ttMap = {'': 'sel-all', 'active': 'sel-active', 'locked': 'sel-locked'};
-                ['', 'active', 'locked'].forEach(v => {
+                const ttMap = { '':'sel-all', 'active':'sel-active', 'locked':'sel-locked' };
+                ['','active','locked'].forEach(v => {
                     const el = document.getElementById('chip-tt-' + v);
-                    if (el)
-                        el.className = 'fd-chip' + (v === selTrangThai ? ' ' + ttMap[v] : '');
+                    if (el) el.className = 'fd-chip' + (v === selTrangThai ? ' ' + ttMap[v] : '');
                 });
                 document.querySelectorAll('[id^="chip-to-"]').forEach(el => {
-                    const val = el.id.replace('chip-to-', '');
+                    const val = el.id.replace('chip-to-','');
                     el.className = 'fd-chip' + (val === selToSo ? ' sel-to' : '');
                 });
                 let count = 0;
-                if (selTrangThai)
-                    count++;
-                if (selToSo)
-                    count++;
+                if (selTrangThai) count++;
+                if (selToSo)      count++;
                 const badge = document.getElementById('filterCount');
-                const btn = document.getElementById('filterBtn');
-                if (badge)
-                    badge.textContent = count;
-                if (btn)
-                    btn.classList.toggle('active-filter', count > 0);
+                const btn   = document.getElementById('filterBtn');
+                if (badge) badge.textContent = count;
+                if (btn)   btn.classList.toggle('active-filter', count > 0);
             }
             function applyFilters() {
                 document.getElementById('hiddenTrangThai').value = selTrangThai;
-                document.getElementById('hiddenToSo').value = selToSo;
+                document.getElementById('hiddenToSo').value      = selToSo;
                 document.getElementById('filterForm').submit();
             }
 
-            /* ══ DROPDOWN TRẠNG THÁI NHÂN SỰ INLINE ══ */
+            /* ══ DROPDOWN TRẠNG THÁI NHÂN SỰ — dùng position:fixed, tính toán tọa độ ══ */
             function toggleMenu(id, e) {
                 e.stopPropagation();
-                const menu = document.getElementById('menu-' + id);
-                const btn = document.getElementById('btn-' + id);
+                const menu   = document.getElementById('menu-' + id);
+                const btn    = document.getElementById('btn-'  + id);
                 const isOpen = menu.style.display === 'block';
-                // Đóng tất cả
+
+                /* Đóng tất cả menu khác */
                 document.querySelectorAll('.ts-menu').forEach(m => m.style.display = 'none');
-                document.querySelectorAll('.ts-btn').forEach(b => b.classList.remove('open'));
+                document.querySelectorAll('.ts-btn').forEach(b  => b.classList.remove('open'));
+
                 if (!isOpen) {
+                    /* Tính toán vị trí tuyệt đối dựa trên button */
+                    const rect = btn.getBoundingClientRect();
                     menu.style.display = 'block';
+
+                    /* Xác định xem dropdown có bị tràn khỏi màn hình không */
+                    const menuW = menu.offsetWidth || 200;
+                    let left = rect.left + rect.width / 2 - menuW / 2;
+                    /* Clamp vào trong viewport */
+                    left = Math.max(8, Math.min(left, window.innerWidth - menuW - 8));
+
+                    menu.style.top  = (rect.bottom + 6) + 'px';
+                    menu.style.left = left + 'px';
+
                     btn.classList.add('open');
                 }
             }
-            // Đóng khi click ra ngoài
             document.addEventListener('click', function () {
                 document.querySelectorAll('.ts-menu').forEach(m => m.style.display = 'none');
-                document.querySelectorAll('.ts-btn').forEach(b => b.classList.remove('open'));
+                document.querySelectorAll('.ts-btn').forEach(b  => b.classList.remove('open'));
             });
+            /* Cập nhật lại vị trí khi scroll/resize */
+            window.addEventListener('scroll', function() {
+                document.querySelectorAll('.ts-menu').forEach(m => m.style.display = 'none');
+                document.querySelectorAll('.ts-btn').forEach(b  => b.classList.remove('open'));
+            }, true);
 
-            /* ── ✅ MODAL ĐĂNG XUẤT ── */
+            /* ── MODAL ĐĂNG XUẤT ── */
             function showLogoutModal() {
                 document.getElementById('userPopup').classList.remove('open');
                 document.getElementById('userBarBtn').classList.remove('open');

@@ -390,7 +390,7 @@
                         </div>
                     </div>
                     <a class="ud-item" href="${pageContext.request.contextPath}/profile"><span class="ud-icon">👤</span> Thông tin cá nhân</a>
-                    <a class="ud-item" href="${pageContext.request.contextPath}/change_password"><span class="ud-icon">🔑</span> Đổi mật khẩu</a>
+                    <a class="ud-item" href="${pageContext.request.contextPath}/admin/change_password"><span class="ud-icon">🔑</span> Đổi mật khẩu</a>
                     <hr class="ud-divider">
                     <div class="ud-item danger" onclick="showLogoutModal()">
                         <span class="ud-icon">🚪</span> Đăng xuất
@@ -973,7 +973,7 @@
                 + '<div><div class="dlbl">Mã nhân khẩu</div><div class="dval mono">'+orD(d.maNhanKhau)+'</div></div>'
                 + '<div><div class="dlbl">Quan hệ với chủ hộ</div><div class="dval">'+orD(d.quanHeVoiChuHo || d.quanHe_Cu)+'</div></div>'
                 + '<div><div class="dlbl">Số CCCD hiện tại</div><div class="dval mono">'+orD(d.cCCD_Cu || d.cccd)+'</div></div>'
-                + '<div><div class="dlbl">Hộ khẩu</div><div class="dval muted">'+orD(d.maHoKhau)+'</div></div>'
+                + '<div><div class="dlbl">Thuộc hộ khẩu</div><div class="dval muted">'+orD(d.maNhanKhau)+'</div></div>'
                 + '<div><div class="dlbl">Tổ dân phố</div><div class="dval muted">'+orD(d.tenTo)+'</div></div>'
                 + '</div>'
                 + '<div class="sec-title">Người gửi yêu cầu</div>'
