@@ -25,7 +25,7 @@ public class LichHopDAO {
     private int tinhTrangThai(Timestamp batDau, Timestamp ketThuc, int trangThaiHienTai) {
         if (trangThaiHienTai == 4) return 4;
         if (batDau == null) return 1;
-        java.time.LocalDateTime now   = java.time.LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")); // ← FIX
+        java.time.LocalDateTime now   = java.time.LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
         java.time.LocalDateTime bdLdt = batDau.toInstant().atZone(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDateTime();
         java.time.LocalDateTime ktLdt = ketThuc != null
                 ? ketThuc.toInstant().atZone(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDateTime()
@@ -44,10 +44,10 @@ public class LichHopDAO {
         row.put("tieuDe",          rs.getString("TieuDe"));
         row.put("noiDung",         rs.getString("NoiDung"));
         row.put("diaDiem",         rs.getString("DiaDiem"));
-        row.put("thoiGianBatDau",  fmtVN(batDau));   // ← FIX
-        row.put("thoiGianKetThuc", fmtVN(ketThuc));  // ← FIX
+        row.put("thoiGianBatDau",  fmtVN(batDau));
+        row.put("thoiGianKetThuc", fmtVN(ketThuc));
         row.put("trangThai",       tinhTrangThai(batDau, ketThuc, ttHienTai));
-        row.put("ngayTao",         fmtVN(rs.getTimestamp("NgayTao"))); // ← FIX
+        row.put("ngayTao",         fmtVN(rs.getTimestamp("NgayTao")));
         row.put("mucDo",           rs.getInt("MucDo"));
         row.put("doiTuong",        rs.getString("DoiTuong"));
         row.put("nguoiTao",        rs.getString("NguoiTao"));
@@ -67,8 +67,7 @@ public class LichHopDAO {
             ps.setString(2, lh.getNoiDung());
             ps.setString(3, lh.getDiaDiem());
             ps.setTimestamp(4, Timestamp.valueOf(lh.getThoiGianBatDau()));
-            ps.setTimestamp(5, lh.getThoiGianKetThuc() != null
-                    ? Timestamp.valueOf(lh.getThoiGianKetThuc()) : null);
+            ps.setTimestamp(5, Timestamp.valueOf(lh.getThoiGianKetThuc())); // bắt buộc, đã validate ở Service
             ps.setInt(6, lh.getToDanPhoID());
             ps.setInt(7, lh.getNguoiTaoID());
             ps.setInt(8, lh.getMucDo());
@@ -93,8 +92,7 @@ public class LichHopDAO {
             ps.setString(2, lh.getNoiDung());
             ps.setString(3, lh.getDiaDiem());
             ps.setTimestamp(4, Timestamp.valueOf(lh.getThoiGianBatDau()));
-            ps.setTimestamp(5, lh.getThoiGianKetThuc() != null
-                    ? Timestamp.valueOf(lh.getThoiGianKetThuc()) : null);
+            ps.setTimestamp(5, Timestamp.valueOf(lh.getThoiGianKetThuc())); // bắt buộc, đã validate ở Service
             ps.setInt(6, lh.getTrangThai());
             ps.setInt(7, lh.getMucDo());
             ps.setString(8, lh.getDoiTuong());
@@ -152,10 +150,10 @@ public class LichHopDAO {
                 row.put("tieuDe",          rs.getString("TieuDe"));
                 row.put("noiDung",         rs.getString("NoiDung"));
                 row.put("diaDiem",         rs.getString("DiaDiem"));
-                row.put("thoiGianBatDau",  fmtVN(batDau));   // ← FIX
-                row.put("thoiGianKetThuc", fmtVN(ketThuc));  // ← FIX
+                row.put("thoiGianBatDau",  fmtVN(batDau));
+                row.put("thoiGianKetThuc", fmtVN(ketThuc));
                 row.put("trangThai",       tinhTrangThai(batDau, ketThuc, ttHienTai));
-                row.put("ngayTao",         fmtVN(rs.getTimestamp("NgayTao"))); // ← FIX
+                row.put("ngayTao",         fmtVN(rs.getTimestamp("NgayTao")));
                 row.put("toDanPhoID",      rs.getInt("ToDanPhoID"));
                 row.put("nguoiTaoID",      rs.getInt("NguoiTaoID"));
                 row.put("mucDo",           rs.getInt("MucDo"));
@@ -231,10 +229,10 @@ public class LichHopDAO {
                 row.put("tieuDe",          rs.getString("TieuDe"));
                 row.put("noiDung",         rs.getString("NoiDung"));
                 row.put("diaDiem",         rs.getString("DiaDiem"));
-                row.put("thoiGianBatDau",  fmtVN(batDau));   // ← FIX
-                row.put("thoiGianKetThuc", fmtVN(ketThuc));  // ← FIX
+                row.put("thoiGianBatDau",  fmtVN(batDau));
+                row.put("thoiGianKetThuc", fmtVN(ketThuc));
                 row.put("trangThai",       tinhTrangThai(batDau, ketThuc, ttHienTai));
-                row.put("ngayTao",         fmtVN(rs.getTimestamp("NgayTao"))); // ← FIX
+                row.put("ngayTao",         fmtVN(rs.getTimestamp("NgayTao")));
                 row.put("toDanPhoID",      rs.getInt("ToDanPhoID"));
                 row.put("mucDo",           rs.getInt("MucDo"));
                 row.put("doiTuong",        rs.getString("DoiTuong"));
@@ -284,7 +282,7 @@ public class LichHopDAO {
                 Map<String, Object> row = new LinkedHashMap<>();
                 row.put("suaID",          rs.getInt("SuaID"));
                 row.put("nguoiSua",       rs.getString("NguoiSua"));
-                row.put("thoiGianSua",    fmtVN(rs.getTimestamp("ThoiGianSua"))); // ← FIX
+                row.put("thoiGianSua",    fmtVN(rs.getTimestamp("ThoiGianSua")));
                 row.put("noiDungThayDoi", rs.getString("NoiDungThayDoi"));
                 row.put("lyDoSua",        rs.getString("LyDoSua"));
                 list.add(row);
@@ -353,7 +351,7 @@ public class LichHopDAO {
                 row.put("chuHo",       rs.getString("ChuHo"));
                 row.put("soDienThoai", rs.getString("SoDienThoai"));
                 row.put("daDoc",       rs.getBoolean("DaDoc"));
-                row.put("thoiGianDoc", fmtVN(rs.getTimestamp("ThoiGianDoc"))); // ← FIX
+                row.put("thoiGianDoc", fmtVN(rs.getTimestamp("ThoiGianDoc")));
                 list.add(row);
             }
         } catch (Exception e) {

@@ -234,7 +234,8 @@
                         <div class="field-error" id="err-thoiGianBatDau"></div>
                     </div>
                     <div>
-                        <label for="thoiGianKetThuc">Thời gian kết thúc <span class="hint">(không bắt buộc)</span></label>
+                        <%-- ĐÃ SỬA: bắt buộc điền giờ kết thúc --%>
+                        <label for="thoiGianKetThuc">Thời gian kết thúc <span class="required">*</span></label>
                         <input type="datetime-local" id="thoiGianKetThuc" name="thoiGianKetThuc"
                                value="${param.thoiGianKetThuc}"/>
                         <div class="field-error" id="err-thoiGianKetThuc"></div>
@@ -397,20 +398,15 @@
     const levelMeta = { 1: ['normal','🟢','Bình thường'], 2: ['warn','🟡','Quan trọng'], 3: ['danger','🔴','Khẩn cấp'] };
 
     function selectLevel(val, type, icon, text) {
-        // check radio
         document.querySelector('#panelMucDo input[value="' + val + '"]').checked = true;
-        // update trigger
         document.getElementById('mucDoIcon').textContent = icon;
         document.getElementById('mucDoText').textContent = text;
-        // highlight option
         [1,2,3].forEach(i => document.getElementById('lo-' + i).className = 'level-option');
         document.getElementById('lo-' + val).classList.add('sel-' + type);
         document.getElementById('err-mucDo').classList.remove('show');
-        // đóng panel sau 120ms
         setTimeout(closeAllDD, 120);
     }
 
-    // init mức độ mặc định = Bình thường
     selectLevel(1, 'normal', '🟢', 'Bình thường');
 
     // ── ĐỐI TƯỢNG THAM GIA ──
@@ -420,7 +416,6 @@
         const next = !cb.checked;
 
         if (key === 'tatca' && next) {
-            // chọn Tất cả → bỏ hết cái khác
             document.querySelectorAll('#panelDoiTuong .check-option').forEach(c => {
                 if (c.id !== 'co-tatca') {
                     c.classList.remove('checked');
@@ -429,7 +424,6 @@
                 }
             });
         } else if (key !== 'tatca' && next) {
-            // chọn cái khác → bỏ Tất cả
             const tc = document.getElementById('co-tatca');
             tc.classList.remove('checked');
             tc.querySelector('input').checked = false;
@@ -485,10 +479,14 @@
             bdEl.classList.remove('input-error'); errBd.classList.remove('show');
         }
 
-        // Thời gian kết thúc
+        // ĐÃ SỬA: Thời gian kết thúc bắt buộc phải điền
         const ktEl  = document.getElementById('thoiGianKetThuc');
         const errKt = document.getElementById('err-thoiGianKetThuc');
-        if (ktEl.value && ktEl.value <= bdEl.value) {
+        if (!ktEl.value) {
+            ktEl.classList.add('input-error');
+            errKt.textContent = 'Vui lòng chọn thời gian kết thúc.';
+            errKt.classList.add('show'); valid = false;
+        } else if (ktEl.value <= bdEl.value) {
             ktEl.classList.add('input-error');
             errKt.textContent = 'Thời gian kết thúc phải sau thời gian bắt đầu.';
             errKt.classList.add('show'); valid = false;
@@ -515,8 +513,8 @@
         document.getElementById('spinner').style.display = 'block';
     });
 
-    // Xóa lỗi khi nhập lại
-    ['tieuDe', 'diaDiem', 'thoiGianBatDau'].forEach(function (id) {
+    // ĐÃ SỬA: thêm thoiGianKetThuc vào list xóa lỗi khi nhập lại
+    ['tieuDe', 'diaDiem', 'thoiGianBatDau', 'thoiGianKetThuc'].forEach(function (id) {
         document.getElementById(id).addEventListener('input', function () {
             this.classList.remove('input-error');
             const err = document.getElementById('err-' + id);

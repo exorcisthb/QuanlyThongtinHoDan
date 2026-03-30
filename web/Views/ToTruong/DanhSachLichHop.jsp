@@ -69,7 +69,8 @@
         .badge-gray  {background:rgba(100,116,139,.15);color:var(--muted)}
         .badge-red   {background:rgba(247,92,92,.15);  color:var(--danger)}
         .badge-warn  {background:rgba(251,191,36,.15); color:var(--warn)}
-        .action-wrap{display:flex;gap:6px}
+        /* FIX: thêm flex-wrap để nút không tràn */
+        .action-wrap{display:flex;gap:6px;flex-wrap:wrap}
         .act-btn{padding:6px 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--surface2);color:var(--muted);text-decoration:none;transition:all .18s;white-space:nowrap}
         .act-btn:hover{color:var(--text);border-color:var(--accent2)}
         .act-btn.edit:hover{color:var(--warn);border-color:var(--warn)}
@@ -254,7 +255,6 @@
                                     <td style="color:var(--muted)">${lh.nguoiTao}</td>
                                     <td>
                                         <div class="action-wrap">
-                                            <%-- Chỉ hiện nút Sửa khi trạng thái = 1 (Sắp diễn ra) --%>
                                             <c:choose>
                                                 <c:when test="${lh.trangThai == 1}">
                                                     <a href="${pageContext.request.contextPath}/sua-lich-hop?id=${lh.lichHopID}"
@@ -319,9 +319,10 @@
     }
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-    const mucDoLabel = {1:'🟢 Bình thường', 2:'🟡 Quan trọng', 3:'🔴 Khẩn cấp'};
-    const ttLabel    = {1:'Sắp diễn ra', 2:'Đang diễn ra', 3:'Đã kết thúc', 4:'Đã hủy'};
-    const ttClass    = {1:'badge-blue', 2:'badge-green', 3:'badge-gray', 4:'badge-red'};
+    // FIX: dùng String key để tránh lỗi lookup number vs string
+    const mucDoLabel = {'1':'🟢 Bình thường', '2':'🟡 Quan trọng', '3':'🔴 Khẩn cấp'};
+    const ttLabel    = {'1':'Sắp diễn ra', '2':'Đang diễn ra', '3':'Đã kết thúc', '4':'Đã hủy'};
+    const ttClass    = {'1':'badge-blue', '2':'badge-green', '3':'badge-gray', '4':'badge-red'};
     const doiTuongMap = {
         tatca:'Tất cả', chuho:'Chủ hộ', thanhnien:'Thanh niên',
         phunu:'Phụ nữ', nguoicao:'Người cao tuổi'
@@ -332,20 +333,24 @@
         const lichSu = data.lichSu  || [];
         const docTB  = data.docTB   || [];
 
-        document.getElementById('modalTieuDe').textContent = lh.tieuDe;
+        document.getElementById('modalTieuDe').textContent = lh.tieuDe || 'Chi tiết lịch họp';
 
         const doiTuong = (lh.doiTuong || '').split(',')
             .map(k => doiTuongMap[k.trim()] || k).filter(Boolean).join(', ');
+
+        // FIX: ép về String khi lookup để tránh lỗi number key
+        const ttKey = String(lh.trangThai);
+        const mdKey = String(lh.mucDo);
 
         let html = `
         <div class="modal-section">
             <div class="modal-section-title">Thông tin lịch họp</div>
             <div class="info-grid">
                 <div><div class="ii-label">Địa điểm</div><div class="ii-val">${lh.diaDiem || '—'}</div></div>
-                <div><div class="ii-label">Trạng thái</div><div class="ii-val"><span class="badge ${ttClass[lh.trangThai]}">${ttLabel[lh.trangThai] || '—'}</span></div></div>
+                <div><div class="ii-label">Trạng thái</div><div class="ii-val"><span class="badge ${ttClass[ttKey] || ''}">${ttLabel[ttKey] || '—'}</span></div></div>
                 <div><div class="ii-label">Thời gian bắt đầu</div><div class="ii-val">${lh.thoiGianBatDau || '—'}</div></div>
                 <div><div class="ii-label">Thời gian kết thúc</div><div class="ii-val">${lh.thoiGianKetThuc || '—'}</div></div>
-                <div><div class="ii-label">Mức độ</div><div class="ii-val">${mucDoLabel[lh.mucDo] || '—'}</div></div>
+                <div><div class="ii-label">Mức độ</div><div class="ii-val">${mucDoLabel[mdKey] || '—'}</div></div>
                 <div><div class="ii-label">Đối tượng tham gia</div><div class="ii-val">${doiTuong || '—'}</div></div>
                 <div style="grid-column:1/-1"><div class="ii-label">Nội dung</div><div class="ii-val">${lh.noiDung || '—'}</div></div>
                 <div><div class="ii-label">Người tạo</div><div class="ii-val">${lh.nguoiTao || '—'}</div></div>
@@ -355,7 +360,7 @@
 
         // Trạng thái đọc thông báo
         if (docTB.length > 0) {
-            const daDoc   = docTB.filter(r => r.daDoc).length;
+            const daDoc   = docTB.filter(r => r.daDoc === true).length;
             const chuaDoc = docTB.length - daDoc;
             html += `
             <div class="modal-section">
@@ -368,10 +373,11 @@
                     <thead><tr><th>Chủ hộ</th><th>Số điện thoại</th><th>Trạng thái</th><th>Thời gian đọc</th></tr></thead>
                     <tbody>`;
             docTB.forEach(r => {
+                const daDocRow = r.daDoc === true;
                 html += `<tr>
-                    <td>${r.chuHo}</td>
+                    <td>${r.chuHo || '—'}</td>
                     <td style="color:var(--muted)">${r.soDienThoai || '—'}</td>
-                    <td><span class="dot-read ${r.daDoc ? 'yes' : 'no'}">${r.daDoc ? 'Đã đọc' : 'Chưa đọc'}</span></td>
+                    <td><span class="dot-read ${daDocRow ? 'yes' : 'no'}">${daDocRow ? 'Đã đọc' : 'Chưa đọc'}</span></td>
                     <td style="color:var(--muted);font-size:12px">${r.thoiGianDoc || '—'}</td>
                 </tr>`;
             });
@@ -398,8 +404,8 @@
                     const truoc = snap.truoc || {};
                     const sau   = snap.sau   || {};
                     Object.keys(keyLabel).forEach(k => {
-                        const ov = String(truoc[k] || '');
-                        const nv = String(sau[k]   || '');
+                        const ov = String(truoc[k] ?? '');
+                        const nv = String(sau[k]   ?? '');
                         if (ov !== nv) {
                             diffHtml += '<div class="diff-row">'
                                       + '<span class="diff-key">' + keyLabel[k] + '</span>'
@@ -412,11 +418,11 @@
                 } catch(e) {
                     diffHtml = '<span style="color:var(--muted)">Không thể hiển thị chi tiết</span>';
                 }
-                  html += '<div class="tl-item">'
+                html += '<div class="tl-item">'
                       + '<div class="tl-dot"></div>'
-                      + '<div class="tl-time">' + ls.thoiGianSua + '</div>'
-                      + '<div class="tl-who">✏️ ' + ls.nguoiSua + '</div>'
-                      + '<div class="tl-reason">💬 ' + ls.lyDoSua + '</div>'
+                      + '<div class="tl-time">' + (ls.thoiGianSua || '') + '</div>'
+                      + '<div class="tl-who">✏️ ' + (ls.nguoiSua || '') + '</div>'
+                      + '<div class="tl-reason">💬 ' + (ls.lyDoSua || '') + '</div>'
                       + (diffHtml ? '<div class="tl-diff">' + diffHtml + '</div>' : '')
                       + '</div>';
             });
